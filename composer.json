@@ -1,0 +1,21 @@
+{
+    "name": "ms3commerce/ms3commercefx",
+    "type": "typo3-cms-extension",
+    "description": "mS3 Commerce Typo3 Fluid Extension",
+    "authors": [
+        {
+            "name": "Goodson GmbH",
+            "email": "support@goodson.at"
+        }
+    ],
+    "require": {
+        "typo3/cms-core": ">=6.2 <10",
+        "php": ">=7.2.0",
+        "ms3commerce/dataTransfer": "6.2.*"
+    },
+    "autoload": {
+        "psr-4": {
+          "Ms3\\Ms3CommerceFx\\": "Classes/"
+        }
+    }
+}

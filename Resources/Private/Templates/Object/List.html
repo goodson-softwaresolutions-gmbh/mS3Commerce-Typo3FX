@@ -1,0 +1,14 @@
+<h1>{object.name} - {object.auxiliaryName}</h1>
+<ul>
+    <f:for each="{object.children}" as="child">
+        <f:if condition="{child.isGroup}">
+            <f:then>
+                <li><f:link.action action="list" arguments="{rootId: child.menuId}">{child.name} - {child.auxiliaryName}</f:link.action></li>
+            </f:then>
+            <f:else>
+                <li><f:link.action action="detail" arguments="{rootId: child.menuId}">{child.name} - {child.auxiliaryName}</f:link.action></li>
+            </f:else>
+        </f:if>
+
+    </f:for>
+</ul>
