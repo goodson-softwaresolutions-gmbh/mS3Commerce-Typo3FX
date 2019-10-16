@@ -15,6 +15,8 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
+use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Domain\Model\Group;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
@@ -50,6 +52,52 @@ class PimObjectRepository extends RepositoryBase
         );
 
         return array_map(function($m) { return $m->getObject(); }, $children);
+    }
+
+    /**
+     * @param PimObject $object
+     */
+    public function loadAttributeValues(PimObject $object)
+    {
+        switch ($object->getEntityType()) {
+            case PimObject::TypeGroup:
+                $key = 'Group';
+                break;
+            case PimObject::TypeProduct:
+                $key = 'Product';
+                break;
+            default:
+                return;
+        }
+
+        $q = $this->_q();
+        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
+        $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
+        $q->addSelect(DbHelper::getTableColumnAs($key.'Value', 'v_', 'v'));
+        $q->from('Feature', 'f')
+            ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
+            ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
+            ->where($q->expr()->eq("v.{$key}Id", $object->getId()));
+
+        $attrs = [];
+        $res = $q->execute();
+        while ($row = $res->fetch()) {
+            $attrId = $row['f_Id'];
+            /** @var Attribute $attr */
+            $attr = $this->store->getObjectByIdentifier($attrId, Attribute::class);
+            if ($attr == null) {
+                $attr = new Attribute($attrId);
+                $this->mapper->mapObject($attr, $row, 'f_');
+                $this->mapper->mapObject($attr, $row, 'fv_');
+                $this->store->registerObject($attr);
+            }
+
+            $attrValue = new AttributeValue($row['v_Id']);
+            $attrValue->_setProperty('attribute', $attr);
+            $this->mapper->mapObject($attrValue, $row, 'v_');
+            $attrs[$attr->getSaneName()] = $attrValue;
+        }
+        $object->_setProperty('attributes', $attrs);
     }
 
     /**
