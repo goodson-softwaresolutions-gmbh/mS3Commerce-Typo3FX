@@ -60,10 +60,10 @@ class PimObjectRepository extends RepositoryBase
     private function loadMenuBy($expr, $order = '')
     {
         $q = $this->_q();
-        $q->select('m.Id AS menu_Id,m.LanguageId AS menu_LanguageId,m.MarketId AS menu_MarketId,m.ParentId AS menu_ParentId,m.Depth AS menu_Depth,m.Ordinal AS menu_Ordinal,m.Path AS menu_Path,m.ContextID AS menu_ContextID,m.GroupId AS menu_GroupId,m.ProductId AS menu_ProductId,m.DocumentId AS menu_DocumentId,m.ChildGroupId AS menu_ChildGroupId,m.ChildProductId AS menu_ChildProductId,'.
-                        'g.Id AS grp_Id,g.AsimOid AS grp_AsimOid,g.ObjectId AS grp_ObjectId,g.Name AS grp_Name,g.AuxiliaryName AS grp_AuxiliaryName,'.
-                        'p.Id AS prd_Id,p.AsimOid AS prd_AsimOid,p.ObjectId AS prd_ObjectId,p.Name AS prd_Name,p.AuxiliaryName AS prd_AuxiliaryName')
-            ->from('Menu', 'm')
+        $q->select(DbHelper::getTableColumnAs('Menu', 'menu_', 'm'));
+        $q->addSelect(DbHelper::getTableColumnAs('Groups', 'grp_', 'g'));
+        $q->addSelect(DbHelper::getTableColumnAs('Product', 'prd_', 'p'));
+        $q->from('Menu', 'm')
             ->leftJoin('m', 'Groups', 'g', 'g.Id = m.GroupId')
             ->leftJoin('m', 'Product', 'p', 'p.Id = m.ProductId')
             ->where($expr);
