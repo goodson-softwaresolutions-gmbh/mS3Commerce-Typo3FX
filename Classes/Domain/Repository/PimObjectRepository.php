@@ -45,7 +45,7 @@ class PimObjectRepository extends RepositoryBase
 
         $menuObjs = $this->loadMenuBy($this->_q()->expr()->eq('m.Id', $menuId));
         if (!empty($menuObjs)) {
-            return $menuObjs[0]->getObject();
+            return current($menuObjs)[0]->getObject();
         }
         return null;
     }
@@ -62,7 +62,25 @@ class PimObjectRepository extends RepositoryBase
             'm.Ordinal'
         );
 
-        return array_map(function($m) { return $m->getObject(); }, $children);
+        return array_map(function($m) { return $m->getObject(); }, $children[$menuId]);
+    }
+
+    public function getChildrenCollection(PimObjectCollection $coll)
+    {
+        $objects = $coll->all();
+        $objects = array_filter($objects, function($o) { return !$o->hasChildren() && $o->getMenuId(); });
+
+        if (empty($objects)) {
+            return;
+        }
+
+        $menuIds = array_map(function($o) { return $o->getMenuId(); }, $objects);
+
+        $menuMap = $this->loadMenuBy($this->_q()->expr()->in('m.ParentId', $menuIds));
+        foreach ($objects as $o) {
+            $childObjects = array_map(function($m) { return $m->getObject(); }, $menuMap[$o->getMenuId()]);
+            $o->_setProperty('children', $childObjects);
+        }
     }
 
     /**
@@ -103,9 +121,9 @@ class PimObjectRepository extends RepositoryBase
      * Reuses already loaded objects
      * @param $expr The condition. Either a string, or a Doctrine\DBAL\Constraint
      * @param string $order The order clause
-     * @return Menu[] The loaded menus
+     * @return Menu[][] The loaded menus, grouped by parent id
      */
-    private function loadMenuBy($expr, $order = '')
+    protected function loadMenuBy($expr, $order = '')
     {
         $q = $this->_q();
         $q->select(DbHelper::getTableColumnAs('Menu', 'menu_', 'm'));
@@ -119,13 +137,18 @@ class PimObjectRepository extends RepositoryBase
             $q->orderBy($order);
         }
 
-        $retMenus = [];
+        $retMap = [];
         $res = $q->execute();
         while ($row = $res->fetch()) {
             $menuId = $row['menu_Id'];
+            $pId = $row['menu_ParentId'];
+            if (!array_key_exists($pId, $retMap)) {
+                $retMap[$pId] = [];
+            }
+
             $existing = $this->store->getObjectByIdentifier($menuId, Menu::class);
             if ($existing) {
-                $retMenus[] = $existing;
+                $retMap[$pId][] = $existing;
                 continue;
             }
 
@@ -154,9 +177,13 @@ class PimObjectRepository extends RepositoryBase
                 $menuObj->setObject($obj);
                 $this->store->registerObject($menuObj);
                 $this->store->registerObject($obj);
-                $retMenus[] = $menuObj;
+                $retMap[$pId][] = $menuObj;
             }
         }
+
+        // Flatten array
+        $retMenus = [];
+        array_walk_recursive($retMap, function($a) use (&$retMenus) { $retMenus[] = $a; });
 
         if (count($retMenus) > 1) {
             PimObjectCollection::createCollection(array_map(function ($m) {
@@ -164,10 +191,16 @@ class PimObjectRepository extends RepositoryBase
             }, $retMenus));
         }
 
-        return $retMenus;
+        return $retMap;
     }
 
-    private function loadAttributesByObjects($objectIds, $entityType)
+    /**
+     * Loads attributes for multiple objects.
+     * @param int[] $objectIds The ids of the objects
+     * @param int $entityType The type of the objects (see PimObject::TypeXXX)
+     * @return AttributeValue[][] The values, grouped by object id / attribute sane name
+     */
+    protected function loadAttributesByObjects($objectIds, $entityType)
     {
         if (empty($objectIds)) {
             return [];

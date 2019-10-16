@@ -24,8 +24,11 @@ class PimObjectCollection
         }
     }
 
-    public function getOfType($type)
-    {
+    public function all() {
+        return array_values($this->objects);
+    }
+
+    public function getOfType($type) {
         return array_filter($this->objects, function ($o) use ($type) {
             return $o->getEntityType() == $type;
         });

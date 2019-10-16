@@ -69,7 +69,11 @@ abstract class PimObject extends AbstractEntity
     }
 
     public function getChildren() {
-        if ($this->children === null && $this->menuId) {
+        if ($this->collection) {
+            /** @var PimObjectRepository $repo */
+            $repo = GeneralUtility::makeInstance(PimObjectRepository::class);
+            $repo->getChildrenCollection($this->collection);
+        } else if ($this->children === null && $this->menuId) {
             /** @var PimObjectRepository $repo */
             $repo = GeneralUtility::makeInstance(PimObjectRepository::class);
             $this->children = $repo->getChildren($this->menuId);
@@ -92,5 +96,9 @@ abstract class PimObject extends AbstractEntity
 
     public function hasAttributes() {
         return $this->attributes != null;
+    }
+
+    public function hasChildren() {
+        return $this->children  != null;
     }
 }
