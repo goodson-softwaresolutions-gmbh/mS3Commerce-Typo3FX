@@ -20,6 +20,7 @@ use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Domain\Model\Group;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
+use Ms3\Ms3CommerceFx\Domain\Model\PimObjectCollection;
 use Ms3\Ms3CommerceFx\Domain\Model\Product;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
 
@@ -29,6 +30,11 @@ use Ms3\Ms3CommerceFx\Service\DbHelper;
  */
 class PimObjectRepository extends RepositoryBase
 {
+    /**
+     * Loads a single object by menu id
+     * @param int $menuId The menu id
+     * @return Menu The menu
+     */
     public function getByMenuId($menuId)
     {
         /** @var Menu */
@@ -44,6 +50,11 @@ class PimObjectRepository extends RepositoryBase
         return null;
     }
 
+    /**
+     * Loads all children of a menu id
+     * @param int $menuId The menu id for which to get children
+     * @return PimObject[] The children
+     */
     public function getChildren($menuId)
     {
         $children = $this->loadMenuBy(
@@ -55,55 +66,44 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
-     * @param PimObject $object
+     * Loads attribute values for a single object
+     * @param PimObject $object The object for which to get attribute values
      */
     public function loadAttributeValues(PimObject $object)
     {
-        switch ($object->getEntityType()) {
-            case PimObject::TypeGroup:
-                $key = 'Group';
-                break;
-            case PimObject::TypeProduct:
-                $key = 'Product';
-                break;
-            default:
-                return;
+        if ($object->hasAttributes()) {
+            return;
+        }
+        $map = $this->loadAttributesByObjects($object->getId(), $object->getEntityType());
+        $object->_setProperty('attributes', $map[$object->getId()]);
+    }
+
+    public function loadAttributeValuesCollection(PimObjectCollection $coll)
+    {
+        $groups = $coll->getOfType(PimObject::TypeGroup);
+        $prods = $coll->getOfType(PimObject::TypeProduct);
+
+        $groups = array_filter($groups, function($g) { return !$g->hasAttributes(); } );
+        $prods = array_filter($prods, function($p) { return !$p->hasAttributes(); } );
+
+        $groupAttrs = $this->loadAttributesByObjects(array_map(function($g) { return $g->getId(); }, $groups), PimObject::TypeGroup);
+        $prodAttrs = $this->loadAttributesByObjects(array_map(function($p) { return $p->getId(); }, $prods), PimObject::TypeProduct);
+
+        foreach ($groups as $g) {
+            $g->_setProperty('attributes', $groupAttrs[$g->getId()]);
         }
 
-        $q = $this->_q();
-        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
-        $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
-        $q->addSelect(DbHelper::getTableColumnAs($key.'Value', 'v_', 'v'));
-        $q->from('Feature', 'f')
-            ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
-            ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
-            ->where($q->expr()->eq("v.{$key}Id", $object->getId()));
-
-        $attrs = [];
-        $res = $q->execute();
-        while ($row = $res->fetch()) {
-            $attrId = $row['f_Id'];
-            /** @var Attribute $attr */
-            $attr = $this->store->getObjectByIdentifier($attrId, Attribute::class);
-            if ($attr == null) {
-                $attr = new Attribute($attrId);
-                $this->mapper->mapObject($attr, $row, 'f_');
-                $this->mapper->mapObject($attr, $row, 'fv_');
-                $this->store->registerObject($attr);
-            }
-
-            $attrValue = new AttributeValue($row['v_Id']);
-            $attrValue->_setProperty('attribute', $attr);
-            $this->mapper->mapObject($attrValue, $row, 'v_');
-            $attrs[$attr->getSaneName()] = $attrValue;
+        foreach ($prods as $p) {
+            $p->_setProperty('attributes', $prodAttrs[$p->getId()]);
         }
-        $object->_setProperty('attributes', $attrs);
     }
 
     /**
-     * @param $expr
-     * @param string $order
-     * @return Menu[]
+     * Loads all objects from menu with given condition and order.
+     * Reuses already loaded objects
+     * @param $expr The condition. Either a string, or a Doctrine\DBAL\Constraint
+     * @param string $order The order clause
+     * @return Menu[] The loaded menus
      */
     private function loadMenuBy($expr, $order = '')
     {
@@ -146,7 +146,7 @@ class PimObjectRepository extends RepositoryBase
                     $this->mapper->mapObject($obj, $row, 'prd_');
                     break;
                 default:
-                    // NOOP
+                    // NOOP, will be excluded later
             }
 
             if ($obj) {
@@ -158,6 +158,64 @@ class PimObjectRepository extends RepositoryBase
             }
         }
 
+        if (count($retMenus) > 1) {
+            PimObjectCollection::createCollection(array_map(function ($m) {
+                return $m->getObject();
+            }, $retMenus));
+        }
+
         return $retMenus;
+    }
+
+    private function loadAttributesByObjects($objectIds, $entityType)
+    {
+        if (empty($objectIds)) {
+            return [];
+        }
+        switch ($entityType) {
+            case PimObject::TypeGroup:
+                $key = 'Group';
+                break;
+            case PimObject::TypeProduct:
+                $key = 'Product';
+                break;
+            default:
+                return [];
+        }
+
+        $q = $this->_q();
+        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
+        $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
+        $q->addSelect(DbHelper::getTableColumnAs($key.'Value', 'v_', 'v'));
+        $q->from('Feature', 'f')
+            ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
+            ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
+            ->where($q->expr()->in("v.{$key}Id", $objectIds));
+
+        $objectMap = [];
+        $res = $q->execute();
+        while ($row = $res->fetch()) {
+            $attrId = $row['f_Id'];
+            /** @var Attribute $attr */
+            $attr = $this->store->getObjectByIdentifier($attrId, Attribute::class);
+            if ($attr == null) {
+                $attr = new Attribute($attrId);
+                $this->mapper->mapObject($attr, $row, 'f_');
+                $this->mapper->mapObject($attr, $row, 'fv_');
+                $this->store->registerObject($attr);
+            }
+
+            $attrValue = new AttributeValue($row['v_Id']);
+            $attrValue->_setProperty('attribute', $attr);
+            $this->mapper->mapObject($attrValue, $row, 'v_');
+
+            $objectId = $attrValue->getObjectId();
+            if (!array_key_exists($objectId, $objectMap)) {
+                $objectMap[$objectId] = [];
+            }
+
+            $objectMap[$objectId][$attr->getSaneName()] = $attrValue;
+        }
+        return $objectMap;
     }
 }

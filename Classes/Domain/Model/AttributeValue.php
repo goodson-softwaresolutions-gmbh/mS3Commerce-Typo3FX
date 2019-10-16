@@ -21,7 +21,8 @@ class AttributeValue extends AbstractEntity
         parent::__construct($id);
     }
 
-    protected $objectId;
+    protected $groupId;
+    protected $productId;
     protected $featureId;
     protected $languageId;
     /** @var string */
@@ -35,6 +36,12 @@ class AttributeValue extends AbstractEntity
 
     public function __toString() {
         return $this->contentPlain;
+    }
+
+    public function getObjectId() {
+        if ($this->groupId) return $this->groupId;
+        if ($this->productId) return $this->productId;
+        return null;
     }
 
     public function __call($name, $arguments)
