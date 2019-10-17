@@ -16,6 +16,7 @@
 namespace Ms3\Ms3CommerceFx\Domain\Model;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
+use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -39,24 +40,19 @@ abstract class PimObject extends AbstractEntity
     protected $asimOid;
     protected $objectId;
 
-    /**
-     * @var PimObject[]
-     */
+    /** @var PimObject[] */
     protected $children;
-
-    /**
-     * @var PimObjectCollection
-     */
+    /** @var AttributeValue[] */
+    protected $attributes;
+    /** @var PimObjectCollection */
     protected $collection;
+    /** @var RepositoryFacade */
+    protected $repo;
 
     public function __construct($id = 0) {
         parent::__construct($id);
+        $this->repo = GeneralUtility::makeInstance(RepositoryFacade::class);
     }
-
-    /**
-     * @var AttributeValue[]
-     */
-    protected $attributes;
 
     public abstract function getEntityType() : int;
 
@@ -69,36 +65,20 @@ abstract class PimObject extends AbstractEntity
     }
 
     public function getChildren() {
-        if ($this->collection) {
-            /** @var PimObjectRepository $repo */
-            $repo = GeneralUtility::makeInstance(PimObjectRepository::class);
-            $repo->getChildrenCollection($this->collection);
-        } else if ($this->children === null && $this->menuId) {
-            /** @var PimObjectRepository $repo */
-            $repo = GeneralUtility::makeInstance(PimObjectRepository::class);
-            $this->children = $repo->getChildren($this->menuId);
-        }
+        $this->repo->loadObjectChildren($this);
         return $this->children;
     }
 
     public function getAttributes() {
-        if ($this->collection) {
-            /** @var PimObjectRepository $repo */
-            $repo = GeneralUtility::makeInstance(PimObjectRepository::class);
-            $repo->loadAttributeValuesCollection($this->collection);
-        } else if (!$this->hasAttributes()) {
-            /** @var PimObjectRepository $repo */
-            $repo = GeneralUtility::makeInstance(PimObjectRepository::class);
-            $repo->loadAttributeValues($this);
-        }
+        $this->repo->loadObjectValues($this);
         return $this->attributes;
     }
 
-    public function hasAttributes() {
-        return $this->attributes != null;
+    public function attributesLoaded() {
+        return $this->attributes !== null;
     }
 
-    public function hasChildren() {
-        return $this->children  != null;
+    public function childrenLoaded() {
+        return $this->children  !== null;
     }
 }

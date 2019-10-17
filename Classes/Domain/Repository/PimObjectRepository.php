@@ -15,7 +15,6 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
-use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
 use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Domain\Model\Group;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
@@ -30,6 +29,16 @@ use Ms3\Ms3CommerceFx\Service\DbHelper;
  */
 class PimObjectRepository extends RepositoryBase
 {
+    /** @var \Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository */
+    protected $attributeRepo;
+
+    /**
+     * @param \Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository $ar
+     */
+    public function injectAttributeRepository(\Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository $ar) {
+        $this->attributeRepo = $ar;
+    }
+
     /**
      * Loads a single object by menu id
      * @param int $menuId The menu id
@@ -51,69 +60,39 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
-     * Loads all children of a menu id
-     * @param int $menuId The menu id for which to get children
-     * @return PimObject[] The children
+     * Loads all children of a object
+     * @param PimObject $object The object for which to get children
      */
-    public function getChildren($menuId)
+    public function loadChildren($object)
     {
+        if ($object->childrenLoaded()) {
+            return;
+        }
+        $menuId = $object->getMenuId();
+        if (!$menuId) {
+            return;
+        }
+
         $children = $this->loadMenuBy(
             $this->_q()->expr()->eq('m.ParentId', $menuId),
             'm.Ordinal'
         );
 
-        return array_map(function($m) { return $m->getObject(); }, $children[$menuId]);
-    }
-
-    public function getChildrenCollection(PimObjectCollection $coll)
-    {
-        $objects = $coll->all();
-        $objects = array_filter($objects, function($o) { return !$o->hasChildren() && $o->getMenuId(); });
-
-        if (empty($objects)) {
-            return;
-        }
-
-        $menuIds = array_map(function($o) { return $o->getMenuId(); }, $objects);
-
-        $menuMap = $this->loadMenuBy($this->_q()->expr()->in('m.ParentId', $menuIds));
-        foreach ($objects as $o) {
-            $childObjects = array_map(function($m) { return $m->getObject(); }, $menuMap[$o->getMenuId()]);
-            $o->_setProperty('children', $childObjects);
-        }
+        $children = array_map(function($m) { return $m->getObject(); }, $children[$menuId]);
+        $object->_setProperty('children', $children);
     }
 
     /**
      * Loads attribute values for a single object
      * @param PimObject $object The object for which to get attribute values
      */
-    public function loadAttributeValues(PimObject $object)
+    public function loadAttributeValues($object)
     {
-        if ($object->hasAttributes()) {
+        if ($object->attributesLoaded()) {
             return;
         }
         $map = $this->loadAttributesByObjects($object->getId(), $object->getEntityType());
         $object->_setProperty('attributes', $map[$object->getId()]);
-    }
-
-    public function loadAttributeValuesCollection(PimObjectCollection $coll)
-    {
-        $groups = $coll->getOfType(PimObject::TypeGroup);
-        $prods = $coll->getOfType(PimObject::TypeProduct);
-
-        $groups = array_filter($groups, function($g) { return !$g->hasAttributes(); } );
-        $prods = array_filter($prods, function($p) { return !$p->hasAttributes(); } );
-
-        $groupAttrs = $this->loadAttributesByObjects(array_map(function($g) { return $g->getId(); }, $groups), PimObject::TypeGroup);
-        $prodAttrs = $this->loadAttributesByObjects(array_map(function($p) { return $p->getId(); }, $prods), PimObject::TypeProduct);
-
-        foreach ($groups as $g) {
-            $g->_setProperty('attributes', $groupAttrs[$g->getId()]);
-        }
-
-        foreach ($prods as $p) {
-            $p->_setProperty('attributes', $prodAttrs[$p->getId()]);
-        }
     }
 
     /**
@@ -152,31 +131,8 @@ class PimObjectRepository extends RepositoryBase
                 continue;
             }
 
-            // Create Menu Object
-            $menuObj = new Menu($menuId);
-            $this->mapper->mapObject($menuObj, $row, 'menu_');
-
-            // Create PIM Object
-            /** @var PimObject $obj */
-            $obj = null;
-            switch ($menuObj->getObjectEntityType()) {
-                case PimObject::TypeGroup:
-                    $obj = new Group($row['grp_Id']);
-                    $this->mapper->mapObject($obj, $row, 'grp_');
-                    break;
-                case PimObject::TypeProduct:
-                    $obj = new Product($row['prd_Id']);
-                    $this->mapper->mapObject($obj, $row, 'prd_');
-                    break;
-                default:
-                    // NOOP, will be excluded later
-            }
-
-            if ($obj) {
-                $obj->_setProperty('menuId', $menuId);
-                $menuObj->setObject($obj);
-                $this->store->registerObject($menuObj);
-                $this->store->registerObject($obj);
+            $menuObj = $this->createMenuFromRow($row);
+            if ($menuObj) {
                 $retMap[$pId][] = $menuObj;
             }
         }
@@ -192,6 +148,60 @@ class PimObjectRepository extends RepositoryBase
         }
 
         return $retMap;
+    }
+
+    private function createMenuFromRow($row)
+    {
+        $menuId = $row['menu_Id'];
+
+        // Create Menu Object
+        $menuObj = new Menu($menuId);
+        $this->mapper->mapObject($menuObj, $row, 'menu_');
+
+        $obj = $this->createObjectFromRow($row, $menuObj->getObjectEntityType(), [PimObject::TypeGroup => 'grp_', PimObject::TypeProduct => 'prd_']);
+
+        if (!$obj) {
+            return null;
+        }
+
+        $obj->_setProperty('menuId', $menuId);
+        $menuObj->setObject($obj);
+        $this->store->registerObject($menuObj);
+
+        return $menuObj;
+    }
+
+    private function createObjectFromRow($row, $type, $prefix = '')
+    {
+        if (is_array($prefix)) {
+            $prefix = $prefix[$type];
+        }
+
+        // Create PIM Object
+        /** @var PimObject $obj */
+        $obj = null;
+        switch ($type) {
+            case PimObject::TypeGroup:
+                $existing = $this->store->getObjectByIdentifier($row[$prefix.'Id'], Group::class);
+                if ($existing) {
+                    return $existing;
+                }
+                $obj = new Group($row[$prefix.'Id']);
+                $this->mapper->mapObject($obj, $row, $prefix);
+                $this->store->registerObject($obj);
+                return $obj;
+            case PimObject::TypeProduct:
+                $existing = $this->store->getObjectByIdentifier($row[$prefix.'Id'], Product::class);
+                if ($existing) {
+                    return $existing;
+                }
+                $obj = new Product($row[$prefix.'Id']);
+                $this->mapper->mapObject($obj, $row, $prefix);
+                $this->store->registerObject($obj);
+                return $obj;
+            default:
+                return null;
+        }
     }
 
     /**
@@ -229,15 +239,7 @@ class PimObjectRepository extends RepositoryBase
         $res = $q->execute();
         while ($row = $res->fetch()) {
             $attrId = $row['f_Id'];
-            /** @var Attribute $attr */
-            $attr = $this->store->getObjectByIdentifier($attrId, Attribute::class);
-            if ($attr == null) {
-                $attr = new Attribute($attrId);
-                $this->mapper->mapObject($attr, $row, 'f_');
-                $this->mapper->mapObject($attr, $row, 'fv_');
-                $this->store->registerObject($attr);
-            }
-
+            $attr = $this->attributeRepo->createAttributeFromRow($attrId, $row, ['f_', 'fv_']);
             $attrValue = new AttributeValue($row['v_Id']);
             $attrValue->_setProperty('attribute', $attr);
             $this->mapper->mapObject($attrValue, $row, 'v_');
