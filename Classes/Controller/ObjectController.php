@@ -1,11 +1,25 @@
 <?php
+/***************************************************************
+ * Part of mS3 Commerce Fx
+ * Copyright (C) 2019 Goodson GmbH <http://www.goodson.at>
+ *  All rights reserved
+ *
+ * Dieses Computerprogramm ist urheberrechtlich sowie durch internationale
+ * Abkommen geschützt. Die unerlaubte Reproduktion oder Weitergabe dieses
+ * Programms oder von Teilen dieses Programms kann eine zivil- oder
+ * strafrechtliche Ahndung nach sich ziehen und wird gemäß der geltenden
+ * Rechtsprechung mit größtmöglicher Härte verfolgt.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
-use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 
-use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
+use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class ObjectController extends ActionController
 {
@@ -25,8 +39,18 @@ class ObjectController extends ActionController
     private $rootId = 0;
     public function initializeAction()
     {
-        if (isset($this->settings) && array_key_exists('rootId', $this->settings)) {
+        if (array_key_exists('rootId', $this->settings)) {
             $this->rootId = $this->settings['rootId'];
+        }
+        if (array_key_exists('templateFile', $this->settings)) {
+            $this->defaultViewObjectName = StandaloneView::class;
+        }
+    }
+
+    public function initializeView(ViewInterface $view)
+    {
+        if (array_key_exists('templateFile', $this->settings)) {
+            $view->setTemplatePathAndFilename($this->settings['templateFile']);
         }
     }
 
