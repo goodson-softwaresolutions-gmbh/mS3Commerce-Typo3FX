@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<T3DataStructure>
+    <sheets>
+        <sDEF>
+            <ROOT>
+                <TCEforms>
+                    <sheetTitle>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.title</sheetTitle>
+                </TCEforms>
+                <type>array</type>
+                <el>
+                    <settings.templateFile>
+                        <TCEforms>
+                            <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.templateFile</label>
+                            <config>
+                                <type>input</type>
+                            </config>
+                        </TCEforms>
+                    </settings.templateFile>
+                </el>
+            </ROOT>
+        </sDEF>
+    </sheets>
+</T3DataStructure>

@@ -1,0 +1,17 @@
+mod.wizards {
+    newContentElement.wizardItems {
+        plugins {
+            elements {
+                ms3commercefx_pi1 {
+                    iconIdentifier = ms3commercefx-pi1
+                    title = mS3 Commerce Fx
+                    description = mS3 Commerce Content
+                    tt_content_defValues {
+                        CType = list
+                        list_type = ms3commercefx_pi1
+                    }
+                }
+            }
+        }
+    }
+}
