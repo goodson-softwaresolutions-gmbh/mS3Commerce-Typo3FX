@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObjectCollection;
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
 class PimObjectCollectionRepository extends PimObjectRepository
 {
@@ -31,8 +32,8 @@ class PimObjectCollectionRepository extends PimObjectRepository
         $groups = array_filter($groups, function($g) { return !$g->attributesLoaded(); } );
         $prods = array_filter($prods, function($p) { return !$p->attributesLoaded(); } );
 
-        $groupAttrs = $this->loadAttributesByObjects(array_map(function($g) { return $g->getId(); }, $groups), PimObject::TypeGroup);
-        $prodAttrs = $this->loadAttributesByObjects(array_map(function($p) { return $p->getId(); }, $prods), PimObject::TypeProduct);
+        $groupAttrs = $this->loadAttributesByObjects(ObjectHelper::getIdsFromObjects($groups), PimObject::TypeGroup);
+        $prodAttrs = $this->loadAttributesByObjects(ObjectHelper::getIdsFromObjects($prods), PimObject::TypeProduct);
 
         foreach ($groups as $g) {
             $g->_setProperty('attributes', $groupAttrs[$g->getId()]);
@@ -55,11 +56,11 @@ class PimObjectCollectionRepository extends PimObjectRepository
             return;
         }
 
-        $menuIds = array_map(function($o) { return $o->getMenuId(); }, $objects);
+        $menuIds = ObjectHelper::getMenuIdsFromObjects($objects);
         $menuMap = $this->loadMenuBy($this->_q()->expr()->in('m.ParentId', $menuIds));
         foreach ($objects as $o) {
             if (array_key_exists($o->getMenuId(), $menuMap)) {
-                $o->_setProperty('children', $menuMap[$o->getMenuId()]);
+                $o->_setProperty('children', ObjectHelper::getObjectsFromMenus($menuMap[$o->getMenuId()]));
             } else {
                 $o->_setProperty('children', []);
             }

@@ -22,6 +22,7 @@ use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObjectCollection;
 use Ms3\Ms3CommerceFx\Domain\Model\Product;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
 /**
  * Class PimObjectRepository
@@ -78,7 +79,7 @@ class PimObjectRepository extends RepositoryBase
             'm.Ordinal'
         );
 
-        $children = array_map(function($m) { return $m->getObject(); }, $children[$menuId]);
+        $children = ObjectHelper::getObjectsFromMenus($children[$menuId]);
         $object->_setProperty('children', $children);
     }
 
@@ -142,9 +143,7 @@ class PimObjectRepository extends RepositoryBase
         array_walk_recursive($retMap, function($a) use (&$retMenus) { $retMenus[] = $a; });
 
         if (count($retMenus) > 1) {
-            PimObjectCollection::createCollection(array_map(function ($m) {
-                return $m->getObject();
-            }, $retMenus));
+            PimObjectCollection::createCollection(ObjectHelper::getObjectsFromMenus($retMenus));
         }
 
         return $retMap;
