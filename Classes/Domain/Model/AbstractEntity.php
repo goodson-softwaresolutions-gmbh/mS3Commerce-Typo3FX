@@ -57,10 +57,19 @@ abstract class AbstractEntity
             if (property_exists($this, $prop)) {
                 return $this->_getProperty($prop);
             }
-            if (method_exists($this, $prop)) {
+            if (strpos($prop, 'is') === 0 && method_exists($this, $prop)) {
                 return $this->$prop();
             }
         }
+    }
+
+    public function __get($name)
+    {
+        if (property_exists($this, $name)) {
+            // TODO: Exclude properties
+            return $this->_getProperty($name);
+        }
+        return null;
     }
 
     public function _getProperty($name) {
