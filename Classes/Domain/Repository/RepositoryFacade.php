@@ -18,6 +18,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
+use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
@@ -37,6 +38,16 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     private $structureElement;
     public function injectStructureElement(StructureElementRepository $ser) {
         $this->structureElement = $ser;
+    }
+
+    /** @var QuerySettings */
+    private $querySettings;
+    public function injectQuerySettings(QuerySettings $settings) {
+        $this->querySettings = $settings;
+    }
+
+    public function getQuerySettings() {
+        return $this->querySettings;
     }
 
     /**
