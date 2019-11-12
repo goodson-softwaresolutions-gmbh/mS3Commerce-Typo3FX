@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
+use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
@@ -32,6 +33,12 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         $this->objectCollection = $ocr;
     }
 
+    /** @var StructureElementRepository */
+    private $structureElement;
+    public function injectStructureElement(StructureElementRepository $ser) {
+        $this->structureElement = $ser;
+    }
+
     /**
      * @param int $menuId
      * @return Menu
@@ -41,7 +48,7 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @param $object PimObject
+     * @param PimObject $object
      */
     public function loadObjectValues($object) {
         if ($object->getCollection()) {
@@ -52,7 +59,7 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @param $object PimObject
+     * @param PimObject $object
      */
     public function loadObjectChildren($object) {
         if ($object->getCollection()) {
@@ -60,5 +67,13 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         } else {
             $this->object->loadChildren($object);
         }
+    }
+
+    /**
+     * @param int $id
+     * @return StructureElement
+     */
+    public function getStructureElementById($id) {
+        return $this->structureElement->getStructureElementById($id);
     }
 }

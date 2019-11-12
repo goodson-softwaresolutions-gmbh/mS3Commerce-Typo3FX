@@ -39,6 +39,7 @@ abstract class PimObject extends AbstractEntity
     protected $auxiliaryName;
     protected $asimOid;
     protected $objectId;
+    protected $structureElementId;
 
     /** @var PimObject[] */
     protected $children;
@@ -46,12 +47,10 @@ abstract class PimObject extends AbstractEntity
     protected $attributes;
     /** @var PimObjectCollection */
     protected $collection;
-    /** @var RepositoryFacade */
-    protected $repo;
 
     public function __construct($id = 0) {
         parent::__construct($id);
-        $this->repo = GeneralUtility::makeInstance(RepositoryFacade::class);
+
     }
 
     public abstract function getEntityType() : int;
@@ -73,12 +72,12 @@ abstract class PimObject extends AbstractEntity
     }
 
     public function getChildren() {
-        $this->repo->loadObjectChildren($this);
+        $this->getRepo()->loadObjectChildren($this);
         return $this->children;
     }
 
     public function getAttributes() {
-        $this->repo->loadObjectValues($this);
+        $this->getRepo()->loadObjectValues($this);
         return $this->attributes;
     }
 
@@ -88,5 +87,9 @@ abstract class PimObject extends AbstractEntity
 
     public function childrenLoaded() {
         return $this->children  !== null;
+    }
+
+    public function getStructureElement() {
+        return $this->getRepo()->getStructureElementById($this->structureElementId);
     }
 }
