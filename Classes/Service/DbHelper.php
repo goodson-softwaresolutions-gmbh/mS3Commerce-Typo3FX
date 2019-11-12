@@ -21,15 +21,21 @@ class DbHelper
 {
     private function __construct() {}
 
+    private static $cache = [];
+
     public static function getTableColumnNames($tableName)
     {
-        /** @var DbBackend $db */
-        $db = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(DbBackend::class);
-        $res = $db->getConnection()->executeQuery("DESC $tableName")->fetchAll();
-        return array_map(function($r) { return $r['Field']; }, $res);
+        if (!array_key_exists($tableName, self::$cache)) {
+            /** @var DbBackend $db */
+            $db = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(DbBackend::class);
+            $res = $db->getConnection()->executeQuery("DESC $tableName")->fetchAll();
+            $fieldNames = array_map(function($r) { return $r['Field']; }, $res);
+            self::$cache[$tableName] = $fieldNames;
+        }
+        return self::$cache[$tableName];
     }
 
-    public static function getTableColumnAs($tableName, $aliasPrefix, $tableAlias = '')
+    public static function getTableColumnAs($tableName, $aliasPrefix = '', $tableAlias = '')
     {
         if (empty($tableAlias)) $tableAlias = $tableName;
         $cols = self::getTableColumnNames($tableName);
