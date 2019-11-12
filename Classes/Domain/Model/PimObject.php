@@ -64,6 +64,14 @@ abstract class PimObject extends AbstractEntity
         return $this->getEntityType() == self::TypeProduct;
     }
 
+    public function getIsGroup() : bool {
+        return $this->isGroup();
+    }
+
+    public function getIsProduct() : bool {
+        return $this->isProduct();
+    }
+
     public function getChildren() {
         $this->repo->loadObjectChildren($this);
         return $this->children;
