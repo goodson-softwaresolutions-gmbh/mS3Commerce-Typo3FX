@@ -256,7 +256,9 @@ class PimObjectRepository extends RepositoryBase
         $q->from('Feature', 'f')
             ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
             ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
-            ->where($q->expr()->in("v.{$key}Id", $objectIds));
+            ->leftJoin('f', 'StructureElement', 's', 'f.StructureElementId = s.Id')
+            ->where($q->expr()->in("v.{$key}Id", $objectIds))
+            ->orderBy('s.OrderNr', 'DESC'); // Higher OrderNr are on top of hierarchy, 1 = Product (negative are special, like Price)
 
         $objectMap = [];
         $res = $q->execute();
@@ -273,6 +275,7 @@ class PimObjectRepository extends RepositoryBase
             }
 
             $objectMap[$objectId][$attr->getSaneName()] = $attrValue;
+            $objectMap[$objectId][$attr->getSaneAuxiliaryName()] = $attrValue; // Will be overridden, if also exists in a deeper hierarchy level
         }
         return $objectMap;
     }
