@@ -120,12 +120,13 @@ abstract class PimObject extends AbstractEntity
     }
 }
 
-class CategorizationProxy implements \ArrayAccess
+class CategorizationProxy implements \ArrayAccess, \Iterator
 {
     /** @var PimObject */
     private $obj;
     /** @var Categorization */
     private $categorization;
+    private $pos;
 
     /**
      * CategorizationProxy constructor.
@@ -136,6 +137,7 @@ class CategorizationProxy implements \ArrayAccess
     {
         $this->obj = $obj;
         $this->categorization = $categorization;
+        $pos = 0;
     }
 
     public function getCategorization() {
@@ -203,5 +205,63 @@ class CategorizationProxy implements \ArrayAccess
     public function offsetUnset($offset)
     {
         // TODO: Implement offsetUnset() method.
+    }
+
+    /**
+     * Return the current element
+     * @link https://php.net/manual/en/iterator.current.php
+     * @return mixed Can return any type.
+     * @since 5.0.0
+     */
+    public function current()
+    {
+        /** @var Attribute $attr */
+        $attr = $this->categorization->getAttributes()[$this->pos];
+        return $this->obj->getAttributes()[$attr->getSaneName()];
+    }
+
+    /**
+     * Move forward to next element
+     * @link https://php.net/manual/en/iterator.next.php
+     * @return void Any returned value is ignored.
+     * @since 5.0.0
+     */
+    public function next()
+    {
+        $this->pos++;
+    }
+
+    /**
+     * Return the key of the current element
+     * @link https://php.net/manual/en/iterator.key.php
+     * @return mixed scalar on success, or null on failure.
+     * @since 5.0.0
+     */
+    public function key()
+    {
+        return $this->pos;
+    }
+
+    /**
+     * Checks if current position is valid
+     * @link https://php.net/manual/en/iterator.valid.php
+     * @return bool The return value will be casted to boolean and then evaluated.
+     * Returns true on success or false on failure.
+     * @since 5.0.0
+     */
+    public function valid()
+    {
+        return $this->pos < count($this->categorization->getAttributes());
+    }
+
+    /**
+     * Rewind the Iterator to the first element
+     * @link https://php.net/manual/en/iterator.rewind.php
+     * @return void Any returned value is ignored.
+     * @since 5.0.0
+     */
+    public function rewind()
+    {
+        $this->pos = 0;
     }
 }

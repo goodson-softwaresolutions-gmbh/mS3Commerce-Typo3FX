@@ -13,3 +13,11 @@
 
     </f:for>
 </ul>
+
+<f:if condition="{object.isProduct}">
+    <table>
+        <f:for each="{object.categorization._Set_}" as="val">
+            <tr><td>{val.attribute.title}</td><td>{val}</td></tr>
+        </f:for>
+    </table>
+</f:if>
