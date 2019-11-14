@@ -15,6 +15,7 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Ms3\Ms3CommerceFx\Domain\Model\Categorization;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
@@ -40,6 +41,12 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         $this->structureElement = $ser;
     }
 
+    /** @var CategorizationRepository */
+    private $categorization;
+    public function injectCategorization(CategorizationRepository $cr) {
+        $this->categorization = $cr;
+    }
+
     /** @var QuerySettings */
     private $querySettings;
     public function injectQuerySettings(QuerySettings $settings) {
@@ -56,6 +63,19 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function getObjectByMenuId($menuId) {
         return $this->object->getByMenuId($menuId);
+    }
+
+    /**
+     * @param PimObject $object
+     * @param $type
+     * @return \Ms3\Ms3CommerceFx\Domain\Model\Categorization|null
+     */
+    public function getObjectCategorizations(PimObject $object) {
+        return $this->categorization->getCategorizationsForObject($object->getId(), $object->getEntityType());
+    }
+
+    public function loadCategorizationAttributes(Categorization $cat) {
+        $this->categorization->loadAttributesForCategorization($cat);
     }
 
     /**
@@ -78,6 +98,10 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         } else {
             $this->object->loadChildren($object);
         }
+    }
+
+    public function loadObjectCategorizations($object) {
+        $this->categorization->loadCategorizationsForObject($object);
     }
 
     /**

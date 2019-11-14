@@ -15,6 +15,8 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Model;
 
+use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
+
 class Attribute extends AbstractEntity
 {
     protected $asimOid;
@@ -40,11 +42,11 @@ class Attribute extends AbstractEntity
     }
 
     public function getSaneName() {
-        return preg_replace('/\W/', '_', $this->name);
+        return GeneralUtilities::sanitizeFluidAccessName($this->name);
     }
 
     public function getSaneAuxiliaryName() {
-        return preg_replace('/\W/', '_', $this->auxiliaryName);
+        return GeneralUtilities::sanitizeFluidAccessName($this->auxiliaryName);
     }
 
     public function getStructureElement() {

@@ -46,9 +46,30 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
         return isset($this->identifierMap[$className][$identifier]);
     }
 
+    /**
+     * Removes all stored identifiers from an array of identifiers.
+     * @param int[] $identifiers A list of identifiers to filter
+     * @param string $className The class type of the identifiers
+     * @return int[] All identifiers that are not stored
+     */
+    public function filterKnownIdentifiers($identifiers, $className) {
+        if (!is_array($this->identifierMap[$className])) {
+            return $identifiers;
+        }
+        return array_diff($identifiers, array_keys($this->identifierMap[$className]));
+    }
+
     public function getObjectByIdentifier($identifier, $className)
     {
         return $this->identifierMap[$className][$identifier];
+    }
+
+    public function getObjectsByIdentifiers($identifiers, $className) {
+        $res = [];
+        foreach ($identifiers as $id) {
+            $res[$id] = $this->getObjectByIdentifier($id, $className);
+        }
+        return $res;
     }
 
     public function getIdentifierByObject($object)
