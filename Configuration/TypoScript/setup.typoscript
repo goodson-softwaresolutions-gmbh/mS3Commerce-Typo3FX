@@ -1,0 +1,3 @@
+plugin.tx_ms3commercefx.settings {
+    includeUsageTypes = 1,2,4
+}

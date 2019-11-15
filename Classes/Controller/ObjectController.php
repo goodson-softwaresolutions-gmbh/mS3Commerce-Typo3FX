@@ -45,6 +45,9 @@ class ObjectController extends ActionController
         if (array_key_exists('templateFile', $this->settings)) {
             $this->defaultViewObjectName = StandaloneView::class;
         }
+        if (array_key_exists('includeUsageTypes', $this->settings)) {
+            $this->repo->getQuerySettings()->setIncludeUsageTypeIds($this->settings['includeUsageTypes']);
+        }
     }
 
     public function initializeView(ViewInterface $view)

@@ -15,35 +15,15 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Model;
 
-class Attribute extends AbstractEntity
+
+class StructureElement extends AbstractEntity
 {
-    protected $asimOid;
-    /** @var string */
+    protected $guid;
     protected $name;
-    protected $languageId;
-    protected $marketId;
-    protected $userRights; // REMOVE?
-
-    protected $structureElementId;
-    protected $auxiliaryName;
-    protected $title;
-    protected $info;
-    protected $unitToken;
-    protected $dimension;
-    protected $prefix;
     protected $type;
-    protected $version;
-    protected $tableData;
+    protected $orderNr;
 
-    public function __construct($id) {
+    public function __construct(int $id) {
         parent::__construct($id);
-    }
-
-    public function getSaneName() {
-        return preg_replace('/\W/', '_', $this->name);
-    }
-
-    public function getStructureElement() {
-        return $this->getRepo()->getStructureElementById($this->structureElementId);
     }
 }

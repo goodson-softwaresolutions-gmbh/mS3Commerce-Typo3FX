@@ -21,6 +21,7 @@ use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObjectCollection;
 use Ms3\Ms3CommerceFx\Domain\Model\Product;
+use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
@@ -38,6 +39,16 @@ class PimObjectRepository extends RepositoryBase
      */
     public function injectAttributeRepository(\Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository $ar) {
         $this->attributeRepo = $ar;
+    }
+
+    /** @var QuerySettings */
+    protected $querySettings;
+
+    /**
+     * @param QuerySettings $settings
+     */
+    public function injectQuerySettings(QuerySettings $settings) {
+        $this->querySettings = $settings;
     }
 
     /**
@@ -112,7 +123,20 @@ class PimObjectRepository extends RepositoryBase
         $q->from('Menu', 'm')
             ->leftJoin('m', 'Groups', 'g', 'g.Id = m.GroupId')
             ->leftJoin('m', 'Product', 'p', 'p.Id = m.ProductId')
-            ->where($expr);
+            ->leftJoin('m', 'StructureElement', 's', 'p.StructureElementId = s.Id OR g.StructureElementId = s.Id')
+            ;
+        $includePageTypes = $this->querySettings->getIncludeUsageTypeIds();
+        if (!empty($includePageTypes)) {
+            $q->where(
+                $q->expr()->andX(
+                    $q->expr()->in('s.Type', $includePageTypes),
+                    $expr
+                )
+            );
+        } else {
+            $q->where($expr);
+        }
+
         if ($order) {
             $q->orderBy($order);
         }

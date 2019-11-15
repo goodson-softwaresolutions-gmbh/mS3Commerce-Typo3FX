@@ -15,6 +15,9 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Model;
 
+use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Class AbstractEntity
  * Basic entity stored in mS3 Commerce database
@@ -26,6 +29,11 @@ abstract class AbstractEntity
      * @var int $id
      */
     protected $id;
+
+    /**
+     * @var RepositoryFacade $repo
+     */
+    private $repo;
 
     public function __construct(int $id)
     {
@@ -78,5 +86,12 @@ abstract class AbstractEntity
 
     public function _setProperty($name, $value) {
         $this->$name = $value;
+    }
+
+    protected function getRepo() {
+        if ($this->repo == null) {
+            $this->repo = GeneralUtility::makeInstance(RepositoryFacade::class);
+        }
+        return $this->repo;
     }
 }
