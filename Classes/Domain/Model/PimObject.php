@@ -45,12 +45,13 @@ abstract class PimObject extends AbstractEntity
     protected $children;
     /** @var AttributeValue[] */
     protected $attributes;
+    /** @var Categorization[] */
+    protected $categorizations;
     /** @var PimObjectCollection */
     protected $collection;
 
     public function __construct($id = 0) {
         parent::__construct($id);
-
     }
 
     public abstract function getEntityType() : int;
@@ -76,6 +77,10 @@ abstract class PimObject extends AbstractEntity
         return $this->children;
     }
 
+    public function childrenLoaded() {
+        return $this->children  !== null;
+    }
+
     public function getAttributes() {
         $this->getRepo()->loadObjectValues($this);
         return $this->attributes;
@@ -85,11 +90,178 @@ abstract class PimObject extends AbstractEntity
         return $this->attributes !== null;
     }
 
-    public function childrenLoaded() {
-        return $this->children  !== null;
-    }
-
     public function getStructureElement() {
         return $this->getRepo()->getStructureElementById($this->structureElementId);
+    }
+
+    public function getCategorization() {
+        $this->getRepo()->loadObjectCategorizations($this);
+        return $this->valuedCategorizations;
+    }
+
+    public function categorizationsLoaded() {
+        return $this->categorizations !== null;
+    }
+
+    /**
+     * @param Categorization[] $categorizations
+     */
+    public function setCategorizations($categorizations) {
+        $this->categorizations = $categorizations;
+        $this->assignCategorizationValues();
+    }
+
+    private $valuedCategorizations;
+    private function assignCategorizationValues() {
+        $this->valuedCategorizations = [];
+        foreach ($this->categorizations as $cat) {
+            $this->valuedCategorizations[$cat->getSaneType()] = new CategorizationProxy($this, $cat);
+        }
+    }
+}
+
+class CategorizationProxy implements \ArrayAccess, \Iterator
+{
+    /** @var PimObject */
+    private $obj;
+    /** @var Categorization */
+    private $categorization;
+    private $pos;
+
+    /**
+     * CategorizationProxy constructor.
+     * @param PimObject $obj
+     * @param Categorization $categorization
+     */
+    public function __construct($obj, $categorization)
+    {
+        $this->obj = $obj;
+        $this->categorization = $categorization;
+        $pos = 0;
+    }
+
+    public function getCategorization() {
+        return $this->categorization;
+    }
+
+    /**
+     * Whether a offset exists
+     * @link https://php.net/manual/en/arrayaccess.offsetexists.php
+     * @param mixed $offset <p>
+     * An offset to check for.
+     * </p>
+     * @return bool true on success or false on failure.
+     * </p>
+     * <p>
+     * The return value will be casted to boolean if non-boolean was returned.
+     * @since 5.0.0
+     */
+    public function offsetExists($offset)
+    {
+        return array_key_exists($offset, $this->categorization->getAttributes());
+    }
+
+    /**
+     * Offset to retrieve
+     * @link https://php.net/manual/en/arrayaccess.offsetget.php
+     * @param mixed $offset <p>
+     * The offset to retrieve.
+     * </p>
+     * @return mixed Can return all value types.
+     * @since 5.0.0
+     */
+    public function offsetGet($offset)
+    {
+        $attr = $this->categorization->getAttributes()[$offset];
+        return $this->obj->getAttributes()[$attr->getSaneName()];
+    }
+
+    /**
+     * Offset to set
+     * @link https://php.net/manual/en/arrayaccess.offsetset.php
+     * @param mixed $offset <p>
+     * The offset to assign the value to.
+     * </p>
+     * @param mixed $value <p>
+     * The value to set.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetSet($offset, $value)
+    {
+        // TODO: Implement offsetSet() method.
+    }
+
+    /**
+     * Offset to unset
+     * @link https://php.net/manual/en/arrayaccess.offsetunset.php
+     * @param mixed $offset <p>
+     * The offset to unset.
+     * </p>
+     * @return void
+     * @since 5.0.0
+     */
+    public function offsetUnset($offset)
+    {
+        // TODO: Implement offsetUnset() method.
+    }
+
+    /**
+     * Return the current element
+     * @link https://php.net/manual/en/iterator.current.php
+     * @return mixed Can return any type.
+     * @since 5.0.0
+     */
+    public function current()
+    {
+        /** @var Attribute $attr */
+        $attr = $this->categorization->getAttributes()[$this->pos];
+        return $this->obj->getAttributes()[$attr->getSaneName()];
+    }
+
+    /**
+     * Move forward to next element
+     * @link https://php.net/manual/en/iterator.next.php
+     * @return void Any returned value is ignored.
+     * @since 5.0.0
+     */
+    public function next()
+    {
+        $this->pos++;
+    }
+
+    /**
+     * Return the key of the current element
+     * @link https://php.net/manual/en/iterator.key.php
+     * @return mixed scalar on success, or null on failure.
+     * @since 5.0.0
+     */
+    public function key()
+    {
+        return $this->pos;
+    }
+
+    /**
+     * Checks if current position is valid
+     * @link https://php.net/manual/en/iterator.valid.php
+     * @return bool The return value will be casted to boolean and then evaluated.
+     * Returns true on success or false on failure.
+     * @since 5.0.0
+     */
+    public function valid()
+    {
+        return $this->pos < count($this->categorization->getAttributes());
+    }
+
+    /**
+     * Rewind the Iterator to the first element
+     * @link https://php.net/manual/en/iterator.rewind.php
+     * @return void Any returned value is ignored.
+     * @since 5.0.0
+     */
+    public function rewind()
+    {
+        $this->pos = 0;
     }
 }

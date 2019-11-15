@@ -38,6 +38,26 @@ class AttributeRepository extends RepositoryBase
     }
 
     /**
+     * Loads a list of attributes by ids. Already known attributes are not reloaded
+     * @param int[] $attributeIds
+     * @return Attribute[]
+     */
+    public function getAttributesByIds($attributeIds) {
+        $toLoad = $this->store->filterKnownIdentifiers($attributeIds, Attribute::class);
+
+        if (!empty($toLoad)) {
+            // Load unknown attributes
+            $q = $this->queryByExpression($this->_q()->expr()->in('f.Id', $toLoad));
+            $res = $q->execute();
+            while ($row = $res->fetch()) {
+                $this->internalBuildFromRow($row['f_Id'], $row, ['f_', 'fv_']);
+            }
+        }
+
+        return $this->store->getObjectsByIdentifiers($attributeIds, Attribute::class);
+    }
+
+    /**
      * Creates a new Attribute record from a given DB record.
      * If the attribute is already loaded, returns the existing instance
      * @param $attributeId The attribute id to create
