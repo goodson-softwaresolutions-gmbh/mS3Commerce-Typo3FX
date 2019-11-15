@@ -21,24 +21,16 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
-class ObjectController extends AbstractController
+class MenuController extends AbstractController
 {
-    /**
-     * @param int $rootId
-     */
-    public function listAction($rootId = 0)
+    public function menuAction()
     {
-        if ($rootId == 0) $rootId = $this->rootId;
-        $obj = $this->repo->getObjectByMenuId($rootId);
-        $this->view->assign('object', $obj);
-    }
-
-    /**
-     * @param int $rootId
-     */
-    public function detailAction($rootId)
-    {
-        $obj = $this->repo->getObjectByMenuId($rootId);
+        if (array_key_exists('startId', $this->settings)) {
+            $startId = $this->settings['startId'];
+        } else {
+            $startId = $this->rootId;
+        }
+        $obj = $this->repo->getObjectByMenuId($startId);
         $this->view->assign('object', $obj);
     }
 }

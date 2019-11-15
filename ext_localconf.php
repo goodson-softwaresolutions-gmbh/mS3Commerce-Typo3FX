@@ -6,11 +6,13 @@ defined('TYPO3_MODE') || die('Access denied.');
     'Pi1',
     [
         // Cacheables actions
-        'Object' => 'list,detail'
+        'Object' => 'list,detail',
+        'Menu' => 'menu'
     ],
     [
         // Non-Cacheables actions
-        'Object' => 'list,detail'
+        'Object' => 'list,detail',
+        'Menu' => 'menu'
     ]
 );
 
