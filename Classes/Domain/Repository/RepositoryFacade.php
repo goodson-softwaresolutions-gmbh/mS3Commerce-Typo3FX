@@ -105,7 +105,11 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
      * @param PimObject $object
      */
     public function loadObjectCategorizations($object) {
-        $this->categorization->loadCategorizationsForObject($object);
+        if ($object->getCollection()) {
+            $this->categorization->loadCategorizationsForObjects($object->getCollection()->all());
+        } else {
+            $this->categorization->loadCategorizationsForObject($object);
+        }
     }
 
     /**
