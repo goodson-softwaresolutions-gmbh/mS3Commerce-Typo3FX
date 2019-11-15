@@ -43,6 +43,10 @@ class Attribute extends AbstractEntity
         return preg_replace('/\W/', '_', $this->name);
     }
 
+    public function getSaneAuxiliaryName() {
+        return preg_replace('/\W/', '_', $this->auxiliaryName);
+    }
+
     public function getStructureElement() {
         return $this->getRepo()->getStructureElementById($this->structureElementId);
     }
