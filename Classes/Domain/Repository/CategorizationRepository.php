@@ -15,11 +15,11 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
 use Ms3\Ms3CommerceFx\Domain\Model\Categorization;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class CategorizationRepository extends RepositoryBase
 {
@@ -34,7 +34,7 @@ class CategorizationRepository extends RepositoryBase
     }
 
     /**
-     * @param $categorizationId
+     * @param int $categorizationId
      * @return Categorization
      */
     public function getCategorizationById($categorizationId) {
@@ -52,7 +52,7 @@ class CategorizationRepository extends RepositoryBase
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @return Categorization
      */
     public function getCategorizationByName($name) {
@@ -101,11 +101,7 @@ class CategorizationRepository extends RepositoryBase
             return;
         }
         $cats = $this->getCategorizationsForObject($object->getId(), $object->getEntityType());
-        $catMap = array_combine(
-            array_map(function($c) { return $c->getSaneType(); }, $cats),
-            $cats
-        );
-        $object->setCategorizations($catMap);
+        $object->setCategorizations($cats);
     }
 
     /**
@@ -122,8 +118,8 @@ class CategorizationRepository extends RepositoryBase
     }
 
     /**
-     * @param $result
-     * @param $prefix
+     * @param \Doctrine\DBAL\Statement $result
+     * @param string $prefix
      * @return Categorization[]
      */
     private function loadFromResult($result, $prefix = '') {
@@ -136,11 +132,15 @@ class CategorizationRepository extends RepositoryBase
                 $this->mapper->mapObject($cat, $row, $prefix);
                 $this->store->registerObject($cat);
             }
-            $categories[] = $cat;
+            $categories[$catId] = $cat;
         }
         return $categories;
     }
 
+    /**
+     * @param mixed $expr
+     * @return Attribute[][] Mapping from categorization id to list of attributes (ordered)
+     */
     private function loadAttributesByExpression($expr) {
         $q = $this->_q();
         $q->select(DbHelper::getTableColumnAs('featureCompilation', 'c_', 'c'))

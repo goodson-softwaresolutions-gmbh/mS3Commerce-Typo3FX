@@ -60,8 +60,8 @@ class AttributeRepository extends RepositoryBase
     /**
      * Creates a new Attribute record from a given DB record.
      * If the attribute is already loaded, returns the existing instance
-     * @param $attributeId The attribute id to create
-     * @param $row The db record
+     * @param int $attributeId The attribute id to create
+     * @param array $row The db record
      * @param array $prefixes array of prefixes in record for data mapping
      * @return Attribute The existing, or newly created attribute
      */

@@ -19,10 +19,20 @@ class GeneralUtilities
 {
     private function __construct() {}
 
+    /**
+     * Replaces characters invalid in a fluid accessor by '_'
+     * @param string $name The name to sanitize
+     * @return string The sane name
+     */
     public static function sanitizeFluidAccessName($name) {
         return preg_replace('/\W/', '_', $name);
     }
 
+    /**
+     * Flattens a multidimensional array to 1 dimension.
+     * @param $array
+     * @return array
+     */
     public static function flattenArray($array) {
         $ret = [];
         array_walk_recursive($array, function($a) use (&$ret) { $ret[] = $a; });

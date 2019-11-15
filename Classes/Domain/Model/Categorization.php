@@ -48,55 +48,26 @@ class Categorization extends AbstractEntity implements \ArrayAccess
         return GeneralUtilities::sanitizeFluidAccessName($this->type);
     }
 
+    /* ArrayAccess implementation */
     public function offsetExists($offset)
     {
         $this->getAttributes();
         return array_key_exists($offset, $this->attributes);
     }
 
-    /**
-     * Offset to retrieve
-     * @link https://php.net/manual/en/arrayaccess.offsetget.php
-     * @param mixed $offset <p>
-     * The offset to retrieve.
-     * </p>
-     * @return mixed Can return all value types.
-     * @since 5.0.0
-     */
     public function offsetGet($offset)
     {
         $this->getAttributes();
         return $this->attributes[$offset];
     }
 
-    /**
-     * Offset to set
-     * @link https://php.net/manual/en/arrayaccess.offsetset.php
-     * @param mixed $offset <p>
-     * The offset to assign the value to.
-     * </p>
-     * @param mixed $value <p>
-     * The value to set.
-     * </p>
-     * @return void
-     * @since 5.0.0
-     */
     public function offsetSet($offset, $value)
     {
-        // TODO: Implement offsetSet() method.
+        // not implemented
     }
 
-    /**
-     * Offset to unset
-     * @link https://php.net/manual/en/arrayaccess.offsetunset.php
-     * @param mixed $offset <p>
-     * The offset to unset.
-     * </p>
-     * @return void
-     * @since 5.0.0
-     */
     public function offsetUnset($offset)
     {
-        // TODO: Implement offsetUnset() method.
+        // not implemented
     }
 }
