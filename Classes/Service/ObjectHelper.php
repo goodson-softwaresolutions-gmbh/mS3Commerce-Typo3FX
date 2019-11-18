@@ -27,7 +27,7 @@ class ObjectHelper
 
     /**
      * Returns the objects of the given menus
-     * @param Memu[] $menus
+     * @param Menu[] $menus
      * @return PimObject[]
      */
     public static function getObjectsFromMenus($menus)

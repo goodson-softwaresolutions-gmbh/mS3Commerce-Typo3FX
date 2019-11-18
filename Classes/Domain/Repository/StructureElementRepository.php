@@ -60,7 +60,7 @@ class StructureElementRepository extends RepositoryBase
         while ($row = $res->fetch()) {
             $str = new StructureElement($row['Id']);
             $this->mapper->mapObject($str, $row);
-            $this->allStructures[$str->id] = $str;
+            $this->allStructures[$str->getId()] = $str;
             $this->store->registerObject($str);
         }
     }

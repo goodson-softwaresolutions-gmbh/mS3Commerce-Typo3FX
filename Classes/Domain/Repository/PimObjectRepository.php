@@ -32,13 +32,13 @@ use Ms3\Ms3CommerceFx\Service\ObjectHelper;
  */
 class PimObjectRepository extends RepositoryBase
 {
-    /** @var \Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository */
+    /** @var AttributeRepository */
     protected $attributeRepo;
 
     /**
-     * @param \Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository $ar
+     * @param AttributeRepository $ar
      */
-    public function injectAttributeRepository(\Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository $ar) {
+    public function injectAttributeRepository(AttributeRepository $ar) {
         $this->attributeRepo = $ar;
     }
 
@@ -111,7 +111,7 @@ class PimObjectRepository extends RepositoryBase
     /**
      * Loads all objects from menu with given condition and order.
      * Reuses already loaded objects
-     * @param $expr The condition. Either a string, or a Doctrine\DBAL\Constraint
+     * @param mixed $expr The condition. Either a string, or a Doctrine\DBAL Constraint
      * @param string $order The order clause
      * @return Menu[][] The loaded menus, grouped by parent id
      */

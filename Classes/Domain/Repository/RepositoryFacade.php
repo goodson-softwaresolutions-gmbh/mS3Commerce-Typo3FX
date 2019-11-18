@@ -53,6 +53,9 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         $this->querySettings = $settings;
     }
 
+    /**
+     * @return QuerySettings
+     */
     public function getQuerySettings() {
         return $this->querySettings;
     }
@@ -66,19 +69,15 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @param PimObject $object
-     * @param $type
-     * @return \Ms3\Ms3CommerceFx\Domain\Model\Categorization|null
+     * Fills in the referenced attributes of a categorization
+     * @param Categorization $cat
      */
-    public function getObjectCategorizations(PimObject $object) {
-        return $this->categorization->getCategorizationsForObject($object->getId(), $object->getEntityType());
-    }
-
     public function loadCategorizationAttributes(Categorization $cat) {
         $this->categorization->loadAttributesForCategorization($cat);
     }
 
     /**
+     * Fills in the attribute values of an object
      * @param PimObject $object
      */
     public function loadObjectValues($object) {
@@ -90,6 +89,7 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
+     * Fills in the child objects of an object
      * @param PimObject $object
      */
     public function loadObjectChildren($object) {
@@ -100,8 +100,16 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         }
     }
 
+    /**
+     * Fills in the categorizations of an object
+     * @param PimObject $object
+     */
     public function loadObjectCategorizations($object) {
-        $this->categorization->loadCategorizationsForObject($object);
+        if ($object->getCollection()) {
+            $this->categorization->loadCategorizationsForObjects($object->getCollection()->all());
+        } else {
+            $this->categorization->loadCategorizationsForObject($object);
+        }
     }
 
     /**

@@ -13,9 +13,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
-
 
 class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
 {
@@ -58,11 +56,17 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
         $this->mapper = $mapper;
     }
 
+    /**
+     * @return \Doctrine\DBAL\Query\QueryBuilder
+     */
     public function createQueryBuilder()
     {
         return $this->_q();
     }
 
+    /**
+     * @return \Doctrine\DBAL\Query\QueryBuilder
+     */
     protected function _q()
     {
         return $this->db->getConnection()->createQueryBuilder();

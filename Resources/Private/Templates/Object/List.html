@@ -1,13 +1,12 @@
-<h1>{object.name} - {object.auxiliaryName}</h1>
-{object.categorization._Set_.3}
+<h1>{object.name} - {object.auxiliaryName} - {object.categorization._Set_.3}</h1>
 <ul>
     <f:for each="{object.children}" as="child">
         <f:if condition="{child.isGroup}">
             <f:then>
-                <li><f:link.action action="list" arguments="{rootId: child.menuId}">{child.name} - {child.auxiliaryName}</f:link.action></li>
+                <li><f:link.page additionalParams="{tx_ms3commercefx_pi1: {rootId: child.menuId}}">{child.name} - {child.auxiliaryName}</f:link.page></li>
             </f:then>
             <f:else>
-                <li><f:link.action action="detail" arguments="{rootId: child.menuId}">{child.name} - {child.auxiliaryName}</f:link.action></li>
+                <li><f:link.page additionalParams="{tx_ms3commercefx_pi1: {rootId: child.menuId}}">{child.name} - {child.auxiliaryName}</f:link.page></li>
             </f:else>
         </f:if>
 
@@ -17,7 +16,7 @@
 <f:if condition="{object.isProduct}">
     <table>
         <f:for each="{object.categorization._Set_}" as="val">
-            <tr><td>{val.attribute.title}</td><td>{val}</td></tr>
+            <tr><td><f:format.raw>{val.attribute.title}</f:format.raw></td><td><f:format.raw>{val}</f:format.raw></td></tr>
         </f:for>
     </table>
 </f:if>

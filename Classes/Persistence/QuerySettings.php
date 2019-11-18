@@ -29,6 +29,9 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         $this->includeUsageTypeIds = array_map(intval, $usageTypeIds);
     }
 
+    /**
+     * @return int[] Object usage types to use
+     */
     public function getIncludeUsageTypeIds() {
         return $this->includeUsageTypeIds;
     }

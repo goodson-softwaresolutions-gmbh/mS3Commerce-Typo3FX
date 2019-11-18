@@ -15,11 +15,12 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
 use Ms3\Ms3CommerceFx\Domain\Model\Categorization;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
 class CategorizationRepository extends RepositoryBase
 {
@@ -34,7 +35,7 @@ class CategorizationRepository extends RepositoryBase
     }
 
     /**
-     * @param $categorizationId
+     * @param int $categorizationId
      * @return Categorization
      */
     public function getCategorizationById($categorizationId) {
@@ -52,7 +53,7 @@ class CategorizationRepository extends RepositoryBase
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @return Categorization
      */
     public function getCategorizationByName($name) {
@@ -92,6 +93,38 @@ class CategorizationRepository extends RepositoryBase
         return $this->loadFromResult($q->execute());
     }
 
+    /**
+     * Gets all categorizations for a list of objects
+     * @param int[] $objectIds The object's Id
+     * @param int $entityType The objects' entity type
+     * @return Categorization[][] Map of object id to categorization list
+     */
+    public function getCategorizationsForObjectList($objectIds, $entityType) {
+        if (empty($objectIds)) {
+            return null;
+        }
+        switch ($entityType) {
+            case PimObject::TypeGroup:
+                $field = 'GroupId';
+                break;
+            case PimObject::TypeProduct:
+                $field = 'ProductId';
+                break;
+            default:
+                return null;
+        }
+
+        $q = $this->_q();
+        $q->select('f.*')
+            ->addSelect("fv.$field AS _fieldId")
+            ->from('featureCompilation', 'f')
+            ->innerJoin('f', 'FeatureCompValue', 'fv', 'f.Id = fv.FeatureCompId')
+            ->where($q->expr()->in("fv.$field", $objectIds))
+        ;
+
+        return $this->loadMappedFromResult($q->execute(), '_fieldId');
+    }
+
     /***
      * Loads the categorizations of an object and assigns them to the object
      * @param PimObject $object
@@ -101,11 +134,31 @@ class CategorizationRepository extends RepositoryBase
             return;
         }
         $cats = $this->getCategorizationsForObject($object->getId(), $object->getEntityType());
-        $catMap = array_combine(
-            array_map(function($c) { return $c->getSaneType(); }, $cats),
-            $cats
-        );
-        $object->setCategorizations($catMap);
+        $object->setCategorizations($cats);
+    }
+
+    /**
+     * @param PimObject[] $objects
+     */
+    public function loadCategorizationsForObjects($objects) {
+        $objects = array_filter($objects, function($o) { return !$o->categorizationsLoaded(); });
+        if (empty($objects)) {
+            return;
+        }
+
+        $groups = array_filter($objects, function($o) { return $o->isGroup(); });
+        $products = array_filter($objects, function($o) { return $o->isProduct(); });
+
+        $groupMap = $this->getCategorizationsForObjectList(ObjectHelper::getIdsFromObjects($groups), PimObject::TypeGroup);
+        $productMap = $this->getCategorizationsForObjectList(ObjectHelper::getIdsFromObjects($products), PimObject::TypeProduct);
+
+        foreach ($groups as $g) {
+            $g->setCategorizations($groupMap[$g->getId()]);
+        }
+
+        foreach ($products as $p) {
+            $p->setCategorizations($productMap[$p->getId()]);
+        }
     }
 
     /**
@@ -122,8 +175,8 @@ class CategorizationRepository extends RepositoryBase
     }
 
     /**
-     * @param $result
-     * @param $prefix
+     * @param \Doctrine\DBAL\Statement $result
+     * @param string $prefix
      * @return Categorization[]
      */
     private function loadFromResult($result, $prefix = '') {
@@ -136,11 +189,40 @@ class CategorizationRepository extends RepositoryBase
                 $this->mapper->mapObject($cat, $row, $prefix);
                 $this->store->registerObject($cat);
             }
-            $categories[] = $cat;
+            $categories[$catId] = $cat;
         }
         return $categories;
     }
 
+    /**
+     * @param \Doctrine\DBAL\Statement $result
+     * @param string $mappingColumn
+     * @param string $catPrefix
+     * @return Categorization[][]
+     */
+    private function loadMappedFromResult($result, $mappingColumn, $catPrefix = '') {
+        $categories = [];
+        while ($row = $result->fetch()) {
+            $catId = $row[$catPrefix.'Id'];
+            $cat = $this->store->getObjectByIdentifier($catId, Categorization::class);
+            if ($cat == null) {
+                $cat = new Categorization($catId);
+                $this->mapper->mapObject($cat, $row, $catPrefix);
+                $this->store->registerObject($cat);
+            }
+            $objId = $row[$mappingColumn];
+            if (!array_key_exists($objId, $categories)) {
+                $categories[$objId] = [];
+            }
+            $categories[$objId][$catId] = $cat;
+        }
+        return $categories;
+    }
+
+    /**
+     * @param mixed $expr
+     * @return Attribute[][] Mapping from categorization id to list of attributes (ordered)
+     */
     private function loadAttributesByExpression($expr) {
         $q = $this->_q();
         $q->select(DbHelper::getTableColumnAs('featureCompilation', 'c_', 'c'))

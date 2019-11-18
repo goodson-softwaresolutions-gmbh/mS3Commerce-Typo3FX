@@ -23,6 +23,11 @@ class DbHelper
 
     private static $cache = [];
 
+    /**
+     * Returns the column names for a table
+     * @param string $tableName
+     * @return string[]
+     */
     public static function getTableColumnNames($tableName)
     {
         if (!array_key_exists($tableName, self::$cache)) {
@@ -35,13 +40,22 @@ class DbHelper
         return self::$cache[$tableName];
     }
 
+    /**
+     * Returns a list of column names for a table, suitable for a SELECT statement.
+     * A prefix can be added to the column names. Also, an alias for the table name can be given.
+     *
+     * @param string $tableName The table name
+     * @param string $aliasPrefix Optional prefix for column aliases
+     * @param string $tableAlias Optional table alias. By default, the table name is used
+     * @return string E.g. "table.col1,table.col2" or "t.col1 AS t_col1,t.col2 AS t_col2"
+     */
     public static function getTableColumnAs($tableName, $aliasPrefix = '', $tableAlias = '')
     {
         if (empty($tableAlias)) $tableAlias = $tableName;
         $cols = self::getTableColumnNames($tableName);
         $ret = [];
         foreach ($cols as $c) {
-            $ret[] = "$tableAlias.$c AS {$aliasPrefix}{$c}";
+            $ret[] = "$tableAlias.$c AS $aliasPrefix$c";
         }
         return implode(',', $ret);
     }

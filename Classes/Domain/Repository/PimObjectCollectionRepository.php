@@ -15,8 +15,10 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Ms3\Ms3CommerceFx\Domain\Model\Group;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObjectCollection;
+use Ms3\Ms3CommerceFx\Domain\Model\Product;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
 class PimObjectCollectionRepository extends PimObjectRepository
@@ -26,7 +28,9 @@ class PimObjectCollectionRepository extends PimObjectRepository
      */
     public function loadAttributeValues($coll)
     {
+        /** @var Group[] $groups */
         $groups = $coll->getOfType(PimObject::TypeGroup);
+        /** @var Product[] $prods */
         $prods = $coll->getOfType(PimObject::TypeProduct);
 
         $groups = array_filter($groups, function($g) { return !$g->attributesLoaded(); } );
@@ -49,6 +53,7 @@ class PimObjectCollectionRepository extends PimObjectRepository
      */
     public function loadChildren($coll)
     {
+        /** @var PimObject[] $objects */
         $objects = $coll->all();
         $objects = array_filter($objects, function($o) { return !$o->childrenLoaded() && $o->getMenuId(); });
 
