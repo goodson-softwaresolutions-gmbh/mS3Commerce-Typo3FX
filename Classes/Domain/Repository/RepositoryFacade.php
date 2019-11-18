@@ -89,6 +89,17 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
+     * Returns values for certain attributes for a list of objects.
+     * Only the requested attributes are loaded. The values are not stored in the object
+     * @param PimObject[] $objects The objects
+     * @param string[] $attributes The attribute names
+     * @return \Ms3\Ms3CommerceFx\Domain\Model\AttributeValue[][]
+     */
+    public function getObjectValueSubset($objects, $attributes) {
+        return $this->object->getObjectAttributesSubset($objects, $attributes);
+    }
+
+    /**
      * Fills in the child objects of an object
      * @param PimObject $object
      */

@@ -109,6 +109,37 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     * Returns values for certain attributes for a list of objects.
+     * Only the requested attributes are loaded.
+     *
+     * The attributes are not stored in the object! So another call for the same attributes and object
+     * will load the data again
+     *
+     * This function respects overriding inheritance
+     *
+     * @param PimObject[] $objects The objects for which to get attributes
+     * @param string[] $attributes The attribute names. Can be full name (incl. structure name), or pure name
+     * @return AttributeValue[][] Map from Object Identifier (according to {@see ObjectHelper::getKeyFromObject}) to AttributeValue list
+     */
+    public function getObjectAttributesSubset($objects, $attributes) {
+        $g = array_filter($objects, function($o) { return $o->isGroup(); });
+        $p = array_filter($objects, function($o) { return $o->isProduct(); });
+
+        $gval = $this->loadObjectAttributesSubset(ObjectHelper::getIdsFromObjects($g), PimObject::TypeGroup, $attributes);
+        $pval = $this->loadObjectAttributesSubset(ObjectHelper::getIdsFromObjects($p), PimObject::TypeProduct, $attributes);
+
+        $res = [];
+        foreach ($gval as $k => $v) {
+            $res[ObjectHelper::buildKeyForObject($k, PimObject::TypeGroup)] = $v;
+        }
+        foreach ($pval as $k => $v) {
+            $res[ObjectHelper::buildKeyForObject($k, PimObject::TypeProduct)] = $v;
+        }
+
+        return $res;
+    }
+
+    /**
      * Loads all objects from menu with given condition and order.
      * Reuses already loaded objects
      * @param mixed $expr The condition. Either a string, or a Doctrine\DBAL Constraint
@@ -250,14 +281,63 @@ class PimObjectRepository extends RepositoryBase
         $q = $this->_q();
         $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
         $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
+        $q->addSelect(DbHelper::getTableColumnAs($key . 'Value', 'v_', 'v'));
+        $q->from('Feature', 'f')
+            ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
+            ->innerJoin('f', $key . 'Value', 'v', 'f.Id = v.FeatureId')
+            ->leftJoin('f', 'StructureElement', 's', 'f.StructureElementId = s.Id')
+            ->where($q->expr()->in("v.{$key}Id", $objectIds))
+            ->orderBy('s.OrderNr', 'DESC'); // Higher OrderNr are on top of hierarchy, 1 = Product (negative are special, like Price)
+
+        return $this->fetchByQuery($q);
+    }
+
+    protected function loadObjectAttributesSubset($objectIds, $entityType, $attributeNames)
+    {
+        if (empty($objectIds)) {
+            return [];
+        }
+        switch ($entityType) {
+            case PimObject::TypeGroup:
+                $key = 'Group';
+                break;
+            case PimObject::TypeProduct:
+                $key = 'Product';
+                break;
+            default:
+                return [];
+        }
+
+        $q = $this->_q();
+        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
+        $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
         $q->addSelect(DbHelper::getTableColumnAs($key.'Value', 'v_', 'v'));
         $q->from('Feature', 'f')
             ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
             ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
             ->leftJoin('f', 'StructureElement', 's', 'f.StructureElementId = s.Id')
-            ->where($q->expr()->in("v.{$key}Id", $objectIds))
+            ->where(
+                $q->expr()->andX(
+                    $q->expr()->in("v.{$key}Id", $objectIds),
+                    $q->expr()->orX(
+                        $q->expr()->in("f.Name", ':names'),
+                        $q->expr()->in("fv.AuxiliaryName", ':names')
+                    )
+                )
+            )
             ->orderBy('s.OrderNr', 'DESC'); // Higher OrderNr are on top of hierarchy, 1 = Product (negative are special, like Price)
 
+        $q->setParameter(':names', $attributeNames, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
+        return $this->fetchByQuery($q);
+    }
+
+    /**
+     * Fetches attribute values from a query. Respects inheritance
+     * @param \Doctrine\DBAL\Query\QueryBuilder $q The query
+     * @return AttributeValue[][] Mapping from objectId to AttributeValue list
+     */
+    private function fetchByQuery($q)
+    {
         $objectMap = [];
         $res = $q->execute();
         while ($row = $res->fetch()) {
