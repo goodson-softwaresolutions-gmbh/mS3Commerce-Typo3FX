@@ -59,6 +59,13 @@ class Menu extends AbstractEntity
      */
     protected $object;
 
+    /**
+     * @return PimObject
+     */
+    public function getObject() {
+        return $this->object;
+    }
+
     public function setObject(PimObject $obj) {
         $this->object = $obj;
     }

@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Model;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
+use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -127,10 +128,7 @@ abstract class PimObject extends AbstractEntity
      */
     public function setCategorizations($categorizations) {
         // Make map from category name to category
-        $this->categorizations = array_combine(
-            array_map(function($c) { return $c->getSaneType(); }, $categorizations),
-            $categorizations
-        );
+        $this->categorizations = GeneralUtilities::toDictionary($categorizations, function($c) { return $c->getSaneType(); });
         $this->assignCategorizationValues();
     }
 
