@@ -47,6 +47,18 @@ abstract class AbstractController extends ActionController
         if (array_key_exists('includeUsageTypes', $this->settings)) {
             $this->repo->getQuerySettings()->setIncludeUsageTypeIds($this->settings['includeUsageTypes']);
         }
+        if (array_key_exists('marketRestriction', $this->settings)) {
+            $vals = $this->settings['marketRestriction'];
+            if (array_key_exists('attribute', $vals) && array_key_exists('values', $vals)) {
+                $this->repo->getQuerySettings()->setMarketRestriction($vals['attribute'], $vals['values']);
+            }
+        }
+        if (array_key_exists('userRestriction', $this->settings)) {
+            $vals = $this->settings['userRestriction'];
+            if (array_key_exists('attribute', $vals)) {
+                $this->repo->getQuerySettings()->setUserRestriction($vals['attribute']);
+            }
+        }
     }
 
     public function initializeView(ViewInterface $view)

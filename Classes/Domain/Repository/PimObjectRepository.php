@@ -25,6 +25,7 @@ use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
+use Ms3\Ms3CommerceFx\Service\RestrictionService;
 
 /**
  * Class PimObjectRepository
@@ -40,6 +41,15 @@ class PimObjectRepository extends RepositoryBase
      */
     public function injectAttributeRepository(AttributeRepository $ar) {
         $this->attributeRepo = $ar;
+    }
+
+    /** @var RestrictionService */
+    protected $restrictionService;
+    /**
+     * @param RestrictionService $rs
+     */
+    public function injectRestrictionService(RestrictionService $rs) {
+        $this->restrictionService = $rs;
     }
 
     /** @var QuerySettings */
@@ -119,7 +129,7 @@ class PimObjectRepository extends RepositoryBase
      *
      * @param PimObject[] $objects The objects for which to get attributes
      * @param string[] $attributes The attribute names. Can be full name (incl. structure name), or pure name
-     * @return AttributeValue[][] Map from Object Identifier (according to {@see ObjectHelper::getKeyFromObject}) to AttributeValue list
+     * @return AttributeValue[][] Map from Object Identifier (according to {@see ObjectHelper::buildKeyFromObject}) to AttributeValue list
      */
     public function getObjectAttributesSubset($objects, $attributes) {
         $g = array_filter($objects, function($o) { return $o->isGroup(); });
@@ -194,9 +204,18 @@ class PimObjectRepository extends RepositoryBase
             }
         }
 
-        $retMenus = GeneralUtilities::flattenArray($retMap);
-        if (count($retMenus) > 1) {
-            PimObjectCollection::createCollection(ObjectHelper::getObjectsFromMenus($retMenus));
+        // Apply filters
+        $retObjects = GeneralUtilities::flattenArray($retMap);
+        $retObjects = $this->restrictionService->filterRestrictionObjects(ObjectHelper::getObjectsFromMenus($retObjects));
+        $retObjectsKeys = ObjectHelper::getKeyFromObjects($retObjects);
+
+        foreach ($retMap as $pid => $menus) {
+            $menus = GeneralUtilities::toDictionary($menus, function($m) { return ObjectHelper::getKeyFromObject($m->getObject());});
+            $retMap[$pid] = array_values(GeneralUtilities::subset($menus, $retObjectsKeys));
+        }
+
+        if (count($retObjects) > 1) {
+            PimObjectCollection::createCollection($retObjects);
         }
 
         return $retMap;
