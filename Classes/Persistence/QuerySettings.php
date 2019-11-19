@@ -17,10 +17,18 @@ namespace Ms3\Ms3CommerceFx\Persistence;
 
 class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
 {
+    /** @var int[] */
     private $includeUsageTypeIds = [];
+    /** @var string */
+    private $marketRestrictionAttr = null;
+    /** @var string */
+    private $userRestrictionAttr = null;
+    /** @var string[] */
+    private $marketRestrictionValues = null;
 
     /**
-     * @param int[]|string $usageTypeIds
+     * Sets a filter for object usage types. Given as int[] or as ',' separated list
+     * @param int[]|string $usageTypeIds The usage type ids to use
      */
     public function setIncludeUsageTypeIds($usageTypeIds) {
         if (!is_array($usageTypeIds)) {
@@ -30,9 +38,65 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @return int[] Object usage types to use
+     * @return int[] The usage type ids to use
      */
     public function getIncludeUsageTypeIds() {
         return $this->includeUsageTypeIds;
+    }
+
+    /**
+     * Sets a market restriction for objects
+     * @param string $attribute The filter attribute
+     * @param string[]|string $values The allowed values. Either string[] or ';' separated strings
+     */
+    public function setMarketRestriction($attribute, $values) {
+        $this->marketRestrictionAttr = $attribute;
+        if (!is_array($values)) {
+            $values = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $values);
+        }
+        $this->marketRestrictionValues = array_filter($values);
+    }
+
+    /**
+     * @return bool If market restriction is activated
+     */
+    public function isMarketRestricted() : bool{
+        return !empty($this->marketRestrictionAttr) && !empty($this->marketRestrictionValues);
+    }
+
+    /**
+     * @return string The market restriction attribute
+     */
+    public function getMarketRestrictionAttribute() {
+        return $this->marketRestrictionAttr;
+    }
+
+    /**
+     * @return string[] The allowed values for market restriciton
+     */
+    public function getMarketRestrictionValues() {
+        return $this->marketRestrictionValues;
+    }
+
+    /**
+     * Sets a user restriction for objects
+     * @param string $attribute The user restriction attribute
+     */
+    public function setUserRestriction($attribute) {
+
+    }
+
+    /**
+     * @return bool If user restriction is activated
+     */
+    public function isUserRestricted() : bool {
+        return !empty($this->userRestrictionAttr);
+    }
+
+    /**
+     * @return string The user restriction attribute
+     */
+    public function getUserRestrictionAttribute() {
+        return $this->userRestrictionAttr;
     }
 }

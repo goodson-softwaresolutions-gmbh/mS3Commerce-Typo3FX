@@ -50,6 +50,6 @@ class AttributeValue extends AbstractEntity
         if ($ret === null && $this->attribute != null) {
             return $this->attribute->__call($name, $arguments);
         }
-        return null;
+        return $ret;
     }
 }

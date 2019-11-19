@@ -50,6 +50,36 @@ class ObjectHelper
     }
 
     /**
+     * Gets the keys for the given objects
+     * @see buildKeyForObject
+     * @param PimObject[] $objects The objects
+     * @return array The keys
+     */
+    public static function getKeyFromObjects($objects) {
+        return array_map([__CLASS__, 'getKeyFromObject'], $objects);
+    }
+
+    /**
+     * Gets the key for the given object
+     * @see buildKeyForObject
+     * @param PimObject $object The object
+     * @return string The key
+     */
+    public static function getKeyFromObject($object) {
+        return self::buildKeyForObject($object->getId(), $object->getEntityType());
+    }
+
+    /**
+     * Builds a unique key internal for an object. This key can be used for storing mixed typed objects in an array
+     * @param int $objectId The object's id
+     * @param int $entityType The object's entity type
+     * @return string A unique key for the object
+     */
+    public static function buildKeyForObject($objectId, $entityType) {
+        return "$entityType:$objectId";
+    }
+
+    /**
      * Retrieves the menuIds of the given objects
      * @param PimObject[] $objects
      * @return int[]
