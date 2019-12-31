@@ -25,7 +25,11 @@ class GeneralUtilities
      * @return string The sane name
      */
     public static function sanitizeFluidAccessName($name) {
-        return preg_replace('/\W/', '_', $name);
+        return strtolower(preg_replace('/\W/', '_', $name));
+    }
+
+    public static function sqlSanitizeFliudAccessName($field) {
+        return "LOWER(REGEXP_REPLACE($field, '\\W', '_'))";
     }
 
     /**

@@ -21,7 +21,6 @@ use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObjectCollection;
 use Ms3\Ms3CommerceFx\Domain\Model\Product;
-use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
@@ -50,16 +49,6 @@ class PimObjectRepository extends RepositoryBase
      */
     public function injectRestrictionService(RestrictionService $rs) {
         $this->restrictionService = $rs;
-    }
-
-    /** @var QuerySettings */
-    protected $querySettings;
-
-    /**
-     * @param QuerySettings $settings
-     */
-    public function injectQuerySettings(QuerySettings $settings) {
-        $this->querySettings = $settings;
     }
 
     /**

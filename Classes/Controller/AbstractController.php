@@ -40,6 +40,7 @@ abstract class AbstractController extends ActionController
     {
         if (array_key_exists('rootId', $this->settings)) {
             $this->rootId = $this->settings['rootId'];
+            $this->initializeShopParameters($this->rootId);
         }
         if (array_key_exists('templateFile', $this->settings)) {
             $this->defaultViewObjectName = StandaloneView::class;
@@ -65,6 +66,16 @@ abstract class AbstractController extends ActionController
     {
         if (array_key_exists('templateFile', $this->settings)) {
             $view->setTemplatePathAndFilename($this->settings['templateFile']);
+        }
+    }
+
+    protected function initializeShopParameters($rootId)
+    {
+        $shopInfo = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
+        if ($shopInfo) {
+            $this->repo->getQuerySettings()->setShopData($shopInfo->getId(), $shopInfo->getMarketId(), $shopInfo->getLanguageId());
+        } else {
+            $this->repo->getQuerySettings()->setShopData(0, 0, 0);
         }
     }
 }

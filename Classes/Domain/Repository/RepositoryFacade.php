@@ -23,10 +23,22 @@ use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
+    /** @var ShopInfoRepository */
+    private $shopInfo;
+    public function injectShopInfo(ShopInfoRepository $si) {
+        $this->shopInfo = $si;
+    }
+    public function getShopInfoRepository() {
+        return $this->shopInfo;
+    }
+
     /** @var PimObjectRepository */
     private $object;
     public function injectObject(PimObjectRepository $or) {
         $this->object = $or;
+    }
+    public function getObjectRepository() {
+        return $this->object;
     }
 
     /** @var PimObjectCollectionRepository */
@@ -34,17 +46,35 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     public function injectObjectCollection(PimObjectCollectionRepository $ocr) {
         $this->objectCollection = $ocr;
     }
+    public function getObjectCollectionRepository() {
+        return $this->objectCollection;
+    }
+
+    /** @var AttributeRepository */
+    private $attribute;
+    public function injectAttribute(AttributeRepository $ar) {
+        $this->attribute = $ar;
+    }
+    public function getAttributeRepository() {
+        return $this->attribute;
+    }
 
     /** @var StructureElementRepository */
     private $structureElement;
     public function injectStructureElement(StructureElementRepository $ser) {
         $this->structureElement = $ser;
     }
+    public function getStructureElementRepository() {
+        return $this->structureElement;
+    }
 
     /** @var CategorizationRepository */
     private $categorization;
     public function injectCategorization(CategorizationRepository $cr) {
         $this->categorization = $cr;
+    }
+    public function getCategorizationRepository() {
+        return $this->categorization;
     }
 
     /** @var QuerySettings */
