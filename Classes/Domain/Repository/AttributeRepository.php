@@ -17,6 +17,8 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
 use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
 use Ms3\Ms3CommerceFx\Service\DbHelper;
+use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
 class AttributeRepository extends RepositoryBase
 {
@@ -57,6 +59,46 @@ class AttributeRepository extends RepositoryBase
         return $this->store->getObjectsByIdentifiers($attributeIds, Attribute::class);
     }
 
+    public function getAttributeBySaneName($saneAttributeName) {
+        $attr = $this->store->getObjectBySecondaryIdentifier($saneAttributeName, Attribute::class);
+        if ($attr) {
+            return $attr;
+        }
+
+        /// MySQL has REGEXP_REPLACE only in Version 8 (MariaDB already earlier)
+        /// So to still be compatible with MySql 5.X, work around SQL search...
+        $this->loadAll();
+        $attr = $this->store->getObjectBySecondaryIdentifier($saneAttributeName, Attribute::class);
+        if ($attr) {
+            return $attr;
+        }
+
+        /*
+         * SQL REGEXP Search variant:
+        // attribute name is a sanitized name! Must also sanitize in sql query
+        $q = $this->queryByExpression($this->_q()->expr()->eq(GeneralUtilities::sqlSanitizeFliudAccessName('f.Name'), ':name'))->setParameter(':name', $saneAttributeName);
+        $res = $q->execute()->fetchAll();
+        if ($res && !empty($res)) {
+            $attr = $this->internalBuildFromRow($res['f_Id'], $res, ['f_', 'fv_']);
+            return $attr;
+        }
+        */
+        return null;
+    }
+
+    private function loadAll()
+    {
+        $q = $this->queryByExpression('1=1');
+        $q->andWhere($q->expr()->eq('f.MarketId', $this->querySettings->getMarketId()));
+        $q->andWhere($q->expr()->eq('f.LanguageId', $this->querySettings->getLanguageId()));
+        $res = $q->execute();
+        $attrs = [];
+        while ($row = $res->fetch()) {
+            $attrs[] = $this->internalBuildFromRow($row['f_Id'], $row, ['f_', 'fv_']);
+        }
+        return $attrs;
+    }
+
     /**
      * Creates a new Attribute record from a given DB record.
      * If the attribute is already loaded, returns the existing instance
@@ -94,6 +136,8 @@ class AttributeRepository extends RepositoryBase
             $this->mapper->mapObject($attr, $row, $p);
         }
         $this->store->registerObject($attr);
+        $this->store->registerObjectSecondary($attr, $attr->getSaneName());
+
         return $attr;
     }
 }

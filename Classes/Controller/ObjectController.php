@@ -15,6 +15,7 @@
 
 namespace Ms3\Ms3CommerceFx\Controller;
 
+use Ms3\Ms3CommerceFx\Domain\Model\AttributeAccess;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -31,6 +32,7 @@ class ObjectController extends AbstractController
         if ($rootId == 0) $rootId = $this->rootId;
         $obj = $this->repo->getObjectByMenuId($rootId);
         $this->view->assign('object', $obj);
+        $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
     }
 
     /**
@@ -40,5 +42,6 @@ class ObjectController extends AbstractController
     {
         $obj = $this->repo->getObjectByMenuId($rootId);
         $this->view->assign('object', $obj);
+        $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
     }
 }
