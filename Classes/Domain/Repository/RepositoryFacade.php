@@ -77,6 +77,15 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         return $this->categorization;
     }
 
+    /** @var SearchRepository */
+    private $search;
+    public function injectSearch(SearchRepository $sr) {
+        $this->search = $sr;
+    }
+    public function getSearchRepository() {
+        return $this->search;
+    }
+
     /** @var QuerySettings */
     private $querySettings;
     public function injectQuerySettings(QuerySettings $settings) {
@@ -92,10 +101,18 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 
     /**
      * @param int $menuId
-     * @return Menu
+     * @return PimObject
      */
     public function getObjectByMenuId($menuId) {
         return $this->object->getByMenuId($menuId);
+    }
+
+    /**
+     * @param int[] $menuIds
+     * @return PimObject[]
+     */
+    public function getObjectsByMenuIds($menuIds) {
+        return $this->object->getByMenuIds($menuIds);
     }
 
     /**
