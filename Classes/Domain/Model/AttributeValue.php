@@ -52,4 +52,15 @@ class AttributeValue extends AbstractEntity
         }
         return $ret;
     }
+
+    public function _map($row, $prefix) {
+        $this->groupId = $row[$prefix.'GroupId'];
+        $this->productId = $row[$prefix.'ProductId'];
+        $this->featureId = $row[$prefix.'FeatureId'];
+        $this->languageId = $row[$prefix.'LanguageId'];
+        $this->contentHtml = $row[$prefix.'ContentHtml'];
+        $this->contentPlain = $row[$prefix.'ContentPlain'];
+        $this->contentNumber = $row[$prefix.'ContentNumber'];
+        return true;
+    }
 }

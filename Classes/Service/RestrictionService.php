@@ -20,8 +20,9 @@ use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
+use TYPO3\CMS\Core\SingletonInterface;
 
-class RestrictionService
+class RestrictionService implements SingletonInterface
 {
     private $visibleCache = [];
     private $invisibleCache = [];

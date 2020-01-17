@@ -54,7 +54,7 @@ class PimObjectRepository extends RepositoryBase
     /**
      * Loads a single object by menu id
      * @param int $menuId The menu id
-     * @return Menu The menu
+     * @return PimObject The object
      */
     public function getByMenuId($menuId)
     {
@@ -69,6 +69,26 @@ class PimObjectRepository extends RepositoryBase
             return current($menuObjs)[0]->getObject();
         }
         return null;
+    }
+
+    /**
+     * Loads a single object by menu id
+     * @param int[] $menuIds The menu id
+     * @return PimObject[] The objects
+     */
+    public function getByMenuIds($menuIds)
+    {
+        $toLoad = $this->store->filterKnownIdentifiers($menuIds, Menu::class);
+
+        if (!empty($toLoad)) {
+            $this->loadMenuBy($this->_q()->expr()->in('m.Id', $toLoad));
+        }
+
+        $menus = $this->store->getObjectsByIdentifiers($menuIds, Menu::class);
+        $objects = ObjectHelper::getObjectsFromMenus($menus);
+
+        // Must be cached already here
+        return $this->restrictionService->filterRestrictionObjects($objects);
     }
 
     /**
@@ -316,24 +336,34 @@ class PimObjectRepository extends RepositoryBase
                 return [];
         }
 
-        $q = $this->_q();
-        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
-        $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
-        $q->addSelect(DbHelper::getTableColumnAs($key.'Value', 'v_', 'v'));
-        $q->from('Feature', 'f')
-            ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
-            ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
-            ->leftJoin('f', 'StructureElement', 's', 'f.StructureElementId = s.Id')
-            ->where(
-                $q->expr()->andX(
-                    $q->expr()->in("v.{$key}Id", $objectIds),
-                    $q->expr()->orX(
-                        $q->expr()->in("f.Name", ':names'),
-                        $q->expr()->in("fv.AuxiliaryName", ':names')
+        $buildQuery = function($key, $objectIds, $cond) {
+            $q = $this->_q();
+            $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'));
+            $q->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'));
+            $q->addSelect(DbHelper::getTableColumnAs($key.'Value', 'v_', 'v'));
+            $q->addSelect('s.OrderNr');
+            $q->from('Feature', 'f')
+                ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.Id')
+                ->innerJoin('f', $key.'Value', 'v', 'f.Id = v.FeatureId')
+                ->leftJoin('f', 'StructureElement', 's', 'f.StructureElementId = s.Id')
+                ->where(
+                    $q->expr()->andX(
+                        $q->expr()->in("v.{$key}Id", $objectIds),
+                        $cond
                     )
                 )
-            )
-            ->orderBy('s.OrderNr', 'DESC'); // Higher OrderNr are on top of hierarchy, 1 = Product (negative are special, like Price)
+            ;
+            return $q;
+        };
+
+        $q1 = $buildQuery($key, $objectIds, $this->_q()->expr()->in('f.Name', ':names'));
+        $q2 = $buildQuery($key, $objectIds, $this->_q()->expr()->in('fv.AuxiliaryName', ':names'));
+
+        $sql = $q1->getSQL() . " UNION " . $q2->getSQL();
+        $q = $this->_q();
+        $q->select('*')
+            ->from("($sql)", 'Data')
+            ->orderBy('OrderNr', 'DESC'); // Higher OrderNr are on top of hierarchy, 1 = Product (negative are special, like Price)
 
         $q->setParameter(':names', $attributeNames, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
         return $this->fetchByQuery($q);
@@ -346,22 +376,45 @@ class PimObjectRepository extends RepositoryBase
      */
     private function fetchByQuery($q)
     {
+
+    	/*
+        $timers = [
+            'att1' => 0,
+            'att2' => 0,
+            'map1' => 0,
+            'map2' => 0,
+            'val' => 0
+        ];
+        */
+
         $objectMap = [];
         $res = $q->execute();
         while ($row = $res->fetch()) {
+//            $t = microtime(true);
             $attrId = $row['f_Id'];
             $attr = $this->attributeRepo->createAttributeFromRow($attrId, $row, ['f_', 'fv_']);
+//            $timers['att1'] += microtime(true) - $t;
+
+//            $t = microtime(true);
             $attrValue = new AttributeValue($row['v_Id']);
             $attrValue->_setProperty('attribute', $attr);
-            $this->mapper->mapObject($attrValue, $row, 'v_');
+//            $timers['att2'] += microtime(true) - $t;
 
+//            $t = microtime(true);
+            $this->mapper->mapObject($attrValue, $row, 'v_');
+//            $timers['map1'] += microtime(true) - $t;
+
+//            $t = microtime(true);
             $objectId = $attrValue->getObjectId();
             if (!array_key_exists($objectId, $objectMap)) {
                 $objectMap[$objectId] = [];
             }
+//            $timers['map2'] += microtime(true) - $t;
 
+//            $t = microtime(true);
             $objectMap[$objectId][$attr->getSaneName()] = $attrValue;
             $objectMap[$objectId][$attr->getSaneAuxiliaryName()] = $attrValue; // Will be overridden, if also exists in a deeper hierarchy level
+//            $timers['val'] += microtime(true) - $t;
         }
         return $objectMap;
     }

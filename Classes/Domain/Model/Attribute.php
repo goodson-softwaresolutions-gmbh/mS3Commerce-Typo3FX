@@ -37,16 +37,25 @@ class Attribute extends AbstractEntity
     protected $version;
     protected $tableData;
 
+    private $_saneName;
+    private $_saneAuxName;
+
     public function __construct($id) {
         parent::__construct($id);
     }
 
     public function getSaneName() {
-        return GeneralUtilities::sanitizeFluidAccessName($this->name);
+        if (empty($this->_saneName)) {
+            $this->_saneName = GeneralUtilities::sanitizeFluidAccessName($this->name);
+        }
+        return $this->_saneName;
     }
 
     public function getSaneAuxiliaryName() {
-        return GeneralUtilities::sanitizeFluidAccessName($this->auxiliaryName);
+        if (empty($this->_saneAuxName)) {
+            $this->_saneAuxName = GeneralUtilities::sanitizeFluidAccessName($this->auxiliaryName);
+        }
+        return $this->_saneAuxName;
     }
 
     public function getStructureElement() {
