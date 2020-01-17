@@ -65,7 +65,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         if (!is_array($usageTypeIds)) {
             $usageTypeIds = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $usageTypeIds);
         }
-        $this->includeUsageTypeIds = array_map(intval, $usageTypeIds);
+        $this->includeUsageTypeIds = array_map('intval', $usageTypeIds);
     }
 
     /**

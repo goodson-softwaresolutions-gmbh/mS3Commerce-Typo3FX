@@ -126,7 +126,7 @@ class PimObjectRepository extends RepositoryBase
         if ($object->attributesLoaded()) {
             return;
         }
-        $map = $this->loadAttributesByObjects($object->getId(), $object->getEntityType());
+        $map = $this->loadAttributesByObjects([$object->getId()], $object->getEntityType());
         $object->_setProperty('attributes', $map[$object->getId()]);
     }
 
