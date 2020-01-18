@@ -15,22 +15,17 @@
 
 namespace Ms3\Ms3CommerceFx\ViewHelpers\AjaxSearch;
 
+use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\Search\ObjectSearch;
-use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
-use Ms3\Ms3CommerceFx\Service\ObjectHelper;
+use Ms3\Ms3CommerceFx\ViewHelpers\AbstractTagBasedViewHelper;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Fluid\View\StandaloneView;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
-use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
-class ResultViewHelper extends AbstractViewHelper
+class ResultViewHelper extends AbstractTagBasedViewHelper
 {
-    protected $escapeOutput = false;
-    protected $escapeChildren = false;
-
     public function initializeArguments()
     {
+        parent::initializeArguments();
         $this->registerArgument('resultTemplate', 'string', '', true);
         $this->registerArgument('root', 'mixed', '', false);
         $this->registerArgument('variables', 'array', '', false);
@@ -39,14 +34,15 @@ class ResultViewHelper extends AbstractViewHelper
 
     public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
     {
+        $content = self::renderContent($arguments, $renderChildrenClosure, $renderingContext);
+        return parent::renderTag('div', $content, $arguments);
+    }
+
+    private static function renderContent(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
+    {
         $settings = $renderingContext->getVariableProvider()->getByPath('settings.ajaxSearch');
 
-        $view = static::getView();
-        $file = $renderingContext->getTemplatePaths()->getPartialPathAndFilename($arguments['resultTemplate']);
-        $view->setTemplatePathAndFilename($file);
-        if (is_array($arguments['variables'])) {
-            $view->assignMultiple($arguments['variables']);
-        }
+        $view = static::getPartialView($arguments['resultTemplate'], $renderingContext, $arguments['variables']);
 
         if ($settings['initializeStaticResult']) {
             /** @var ObjectSearch $search */
@@ -66,18 +62,13 @@ class ResultViewHelper extends AbstractViewHelper
                 $crit['start'] = intval($arguments['start']);
             }
             $searchResult = $search->searchObjects($crit);
+
+            SearchContext::currentContext()->registerSearchMenuId($searchResult['menuIds']);
             $view->assign('result', $searchResult);
         }
 
         return $view->render();
     }
 
-    /**
-     * @return StandaloneView
-     */
-    private static function getView()
-    {
-        $mgm = GeneralUtility::makeInstance(ObjectManager::class);
-        return $mgm->get(StandaloneView::class);
-    }
+
 }
