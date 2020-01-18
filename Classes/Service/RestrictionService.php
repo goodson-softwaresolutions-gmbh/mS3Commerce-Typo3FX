@@ -102,7 +102,7 @@ class RestrictionService implements SingletonInterface
             return true;
         }
 
-        $v = $v->getContentPlain();
+        // FOR FULL MODE: $v = $v->getContentPlain();
         if (empty($v)) {
             return true;
         }
@@ -134,8 +134,19 @@ class RestrictionService implements SingletonInterface
         $loaded = array_filter($objects, function($o) { return $o->attributesLoaded();} );
 
         // Load attributes for not-loaded objects
+        $values = $this->repo->getObjectValueSubsetFlat($toLoad, $attrs);
+        // Map loaded objects to flat values
+        $values2 = array_map(function($o) {
+            return array_map(function($a) {
+              return $a->getContentPlain();
+            } ,$o->getAttributes());
+        }, $loaded);
+
+        /* FULL MODE
+        // Load attributes for not-loaded objects
         $values = $this->repo->getObjectValueSubset($toLoad, $attrs);
         $values2 = GeneralUtilities::toDictionary($loaded, [ObjectHelper::class, 'getKeyFromObjects'], function($o) { return $o->getAttributes(); });
+        */
 
         return array_merge($values, $values2);
     }

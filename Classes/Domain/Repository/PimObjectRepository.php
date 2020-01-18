@@ -32,6 +32,9 @@ use Ms3\Ms3CommerceFx\Service\RestrictionService;
  */
 class PimObjectRepository extends RepositoryBase
 {
+    private const ATTRIBUTE_LOAD_MODE_FULL = 1;
+    private const ATTRIBUTE_LOAD_MODE_FLAT = 2;
+
     /** @var AttributeRepository */
     protected $attributeRepo;
 
@@ -141,11 +144,36 @@ class PimObjectRepository extends RepositoryBase
      * @return AttributeValue[][] Map from Object Identifier (according to {@see ObjectHelper::buildKeyFromObject}) to AttributeValue list
      */
     public function getObjectAttributesSubset($objects, $attributes) {
+        return $this->getObjectAttributesSubsetInternal($objects, $attributes, self::ATTRIBUTE_LOAD_MODE_FULL);
+    }
+
+    /**
+     * Returns values for certain attributes for a list of objects.
+     * Only the requested attributes are loaded.
+     *
+     * The attributes are returned as a simple map from attribute name to plain content
+     *
+     * This function respects overriding inheritance
+     *
+     * @param PimObject[] $objects The objects for which to get attributes
+     * @param string[] $attributes The attribute names. Can be full name (incl. structure name), or pure name
+     * @return array Map from Object Identifier (according to {@see ObjectHelper::buildKeyFromObject}) to list of AttributeName => ContentPlain
+     */
+    public function getObjectAttributesSubsetFlat($objects, $attributes) {
+        return $this->getObjectAttributesSubsetInternal($objects, $attributes, self::ATTRIBUTE_LOAD_MODE_FLAT);
+    }
+
+    private function getObjectAttributesSubsetInternal($objects, $attributes, $mode) {
         $g = array_filter($objects, function($o) { return $o->isGroup(); });
         $p = array_filter($objects, function($o) { return $o->isProduct(); });
 
-        $gval = $this->loadObjectAttributesSubset(ObjectHelper::getIdsFromObjects($g), PimObject::TypeGroup, $attributes);
-        $pval = $this->loadObjectAttributesSubset(ObjectHelper::getIdsFromObjects($p), PimObject::TypeProduct, $attributes);
+        if ($mode == self::ATTRIBUTE_LOAD_MODE_FULL) {
+            $gval = $this->loadObjectAttributesSubset(ObjectHelper::getIdsFromObjects($g), PimObject::TypeGroup, $attributes);
+            $pval = $this->loadObjectAttributesSubset(ObjectHelper::getIdsFromObjects($p), PimObject::TypeProduct, $attributes);
+        } else if ($mode == self::ATTRIBUTE_LOAD_MODE_FLAT) {
+            $gval = $this->loadObjectAttributesSubsetFlat(ObjectHelper::getIdsFromObjects($g), PimObject::TypeGroup, $attributes);
+            $pval = $this->loadObjectAttributesSubsetFlat(ObjectHelper::getIdsFromObjects($p), PimObject::TypeProduct, $attributes);
+        }
 
         $res = [];
         foreach ($gval as $k => $v) {
@@ -322,6 +350,16 @@ class PimObjectRepository extends RepositoryBase
 
     protected function loadObjectAttributesSubset($objectIds, $entityType, $attributeNames)
     {
+        return $this->loadObjectAttributesSubsetInternal($objectIds, $entityType, $attributeNames, self::ATTRIBUTE_LOAD_MODE_FULL);
+    }
+
+    protected function loadObjectAttributesSubsetFlat($objectIds, $entityType, $attributeNames)
+    {
+        return $this->loadObjectAttributesSubsetInternal($objectIds, $entityType, $attributeNames, self::ATTRIBUTE_LOAD_MODE_FLAT);
+    }
+
+    private function loadObjectAttributesSubsetInternal($objectIds, $entityType, $attributeNames, $mode)
+    {
         if (empty($objectIds)) {
             return [];
         }
@@ -366,7 +404,68 @@ class PimObjectRepository extends RepositoryBase
             ->orderBy('OrderNr', 'DESC'); // Higher OrderNr are on top of hierarchy, 1 = Product (negative are special, like Price)
 
         $q->setParameter(':names', $attributeNames, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY);
-        return $this->fetchByQuery($q);
+
+        if ($mode == self::ATTRIBUTE_LOAD_MODE_FULL) {
+            return $this->fetchByQuery($q);
+        } else if ($mode == self::ATTRIBUTE_LOAD_MODE_FLAT) {
+            /*
+            // Warm up of SQL
+            $s = microtime(true);
+            $q->execute();
+            $sql = microtime(true) - $s;
+
+            $s = microtime(true);
+            $x = $this->fetchByQuery($q);
+            $full = microtime(true) - $s;
+
+            $s = microtime(true);
+            list($x,$tt) = $this->fetchByQueryFlat($q);
+            $arr = microtime(true) - $s;
+            */
+
+            return $this->fetchByQueryFlat($q);
+        }
+    }
+
+    private function fetchByQueryFlat($q)
+    {
+        /*
+        $timers = [
+            'id' => 0,
+            'attr' => 0,
+            'val' => 0,
+            'sql' => 0
+        ];
+        */
+
+//        $t = microtime(true);
+        $objectMap = [];
+        $res = $q->execute();
+//        $timers['sql'] += microtime(true) - $t;
+        while ($row = $res->fetch()) {
+//            $t = microtime(true);
+            if (isset($row['v_ProductId'])) {
+                $objectId = $row['v_ProductId'];
+            } else if (isset($row['v_GroupId'])) {
+                $objectId = $row['v_GroupId'];
+            } else {
+                continue;
+            }
+//            $timers['id'] += microtime(true) - $t;
+
+//            $t = microtime(true);
+            $name = $row['f_Name'];
+            $auxName = $row['fv_AuxiliaryName'];
+//            $timers['attr'] += microtime(true) - $t;
+
+//            $t = microtime(true);
+            $objectMap[$objectId][GeneralUtilities::sanitizeFluidAccessName($name)] = $row['v_ContentPlain'];
+            $objectMap[$objectId][GeneralUtilities::sanitizeFluidAccessName($auxName)] = $row['v_ContentPlain']; // Will be overridden, if also exists in a deeper hierarchy level
+//            $timers['val'] += microtime(true) - $t;
+        }
+
+//        return [$objectMap, $timers];
+        return $objectMap;
     }
 
     /**

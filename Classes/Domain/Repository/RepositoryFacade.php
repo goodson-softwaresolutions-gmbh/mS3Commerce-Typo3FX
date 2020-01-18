@@ -130,6 +130,17 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
+     * Returns values for certain attributes for a list of objects.
+     * Only the requested attributes are loaded. A simple value array for the plaint content is returned
+     * @param PimObject[] $objects The objects
+     * @param string[] $attributes The attribute names
+     * @return array Map of object key to AttributeName => ContentPlain
+     */
+    public function getObjectValueSubsetFlat($objects, $attributes) {
+        return $this->object->getObjectAttributesSubsetFlat($objects, $attributes);
+    }
+
+    /**
      * Fills in the child objects of an object
      * @param PimObject $object
      */
