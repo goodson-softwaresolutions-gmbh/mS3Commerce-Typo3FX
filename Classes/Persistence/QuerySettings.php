@@ -103,7 +103,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @return string[] The allowed values for market restriciton
+     * @return string[] The allowed values for market restriction
      */
     public function getMarketRestrictionValues() {
         return $this->marketRestrictionValues;

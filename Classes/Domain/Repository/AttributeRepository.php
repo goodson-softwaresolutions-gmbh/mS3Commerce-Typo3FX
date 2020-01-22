@@ -22,6 +22,11 @@ use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 
 class AttributeRepository extends RepositoryBase
 {
+    private $structureElement;
+    public function injectStructureElement(StructureElementRepository $ser) {
+        $this->structureElement = $ser;
+    }
+
     /**
      * Gets an attribute by Id
      * @param int $attributeId The attribute id
@@ -59,6 +64,12 @@ class AttributeRepository extends RepositoryBase
         return $this->store->getObjectsByIdentifiers($attributeIds, Attribute::class);
     }
 
+    /**
+     * Returns an attribute by its sanitized name
+     * Note: This function must load all attributes when used the first time, which takes some time. Try to avoid
+     * @param string $saneAttributeName The sanitized attribute name
+     * @return Attribute|null
+     */
     public function getAttributeBySaneName($saneAttributeName) {
         $attr = $this->store->getObjectBySecondaryIdentifier($saneAttributeName, Attribute::class);
         if ($attr) {
@@ -83,6 +94,47 @@ class AttributeRepository extends RepositoryBase
             return $attr;
         }
         */
+        return null;
+    }
+
+    /**
+     * Returns the effective attribute on a given level, considering inheritance
+     * @param string $attributeName The attribute name
+     * @param string $structureElementOrder The level order
+     * @return Attribute|null The effective attribute
+     */
+    public function getEffectiveAttributeForStructureElement($attributeName, $structureElementOrder)
+    {
+        $q = $this->_q();
+        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'))
+            ->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'))
+            ->from('Feature', 'f')
+            ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.FeatureId')
+            ->where('f.Name = :fName')
+            ->setParameter(':fName', $this->querySettings->getMarketRestrictionAttribute());
+
+        if ($row = $q->execute()->fetch()) {
+            // Direct name
+            return $this->internalBuildFromRow($row['f_Id'], $row, ['f_', 'fv_']);
+        }
+
+        $q = $this->_q();
+        $q->select(DbHelper::getTableColumnAs('Feature', 'f_', 'f'))
+            ->addSelect(DbHelper::getTableColumnAs('FeatureValue', 'fv_', 'fv'))
+            ->from('FeatureValue', 'fv')
+            ->innerJoin('fv', 'Feature', 'f', 'fv.FeatureId = f.Id')
+            ->innerJoin('f', 'StructureElement', 's', 'f.StructureElementId = s.Id')
+            ->where($q->expr()->eq('fv.AuxiliaryName', $q->createNamedParameter($attributeName)))
+            ->andWhere($q->expr()->gte('s.OrderNr', $structureElementOrder))
+            ->orderBy('OrderNr');
+
+        $q->setParameter(':fName', $attributeName);
+
+        $row = $q->execute()->fetch();
+
+        if ($row) {
+            return $this->internalBuildFromRow($row['f_Id'], $row, ['f_', 'fv_']);
+        }
         return null;
     }
 

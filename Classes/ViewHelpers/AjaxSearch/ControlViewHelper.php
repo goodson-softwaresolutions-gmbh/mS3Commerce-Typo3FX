@@ -16,10 +16,11 @@
 namespace Ms3\Ms3CommerceFx\ViewHelpers\AjaxSearch;
 
 
+use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
+use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\ViewHelpers\AbstractTagBasedViewHelper;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
-use TYPO3Fluid\Fluid\Core\ViewHelper\TagBuilder;
 
 class ControlViewHelper extends AbstractTagBasedViewHelper
 {
@@ -27,7 +28,7 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
     {
         parent::initializeArguments();
         $this->registerArgument('type', 'string', 'Type of control', true);
-        $this->registerArgument('attribute', 'string', 'PIM Attribute this control filters', true);
+        $this->registerArgument('attribute', 'mixed', 'PIM Attribute this control filters', true);
         $this->registerArgument('variables', 'array', 'Additional ariables passed to control template', false);
     }
 
@@ -45,12 +46,21 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
             $content = '';
         }
 
+        $attr = $arguments['attribute'];
+        if ($attr instanceof AttributeValue) {
+            $attrName = $attr->getAttribute()->getName();
+        } else if ($attr instanceof Attribute) {
+            $attrName = $attr->getName();
+        } else {
+            $attrName = (string)$attr; // Assume string, or _toString exists
+        }
+
         $class = 'mS3Control mS3'.$ucType;
         $arguments['class'] .= $class;
 
         $arguments['data'] = [
             'controltype' => $type,
-            'attribute' => $arguments['attribute']
+            'attribute' => $attrName
         ];
 
         SearchContext::currentContext()->registerFilterAttribute($arguments['attribute'], $type);

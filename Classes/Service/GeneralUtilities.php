@@ -66,8 +66,18 @@ class GeneralUtilities
      * @return array The subset, containing the elements specified by the selected keys
      */
     public static function subset(array $array, array $selectKeys) {
-        $res = [];
         $selectKeys = array_fill_keys($selectKeys, 1);
+        return self::subsetKeys($array, $selectKeys);
+    }
+
+    /**
+     * Returns a subset of a given array, defined by a selection of keys
+     * @param array $array
+     * @param array $selectKeys
+     * @return array
+     */
+    public static function subsetKeys(array $array, array $selectKeys) {
+        $res = [];
         foreach ($array as $k => $v) {
             if (array_key_exists($k, $selectKeys)) {
                 $res[$k] = $v;

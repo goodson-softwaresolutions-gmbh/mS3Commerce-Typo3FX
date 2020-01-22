@@ -15,6 +15,7 @@
 
 namespace Ms3\Ms3CommerceFx\ViewHelpers\AjaxSearch;
 
+use Ms3\Ms3CommerceFx\Domain\Model\PaginationInfo;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\Search\ObjectSearch;
 use Ms3\Ms3CommerceFx\ViewHelpers\AbstractTagBasedViewHelper;
@@ -40,35 +41,56 @@ class ResultViewHelper extends AbstractTagBasedViewHelper
 
     private static function renderContent(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
     {
-        $settings = $renderingContext->getVariableProvider()->getByPath('settings.ajaxSearch');
+        $settings = self::getSettings($renderingContext);
 
         $view = static::getPartialView($arguments['resultTemplate'], $renderingContext, $arguments['variables']);
+
+        $rootId = 0;
+        if (isset($arguments['root'])) {
+            $rootId = $arguments['root']->getMenuId();
+            $view->assign('root', $arguments['root']);
+        }
 
         if ($settings['initializeStaticResult']) {
             /** @var ObjectSearch $search */
             $search = GeneralUtility::makeInstance(ObjectSearch::class);
-            $crit = [];
-            if (isset($arguments['root'])) {
-                $crit['rootId'] = $arguments['root']->getMenuId();
-                $view->assign('root', $arguments['root']);
-            }
+            $context = SearchContext::currentContext();
+            $structureElement = '';
+            $limit = -1;
+            $start = 0;
+
             if (!empty($settings['resultStructureElement'])) {
-                $crit['structureElement'] = $settings['resultStructureElement'];
+                $structureElement = $settings['resultStructureElement'];
             }
+
             if (!empty($settings['pageSize'])) {
-                $crit['limit'] = intval($settings['pageSize']);
+                $limit = intval($settings['pageSize']);
             }
             if (!empty($arguments['start'])) {
-                $crit['start'] = intval($arguments['start']);
+                $start = intval($arguments['start']) - 1;
+                if ($start < 0) $start = 0;
             }
-            $searchResult = $search->searchObjects($crit);
 
-            SearchContext::currentContext()->registerSearchMenuId($searchResult['menuIds']);
+            $search->initObjectSearch($context);
+            $search->addSearchObjects($context, $rootId);
+            $searchObjects = $search->consolidateObjects($context, $structureElement, $start, $limit);
+            $total = $search->getConsolidatedMatchCount($context, $structureElement);
+
+            $page = new PaginationInfo($start + 1, count($searchObjects), $limit, $total);
+
+            $searchResult = [
+                'objects' => $searchObjects,
+                'page' => $page
+            ];
+
             $view->assign('result', $searchResult);
         }
 
         return $view->render();
     }
 
-
+    private static function getSettings(RenderingContextInterface $renderingContext)
+    {
+        return $renderingContext->getVariableProvider()->getByPath('settings.ajaxSearch');
+    }
 }

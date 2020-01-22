@@ -20,23 +20,27 @@ class SearchContext
 {
     private static $_nextId = 0;
     private $id;
+    private $registeredFilters = [];
+    private $usedTablePostfixes = [];
+
     /** @var string */
     private $formId;
-    private $registeredFilters = [];
-    private $searchMenuIds = [];
+    var $isRestrictionFiltered = false;
+    var $consolidatedOnLevel = false;
+    var $isInitialized = false;
 
     /** @var SearchContext */
-    static $currentContext = null;
+    private static $currentContext = null;
     public static function currentContext() {
         if (self::$currentContext == null) {
-            throw new \Exception('No form context');
+            throw new \Exception('No search context');
         }
         return self::$currentContext;
     }
 
     public static function createContext() {
         if (self::$currentContext != null) {
-            throw new \Exception('Already have a context');
+            throw new \Exception('Already have a search context');
         }
 
         self::$currentContext = new SearchContext();
@@ -47,11 +51,20 @@ class SearchContext
         self::$currentContext = null;
     }
 
-    private function __construct()
+    public function __construct()
     {
         $this->id = self::$_nextId;
         self::$_nextId++;
         $this->formId = 'mS3Form_' . $this->id;
+    }
+
+    public function getTableName($postfix = '') {
+        $this->usedTablePostfixes[$postfix] = 1;
+        return "mS3CSearch_$postfix{$this->id}";
+    }
+
+    public function getUsedTableNames() {
+        return array_map([$this, 'getTableName'], array_keys($this->usedTablePostfixes));
     }
 
     /**
@@ -70,12 +83,11 @@ class SearchContext
         $this->formId = $formId;
     }
 
-    public function registerFilterAttribute($attributeName, $controlType)
-    {
+    public function registerFilterAttribute($attributeName, $controlType) {
         $this->registeredFilters[] = ['attribute' => $attributeName, 'type' => $controlType];
     }
 
-    public function registerSearchMenuId($menuIds) {
-        $this->searchMenuIds = $menuIds;
+    public function getRegisteredFilters() {
+        return $this->registeredFilters;
     }
 }

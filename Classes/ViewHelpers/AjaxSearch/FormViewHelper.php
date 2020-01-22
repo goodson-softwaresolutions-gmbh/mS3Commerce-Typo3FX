@@ -15,8 +15,10 @@
 
 namespace Ms3\Ms3CommerceFx\ViewHelpers\AjaxSearch;
 
+use Ms3\Ms3CommerceFx\Search\ObjectSearch;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\ViewHelpers\AbstractTagBasedViewHelper;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Fluid\Core\ViewHelper\TagBuilder;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 
@@ -25,6 +27,8 @@ class FormViewHelper extends AbstractTagBasedViewHelper
 
     public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
     {
+        /** @var ObjectSearch $search */
+        $search = GeneralUtility::makeInstance(ObjectSearch::class);
         $context = SearchContext::createContext();
 
         try {
@@ -35,18 +39,39 @@ class FormViewHelper extends AbstractTagBasedViewHelper
             } else {
                 $context->setFormId($arguments['id']);
             }
-            $content .= self::initForm($context);
+
+            $settings = $renderingContext->getVariableProvider()->getByPath('settings.ajaxSearch');
+            $content .= self::initForm($search, $context, $settings);
 
             return parent::renderTag('div', $content, $arguments);
         } finally {
-            SearchContext::destroyContext();;
+            $search->cleanupSearch($context);
+            SearchContext::destroyContext();
         }
     }
 
-    private static function initForm(SearchContext $context) {
-        $script = "//alert('In Script {$context->getFormId()}');";
-        $t = new TagBuilder('script', $script);
+    private static function initForm(ObjectSearch $search, SearchContext $context, $settings)
+    {
+        $script = '';
+        if ($settings['initializeStaticResult']) {
+            $filters = $context->getRegisteredFilters();
+            $filterAttrs = array_map(function($f) { return $f['attribute']->getName(); }, $filters);
+
+
+            $filterValues = $search->getFilterValues($context, $filterAttrs);
+
+
+            $script = json_encode($filterValues);
+        }
+
+
+        $t = new TagBuilder('script', "/*$script*/");
         $t->addAttribute('type', 'text/javascript');
         return $t->render();
+    }
+
+    private static function getSettings(RenderingContextInterface $renderingContext)
+    {
+        return $renderingContext->getVariableProvider()->getByPath('settings.ajaxSearch');
     }
 }
