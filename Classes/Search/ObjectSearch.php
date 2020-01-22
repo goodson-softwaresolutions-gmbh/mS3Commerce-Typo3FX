@@ -66,8 +66,7 @@ class ObjectSearch implements SingletonInterface
         if (!$context->isInitialized)
             return [];
 
-        //return $this->repo->getSearchRepository()->getAvailableFilterValues($context, $filterAttributes);
-        return [];
+        return $this->repo->getSearchRepository()->getAvailableFilterValues($context, $filterAttributes);
     }
 
     public function cleanupSearch(SearchContext $context) {

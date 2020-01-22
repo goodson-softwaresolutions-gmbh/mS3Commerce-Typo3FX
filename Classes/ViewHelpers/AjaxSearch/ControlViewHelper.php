@@ -40,27 +40,31 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
         if ($view === false) {
             $view = static::tryGetPartialView("Control/ControlBase", $renderingContext, $arguments['variables']);
         }
+
+        $attrParam = $arguments['attribute'];
+        if ($attrParam instanceof AttributeValue) {
+            $attr = $attrParam->getAttribute();
+        } else if ($attrParam instanceof Attribute) {
+            $attr = $attrParam;
+        } else {
+            //$attr = (string)$attrParam; // Assume string, or _toString exists
+        }
+
         if ($view !== false) {
+            $view->assign('attribute', $attr);
             $content = $view->render();
         } else {
             $content = '';
         }
 
-        $attr = $arguments['attribute'];
-        if ($attr instanceof AttributeValue) {
-            $attrName = $attr->getAttribute()->getName();
-        } else if ($attr instanceof Attribute) {
-            $attrName = $attr->getName();
-        } else {
-            $attrName = (string)$attr; // Assume string, or _toString exists
-        }
+
 
         $class = 'mS3Control mS3'.$ucType;
         $arguments['class'] .= $class;
 
         $arguments['data'] = [
             'controltype' => $type,
-            'attribute' => $attrName
+            'attribute' => $attr->getName()
         ];
 
         SearchContext::currentContext()->registerFilterAttribute($arguments['attribute'], $type);

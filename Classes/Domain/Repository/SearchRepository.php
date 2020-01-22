@@ -15,8 +15,10 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Doctrine\DBAL\Connection;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
+use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use Ms3\Ms3CommerceFx\Service\RestrictionService;
 
 class SearchRepository extends RepositoryBase
@@ -243,38 +245,23 @@ class SearchRepository extends RepositoryBase
         }
     }
 
-    /*
     public function getAvailableFilterValues(SearchContext $context, $filterAttributes) {
         $this->filterRestrictions($context);
 
-        // Must extrapolate to filter level
-        $q = $this->_q();
-        $q->select('MIN(OrderNr) AS l')
-            ->from('StructureElement', 's')
-            ->innerJoin('s','Feature', 'a', 'a.StructureElementId = s.Id')
-            ->where('s.OrderNr >= 0')
-            ->andWhere($q->expr()->in('a.Name', $q->createNamedParameter($filterAttributes, Connection::PARAM_STR_ARRAY)));
-        $minLevelFeature = $q->execute()->fetch()['l'];
-
-        $q = $this->_q();
-        $q->select('MIN(OrderNr) AS l')
-            ->from($context->getTableName(), 't')
-            ->innerJoin('t', 'Menu', 'm', 't.MenuId = m.Id')
-            ->innerJoin('m', 'StructureElement', 's', 's.Id = m.StructureElementId')
-            ->where('s.OrderNr >= 0');
-        $minLevelObjects = $q->execute()->fetch()['l'];
-
-        // MySQL cannot UNION statements that use temporary tables... so make separate queries
         $q = $this->_q();
         $q->select('a.Name, v.ContentPlain, v.ContentHtml, v.ContentNumber')
             ->from($context->getTableName(), 't')
             ->innerJoin('t', 'ProductValue', 'v', 't.ProductId = v.ProductId')
             ->innerJoin('v', 'Feature', 'a', 'v.FeatureId = a.Id')
             ->where($q->expr()->in('a.Name', $q->createNamedParameter($filterAttributes, Connection::PARAM_STR_ARRAY)))
-            ->distinct();
+            ->distinct()
+            ->orderBy('a.Name, v.ContentPlain')
+        ;
 
         $values = $q->execute()->fetchAll();
 
+        /* If GROUPS are in temp table:
+        // MySQL cannot UNION statements that use temporary tables... so make separate queries
         $q = $this->_q();
         $q->select('a.Name, v.ContentPlain, v.ContentHtml, v.ContentNumber')
             ->from($context->getTableName(), 't')
@@ -284,10 +271,10 @@ class SearchRepository extends RepositoryBase
             ->distinct();
 
         $values = array_merge($values, $q->execute()->fetchAll());
+        */
 
-        return GeneralUtilities::toDictionary($values, function($v) { return $v['Name']; });
+        return GeneralUtilities::groupBy($values, function($v) { return $v['Name']; });
     }
-    */
 
     /**
      * Adds an object key to the given query to insert into search table

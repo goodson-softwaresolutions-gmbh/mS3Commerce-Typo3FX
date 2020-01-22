@@ -53,6 +53,7 @@ class FormViewHelper extends AbstractTagBasedViewHelper
     private static function initForm(ObjectSearch $search, SearchContext $context, $settings)
     {
         $script = '';
+        $filterData = '[]';
         if ($settings['initializeStaticResult']) {
             $filters = $context->getRegisteredFilters();
             $filterAttrs = array_map(function($f) { return $f['attribute']->getName(); }, $filters);
@@ -61,11 +62,17 @@ class FormViewHelper extends AbstractTagBasedViewHelper
             $filterValues = $search->getFilterValues($context, $filterAttrs);
 
 
-            $script = json_encode($filterValues);
+            $filterData = json_encode($filterValues);
         }
 
-
-        $t = new TagBuilder('script', "/*$script*/");
+        $script = /** @lang JavaScript */<<<XXX
+jQuery(document).ready(function() {
+    let ms3Control = new Ms3CAjaxSearchController('{$context->getFormId()}');
+    ms3Control.init();
+    ms3Control.initializeFilters($filterData);
+});
+XXX;
+        $t = new TagBuilder('script', $script);
         $t->addAttribute('type', 'text/javascript');
         return $t->render();
     }

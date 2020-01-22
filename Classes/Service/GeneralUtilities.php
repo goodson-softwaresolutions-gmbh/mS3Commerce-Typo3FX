@@ -59,6 +59,17 @@ class GeneralUtilities
         return array_combine($k, $v);
     }
 
+    public static function groupBy(array $array, callable $keyCallback, callable $valueCallback = null) {
+        if ($valueCallback == null) {
+            $valueCallback = function($v) { return $v; };
+        }
+        $res = [];
+        foreach ($array as $v) {
+            $res[$keyCallback($v)][] = $valueCallback($v);
+        }
+        return $res;
+    }
+
     /**
      * Returns a subset of a given array, defined by a selection of keys
      * @param array $array The input array
