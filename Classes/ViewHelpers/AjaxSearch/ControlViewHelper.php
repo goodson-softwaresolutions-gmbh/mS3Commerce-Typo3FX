@@ -18,6 +18,7 @@ namespace Ms3\Ms3CommerceFx\ViewHelpers\AjaxSearch;
 
 use Ms3\Ms3CommerceFx\Domain\Model\Attribute;
 use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
+use Ms3\Ms3CommerceFx\Domain\Repository\AttributeRepository;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\ViewHelpers\AbstractTagBasedViewHelper;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
@@ -56,8 +57,6 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
         } else {
             $content = '';
         }
-
-
 
         $class = 'mS3Control mS3'.$ucType;
         $arguments['class'] .= $class;

@@ -52,6 +52,11 @@ class AbstractTagBasedViewHelper extends \TYPO3Fluid\Fluid\Core\ViewHelper\Abstr
         return static::renderStatic($this->arguments, $c, $this->renderingContext);
     }
 
+    protected static function registerTagArgument($name)
+    {
+        self::$_tagArgs[] = $name;
+    }
+
     /**
      * @param array $variables
      * @return StandaloneView

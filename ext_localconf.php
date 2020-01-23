@@ -7,12 +7,14 @@ defined('TYPO3_MODE') || die('Access denied.');
     [
         // Cacheables actions
         'Object' => 'list,detail',
-        'Menu' => 'menu'
+        'Menu' => 'menu',
+        'AjaxSearch' => 'filter'
     ],
     [
         // Non-Cacheables actions
         'Object' => 'list,detail',
-        'Menu' => 'menu'
+        'Menu' => 'menu',
+        'AjaxSearch' => 'filter'
     ]
 );
 

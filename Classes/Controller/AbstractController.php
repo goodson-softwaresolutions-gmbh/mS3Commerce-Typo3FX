@@ -36,15 +36,35 @@ abstract class AbstractController extends ActionController
     }
 
     protected $rootId = 0;
+
     public function initializeAction()
     {
+        $this->initializeRootId();
+        $this->initializeViewTemplate();
+        $this->initializeQuerySettings();
+    }
+
+    public function initializeView(ViewInterface $view)
+    {
+        if (!empty($this->settings['templateFile'])) {
+            $view->setTemplatePathAndFilename($this->settings['templateFile']);
+        }
+    }
+
+    protected function initializeRootId() {
         if (!empty($this->settings['rootId'])) {
             $this->rootId = $this->settings['rootId'];
             $this->initializeShopParameters($this->rootId);
         }
+    }
+
+    protected function initializeViewTemplate() {
         if (!empty($this->settings['templateFile'])) {
             $this->defaultViewObjectName = StandaloneView::class;
         }
+    }
+
+    protected function initializeQuerySettings() {
         if (!empty($this->settings['includeUsageTypes'])) {
             $this->repo->getQuerySettings()->setIncludeUsageTypeIds($this->settings['includeUsageTypes']);
         }
@@ -59,13 +79,6 @@ abstract class AbstractController extends ActionController
             if (!empty($vals['attribute'])) {
                 $this->repo->getQuerySettings()->setUserRestriction($vals['attribute']);
             }
-        }
-    }
-
-    public function initializeView(ViewInterface $view)
-    {
-        if (!empty($this->settings['templateFile'])) {
-            $view->setTemplatePathAndFilename($this->settings['templateFile']);
         }
     }
 

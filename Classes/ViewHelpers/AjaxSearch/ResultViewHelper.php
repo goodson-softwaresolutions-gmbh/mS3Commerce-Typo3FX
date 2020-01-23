@@ -39,22 +39,26 @@ class ResultViewHelper extends AbstractTagBasedViewHelper
         return parent::renderTag('div', $content, $arguments);
     }
 
-    private static function renderContent(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
+    private static function renderContent(array &$arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
     {
         $settings = self::getSettings($renderingContext);
-
         $view = static::getPartialView($arguments['resultTemplate'], $renderingContext, $arguments['variables']);
-
         $rootId = 0;
         if (isset($arguments['root'])) {
             $rootId = $arguments['root']->getMenuId();
             $view->assign('root', $arguments['root']);
         }
 
+        $context = SearchContext::currentContext();
+        if (array_keys($arguments, 'id') && isset($arguments['id'])) {
+            $context->setResultElementId($arguments['id']);
+        } else {
+            $arguments['id'] = $context->getResultElementId();
+        }
+
         if ($settings['initializeStaticResult']) {
             /** @var ObjectSearch $search */
             $search = GeneralUtility::makeInstance(ObjectSearch::class);
-            $context = SearchContext::currentContext();
             $structureElement = '';
             $limit = -1;
             $start = 0;
@@ -71,18 +75,7 @@ class ResultViewHelper extends AbstractTagBasedViewHelper
                 if ($start < 0) $start = 0;
             }
 
-            $search->initObjectSearch($context);
-            $search->addSearchObjects($context, $rootId);
-            $searchObjects = $search->consolidateObjects($context, $structureElement, $start, $limit);
-            $total = $search->getConsolidatedMatchCount($context, $structureElement);
-
-            $page = new PaginationInfo($start + 1, count($searchObjects), $limit, $total);
-
-            $searchResult = [
-                'objects' => $searchObjects,
-                'page' => $page
-            ];
-
+            $searchResult = $search->searchObjectsConsolidated($context, $rootId, $structureElement, $start, $limit);
             $view->assign('result', $searchResult);
         }
 

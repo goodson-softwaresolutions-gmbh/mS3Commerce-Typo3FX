@@ -25,9 +25,14 @@ class SearchContext
 
     /** @var string */
     private $formId;
+    /** @var string */
+    private $resultElementId;
+
     var $isRestrictionFiltered = false;
     var $consolidatedOnLevel = false;
     var $isInitialized = false;
+    var $handledMenuIds = [];
+    var $filterAttributes = [];
 
     /** @var SearchContext */
     private static $currentContext = null;
@@ -56,6 +61,7 @@ class SearchContext
         $this->id = self::$_nextId;
         self::$_nextId++;
         $this->formId = 'mS3Form_' . $this->id;
+        $this->resultElementId = 'mS3Result_' . $this->id;
     }
 
     public function getTableName($postfix = '') {
@@ -65,6 +71,10 @@ class SearchContext
 
     public function getUsedTableNames() {
         return array_map([$this, 'getTableName'], array_keys($this->usedTablePostfixes));
+    }
+
+    public function isAttributeFiltered(): bool {
+        return !empty($this->filterAttributes);
     }
 
     /**
@@ -81,6 +91,22 @@ class SearchContext
     public function setFormId(string $formId): void
     {
         $this->formId = $formId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResultElementId(): string
+    {
+        return $this->resultElementId;
+    }
+
+    /**
+     * @param string $resultElementId
+     */
+    public function setResultElementId(string $resultElementId): void
+    {
+        $this->resultElementId = $resultElementId;
     }
 
     public function registerFilterAttribute($attributeName, $controlType) {

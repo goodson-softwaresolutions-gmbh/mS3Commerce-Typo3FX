@@ -85,6 +85,12 @@ class SearchRepository extends RepositoryBase
      * @param int $menuId The menu id to add decedents
      */
     public function findInMenuId(SearchContext $context, $menuId) {
+        if (array_key_exists($menuId, $context->handledMenuIds)) {
+            return;
+        }
+
+        $context->handledMenuIds[$menuId] = true;
+
         $q = $this->_q();
         $q->select('m.Id, m.Path, m.OrderPath')
             ->from('Menu', 'm')
@@ -152,13 +158,13 @@ class SearchRepository extends RepositoryBase
         $this->consolidateResults($context, $structureElement);
 
         $q = $this->_q();
-        $sql = $q
-            ->select('m.Id AS MenuId, m.OrderPath') // ORDER Column must be in select for DISTINCT
-            ->from($context->getTableName('cons'), 't')
-            ->innerJoin('t', 'Menu', 'm', 't.MenuId = m.Id')
+        $q->select('m.Id AS MenuId, m.OrderPath') // ORDER Column must be in select for DISTINCT
+            ->from($context->getTableName('cons'), 'c')
+            ->innerJoin('c', 'Menu', 'm', 'c.MenuId = m.Id')
             ->orderBy('m.OrderPath')
-            ->distinct()
-            ->getSQL();
+            ->distinct();
+
+        $sql = $q->getSQL();
 
         if ($limit > 0) $sql .= ' LIMIT ' . intval($start) .', ' . intval($limit);
         return $this->db->getConnection()->executeQuery($sql)->fetchAll();
@@ -226,6 +232,12 @@ class SearchRepository extends RepositoryBase
                 ->from($context->getTableName(), 't')
                 ->innerJoin('t', 'Menu', 'm', 't.MenuId = m.Id');
 
+            if ($context->isAttributeFiltered()) {
+                // Only get those matching all filters
+                $ct = count($context->filterAttributes);
+                $q->where("t.filter_sum = $ct");
+            }
+
             $this->executeInsert($q, $context->getTableName('cons'));
 
             // Loop up in hierarchy until no more changes
@@ -245,11 +257,77 @@ class SearchRepository extends RepositoryBase
         }
     }
 
+    public function filterMatchesByAttributes(SearchContext $context, $selectedFilters) {
+        if ($context->isAttributeFiltered()) {
+            if (empty(array_diff_key($selectedFilters, $context->filterAttributes))) {
+                // already filtered by the current attributes, ok
+                return;
+            }
+
+            // Already filtered by something else??
+            throw new \Exception('Result already filtered');
+        }
+
+        $this->filterRestrictions($context);
+        $context->filterAttributes = [];
+
+        $col = 0;
+        $sum = [];
+        $mask = [];
+        foreach ($selectedFilters as $attrName => $values) {
+            $colName = "t.filter_$col";
+            $q = $this->_q();
+            $q->update("{$context->getTableName()} t, ProductValue pv, Feature f")
+                ->set($colName, "1")
+                ->where('t.ProductId = pv.ProductId')
+                ->andWhere('pv.FeatureId = f.Id')
+                ->andWhere($q->expr()->eq('f.Name', $q->createNamedParameter($attrName)));
+
+            $isArr = false;
+            if (is_array($values)) {
+                $values = array_filter($values);
+                if (count($values) > 1) {
+                    $isArr = true;
+                } else {
+                    // single value array
+                    $values = current($values);
+                }
+            }
+
+            if ($isArr) {
+                $q->andWhere($q->expr()->in('pv.ContentPlain', $q->createNamedParameter(array_filter($values), Connection::PARAM_STR_ARRAY)));
+            } else {
+                $q->andWhere($q->expr()->eq('pv.ContentPlain', $q->createNamedParameter($values)));
+            }
+
+            $q->execute();
+
+            $sum[] = $colName;
+            $mask[] = $colName.'*'.(1<<$col);
+
+            $context->filterAttributes[$attrName] = $col;
+
+            $col++;
+        }
+
+        // Make a column counting how many filters match (sum)
+        // and a column with bitmask which filters match (mask)
+        $sum = implode('+', $sum);
+        $mask = implode('+', $mask);
+        $this->_q()
+            ->update($context->getTableName(), 't')
+            ->set('filter_sum', $sum)
+            ->set('filter_mask', $mask)
+            ->execute();
+    }
+
     public function getAvailableFilterValues(SearchContext $context, $filterAttributes) {
         $this->filterRestrictions($context);
 
+        $addCols = ($context->isAttributeFiltered()) ? ',t.filter_sum,t.filter_mask' : '';
+
         $q = $this->_q();
-        $q->select('a.Name, v.ContentPlain, v.ContentHtml, v.ContentNumber')
+        $q->select('a.Name, v.ContentPlain, v.ContentHtml, v.ContentNumber'.$addCols)
             ->from($context->getTableName(), 't')
             ->innerJoin('t', 'ProductValue', 'v', 't.ProductId = v.ProductId')
             ->innerJoin('v', 'Feature', 'a', 'v.FeatureId = a.Id')
@@ -273,7 +351,38 @@ class SearchRepository extends RepositoryBase
         $values = array_merge($values, $q->execute()->fetchAll());
         */
 
-        return GeneralUtilities::groupBy($values, function($v) { return $v['Name']; });
+        $values = GeneralUtilities::groupBy($values, function($v) { return $v['Name']; });
+        $this->extractAvailableFiltersValues($context, $values);
+
+        return $values;
+    }
+
+    private function extractAvailableFiltersValues(SearchContext $context, &$values) {
+        if (!$context->isAttributeFiltered())
+            return;
+
+        $ct = count($context->filterAttributes);
+        foreach ($values as $attr => &$items) {
+            $s = $ct;
+            $m = (1<<$ct)-1;
+
+            if (array_key_exists($attr, $context->filterAttributes)) {
+                // a filtered attribute. value must be present in all OTHER attributes
+                $s = $s-1;
+                $m &= ~(1<<$context->filterAttributes[$attr]);
+                $items = array_filter($items, function($row) use ($s, $m) {
+                    if ($row['filter_sum'] < $s) return false; // not matched by all (remaining) filters
+                    if ($row['filter_sum'] > $s) return true; // matched by all
+                    // Check if only excluded by itself (color = red AND yellow => red and yellow don't match)
+                    return ($row['filter_mask'] & $m) == $m;
+                });
+            } else {
+                $items = array_filter($items, function($row) use ($s) {
+                    return $row['filter_sum'] >= $s; // Must match ALL filters
+                });
+            }
+        }
+
     }
 
     /**
@@ -355,11 +464,29 @@ class SearchRepository extends RepositoryBase
      * @throws \Doctrine\DBAL\DBALException
      */
     public function initObjectSearch(SearchContext $context) {
+        $this->createObjectFilterTable($context, 0);
+    }
+
+    public function initObjectSearchForFilter(SearchContext $context, $filters) {
+        $this->createObjectFilterTable($context, count($filters));
+    }
+
+    private function createObjectFilterTable(SearchContext $context, $filterCount) {
         if ($context->isInitialized) return;
         $context->isInitialized = true;
 
+        $filterCols = '';
+        if ($filterCount > 0) {
+            $filterCols = array_map(function ($i) {
+                return "filter_$i BIT NOT NULL DEFAULT 0";
+            }, range(0, $filterCount-1));
+
+            $filterCols[] = 'filter_mask INT NOT NULL DEFAULT 0';
+            $filterCols[] = 'filter_sum INT NOT NULL DEFAULT 0';
+            $filterCols = implode($filterCols, ',') . ',';
+        }
         $this->db->getConnection()->executeQuery(
-            /** @lang MySQL */ <<<XXX
+        /** @lang MySQL */ <<<XXX
             CREATE TEMPORARY TABLE {$context->getTableName()} (
                 MenuId INT NOT NULL,
                 Path VARCHAR(127) NULL,
@@ -369,6 +496,7 @@ class SearchRepository extends RepositoryBase
                 MarketRestriction VARCHAR(255) NULL,
                 UserRestriction VARCHAR(255) NULL,
                 RestrictionFiltered BIT NOT NULL DEFAULT 0,
+                {$filterCols}
                 INDEX idx_menuId (MenuId),
                 INDEX idx_sort (Sort),
                 INDEX idx_path (Path),

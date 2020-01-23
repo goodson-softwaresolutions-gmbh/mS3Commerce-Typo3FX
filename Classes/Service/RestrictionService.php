@@ -98,7 +98,6 @@ class RestrictionService implements SingletonInterface
             ->where($q->expr()->in('ObjectKey', $q->createNamedParameter(array_keys($this->visibleCache), Connection::PARAM_STR_ARRAY)))
             ->execute();
 
-
         $markForInclusion = function($values) use ($connection, $tableName)
         {
             $q = $connection->createQueryBuilder();
