@@ -195,7 +195,12 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
     {
         /** @var Attribute $attr */
         $attr = $this->categorization->getAttributes()[$this->pos];
-        return $this->obj->getAttributes()[$attr->getSaneName()];
+        $ret = $this->obj->getAttributes()[$attr->getSaneName()];
+        if (!$ret) {
+            $ret = new AttributeValue(0);
+            $ret->_setProperty('attribute', $attr);
+        }
+        return $ret;
     }
 
     public function next()
