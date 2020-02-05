@@ -165,18 +165,22 @@ function Ms3CAjaxSearchCheckbox(controller, attribute, element) {
         this.element.css('display', 'block');
     };
 
+    Ms3CAjaxSearchCheckbox.prototype.getFilterValueContainer = function() {
+        return this.element.children('.filterValues').first();
+    };
+
     Ms3CAjaxSearchCheckbox.prototype.setFilterValues = function(values, selectedValues) {
         let val = '';
         for (let k in values) {
             let isSelected = selectedValues.indexOf(values[k].ContentPlain) >= 0;
             val += this.buildElement(values[k].ContentPlain, values[k].ContentHtml, isSelected);
         }
-        this.element.children('.filterValues').first().html(val);
+        this.getFilterValueContainer(this.element).html(val);
         this.activateElements();
     };
 
-    Ms3CAjaxSearchCheckbox.prototype.buildElement = function(value, display, isSelcted) {
-        let selStr = isSelcted ? ' checked="checked"' : '';
+    Ms3CAjaxSearchCheckbox.prototype.buildElement = function(value, display, isSelected) {
+        let selStr = isSelected ? ' checked="checked"' : '';
         return '<input type="checkbox" value="' + value + '"'+selStr+'>' + display + '</intput><br/>';
     };
 
