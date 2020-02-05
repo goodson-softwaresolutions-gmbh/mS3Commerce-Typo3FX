@@ -168,6 +168,10 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         return $this->categorization;
     }
 
+    public function getAttributes() {
+        return $this->categorization->getAttributes();
+    }
+
     /* ArrayAccess implementation */
     public function offsetExists($offset)
     {
@@ -196,10 +200,6 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         /** @var Attribute $attr */
         $attr = $this->categorization->getAttributes()[$this->pos];
         $ret = $this->obj->getAttributes()[$attr->getSaneName()];
-        if (!$ret) {
-            $ret = new AttributeValue(0);
-            $ret->_setProperty('attribute', $attr);
-        }
         return $ret;
     }
 

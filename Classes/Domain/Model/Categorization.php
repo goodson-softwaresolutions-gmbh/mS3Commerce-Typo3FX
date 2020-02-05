@@ -52,13 +52,15 @@ class Categorization extends AbstractEntity implements \ArrayAccess
     public function offsetExists($offset)
     {
         $this->getAttributes();
-        return array_key_exists($offset, $this->attributes);
+        // 1-Based
+        return array_key_exists($offset-1, $this->attributes);
     }
 
     public function offsetGet($offset)
     {
         $this->getAttributes();
-        return $this->attributes[$offset];
+        // 1-Based
+        return $this->attributes[$offset-1];
     }
 
     public function offsetSet($offset, $value)
