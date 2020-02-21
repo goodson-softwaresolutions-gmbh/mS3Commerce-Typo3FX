@@ -26,4 +26,38 @@ class StructureElement extends AbstractEntity
     public function __construct(int $id) {
         parent::__construct($id);
     }
+
+    /**
+     * @return string
+     */
+    public function getGuid()
+    {
+        return $this->guid;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrderNr()
+    {
+        return $this->orderNr;
+    }
+
+
 }

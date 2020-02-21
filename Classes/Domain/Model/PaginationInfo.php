@@ -112,5 +112,4 @@ class PaginationInfo
     {
         return $this->start + $this->count - 1;
     }
-
 }

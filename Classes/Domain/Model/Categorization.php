@@ -31,19 +31,31 @@ class Categorization extends AbstractEntity implements \ArrayAccess
         parent::__construct($id);
     }
 
+    /**
+     * @return Attribute[]
+     */
     public function getAttributes() {
         $this->getRepo()->loadCategorizationAttributes($this);
         return $this->attributes;
     }
 
+    /**
+     * @return bool
+     */
     public function hasAttributesLoaded() {
         return $this->attributes !== null;
     }
 
+    /**
+     * @return string
+     */
     public function getSaneName() {
         return GeneralUtilities::sanitizeFluidAccessName($this->name);
     }
 
+    /**
+     * @return string
+     */
     public function getSaneType() {
         return GeneralUtilities::sanitizeFluidAccessName($this->type);
     }

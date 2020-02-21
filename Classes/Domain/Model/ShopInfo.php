@@ -31,4 +31,76 @@ class ShopInfo extends AbstractEntity
     {
         parent::__construct($id);
     }
+
+    /**
+     * @return int
+     */
+    public function getShopId()
+    {
+        return $this->shopId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLanguageId()
+    {
+        return $this->languageId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMarketId()
+    {
+        return $this->marketId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStartId()
+    {
+        return $this->startId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEndId()
+    {
+        return $this->endId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRootGroupId()
+    {
+        return $this->rootGroupId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBaseExportDate()
+    {
+        return $this->baseExportDate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getImportDate()
+    {
+        return $this->importDate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUploadDate()
+    {
+        return $this->uploadDate;
+    }
 }

@@ -22,6 +22,9 @@ namespace Ms3\Ms3CommerceFx\Domain\Model;
  */
 class Product extends PimObject
 {
+    /**
+     * @return int
+     */
     public function getEntityType(): int
     {
         return PimObject::TypeProduct;
