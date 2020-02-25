@@ -62,7 +62,7 @@ class PimObjectCollectionRepository extends PimObjectRepository
         }
 
         $menuIds = ObjectHelper::getMenuIdsFromObjects($objects);
-        $menuMap = $this->loadMenuBy($this->_q()->expr()->in('m.ParentId', $menuIds));
+        $menuMap = $this->loadMenuBy($this->_q()->expr()->in('m.ParentId', $menuIds), 'm.ParentId, m.Ordinal');
         foreach ($objects as $o) {
             if (array_key_exists($o->getMenuId(), $menuMap)) {
                 $o->_setProperty('children', ObjectHelper::getObjectsFromMenus($menuMap[$o->getMenuId()]));

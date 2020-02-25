@@ -18,6 +18,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 use Doctrine\DBAL\Connection;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
+use Ms3\Ms3CommerceFx\Search\SearchQueryUtils;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use Ms3\Ms3CommerceFx\Service\RestrictionService;
 
@@ -71,10 +72,10 @@ class SearchRepository extends RepositoryBase
 
         $q->andWhere($q->expr()->like('m.Path', $path.'%'));
 
-        $cols = array_merge(['MenuId', 'Path', 'Sort'], $this->addObjectKeyToQuery($q));
-        $cols = array_merge($cols, $this->addRestrictionValuesToQuery($q));
+        $cols = array_merge(['MenuId', 'Path', 'Sort'], SearchQueryUtils::addObjectKeyToQuery($q));
+        $cols = array_merge($cols, SearchQueryUtils::addRestrictionValuesToQuery($this->querySettings, $q));
 
-        $this->executeInsert($q, $context->getTableName(), $cols);
+        SearchQueryUtils::executeInsert($this->db, $q, $context->getTableName(), $cols);
         $context->isRestrictionFiltered = false;
         $context->consolidatedOnLevel = false;
     }
@@ -100,10 +101,10 @@ class SearchRepository extends RepositoryBase
             $q->expr()->like('m.Path', "CONCAT(pm.Path, '/', pm.Id, '%')"));
         $q->andWhere($q->expr()->eq('pm.Id', $menuId));
 
-        $cols = array_merge(['MenuId', 'Path', 'Sort'], $this->addObjectKeyToQuery($q));
-        $cols = array_merge($cols, $this->addRestrictionValuesToQuery($q));
+        $cols = array_merge(['MenuId', 'Path', 'Sort'], SearchQueryUtils::addObjectKeyToQuery($q));
+        $cols = array_merge($cols, SearchQueryUtils::addRestrictionValuesToQuery($this->querySettings, $q));
 
-        $this->executeInsert($q, $context->getTableName(), $cols);
+        SearchQueryUtils::executeInsert($this->db, $q, $context->getTableName(), $cols);
         $context->isRestrictionFiltered = false;
         $context->consolidatedOnLevel = false;
     }
@@ -238,7 +239,7 @@ class SearchRepository extends RepositoryBase
                 $q->where("t.filter_sum = $ct");
             }
 
-            $this->executeInsert($q, $context->getTableName('cons'));
+            SearchQueryUtils::executeInsert($this->db, $q, $context->getTableName('cons'));
 
             // Loop up in hierarchy until no more changes
             do {
@@ -385,78 +386,6 @@ class SearchRepository extends RepositoryBase
 
     }
 
-    /**
-     * Adds an object key to the given query to insert into search table
-     * @param \Doctrine\DBAL\Query\QueryBuilder $q
-     * @return string[] The added insert column names
-     */
-    private function addObjectKeyToQuery($q)
-    {
-        $q->addSelect('p.Id');
-        $q->addSelect("CONCAT('".PimObject::TypeProduct.":', p.Id) AS ObjectKey");
-
-        return ['ProductId', 'ObjectKey'];
-    }
-
-    /**
-     * Adds restriction values to the given query to insert into search table
-     * @param \Doctrine\DBAL\Query\QueryBuilder $q
-     * @return string[] The added insert column names
-     */
-    private function addRestrictionValuesToQuery($q)
-    {
-        $cols = [];
-        if ($this->querySettings->isMarketRestricted()) {
-            $productLevel = $this->structureElementRepo->getProductLevel();
-            $marketAttr = $this->attrRepo->getEffectiveAttributeForStructureElement($this->querySettings->getMarketRestrictionAttribute(), $productLevel->getOrderNr());
-
-            if ($marketAttr != null) {
-                $q->leftJoin('p', 'ProductValue', 'pv_market', $q->expr()->andX(
-                    $q->expr()->eq('pv_market.ProductId', 'p.Id'),
-                    $q->expr()->eq('pv_market.FeatureId', $marketAttr->getId())
-                ));
-                $q->addSelect('pv_market.ContentPlain');
-                $cols[] = 'MarketRestriction';
-            }
-        }
-
-        if ($this->querySettings->isUserRestricted()) {
-            $productLevel = $this->structureElementRepo->getProductLevel();
-            $marketAttr = $this->attrRepo->getEffectiveAttributeForStructureElement($this->querySettings->getUserRestrictionAttribute(), $productLevel->getId());
-
-            if ($marketAttr != null) {
-                $q->leftJoin('p', 'ProductValue', 'pv_user', $q->expr()->andX(
-                    $q->expr()->eq('pv_user.ProductId', 'p.Id'),
-                    $q->expr()->eq('pv_user.FeatureId', $marketAttr->getId())
-                ));
-                $q->addSelect('pv_user.ContentPlain');
-                $cols[] = 'UserRestriction';
-            }
-        }
-
-        return $cols;
-    }
-
-    /**
-     * Executes an INSERT INTO SELECT with the given select query
-     * @param \Doctrine\DBAL\Query\QueryBuilder $q
-     * @param string $table The table to insert into
-     * @param string[] $cols The insert column names. If empty, all destination columns must be selected
-     * @throws \Exception
-     */
-    private function executeInsert($q, $table, $cols = [])
-    {
-        $colStr = '';
-        if (!empty($cols)) {
-            $colStr = '('. implode(',', $cols).') ';
-        }
-
-        $this->db->getConnection()->executeUpdate(
-            "INSERT INTO $table $colStr {$q->getSQL()}",
-            $q->getParameters(),
-            $q->getParameterTypes()
-        );
-    }
 
     /**
      * Initializes the search context
@@ -548,5 +477,4 @@ XXX
 XXX
         );
     }
-
 }
