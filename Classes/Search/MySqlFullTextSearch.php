@@ -56,8 +56,8 @@ class MySqlFullTextSearch extends RepositoryBase implements FullTextSearchInterf
         $q = $this->_q();
         $scoreFields = [];
         $searchFields = [];
-        for ($i = 0; $i <= 3; ++$i) {
-            $n = $i==0?'Display':'SearchTerms'.$i;
+        for ($i = 1; $i <= 3; ++$i) {
+            $n = 'SearchTerms'.$i;
             $searchFields[] = $n;
             $f = /** @lang MySQL */"(0+LEAST((MATCH($n) AGAINST (:term IN BOOLEAN MODE)), 100000)*POW(2,4-$i)) AS score$i";
             $scoreFields[] = $f;
@@ -74,6 +74,6 @@ class MySqlFullTextSearch extends RepositoryBase implements FullTextSearchInterf
         // Build boolean terms => append '*' to each single word. TODO: Add +? ("And" query)
         $terms = preg_split('/\s+/', $term, -1, PREG_SPLIT_NO_EMPTY);
         $termsBool = array_map(function($t) { return strtolower($t).'*'; }, $terms);
-        return implode(' ', $termsBool);
+        return implode(' +', $termsBool);
     }
 }
