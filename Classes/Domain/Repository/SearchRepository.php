@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
 use Doctrine\DBAL\Connection;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
+use Ms3\Ms3CommerceFx\Search\FullTextSearchInterface;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\Search\SearchQueryUtils;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
@@ -33,11 +34,19 @@ class SearchRepository extends RepositoryBase
         $this->restriction = $rs;
     }
 
+    /** @var FullTextSearchInterface */
+    private $ftBackend;
+    /**
+     * @param FullTextSearchInterface $be
+     */
+    public function injectTextSearchBackend(FullTextSearchInterface $be) {
+        $this->ftBackend = $be;
+    }
+
     /**
      * @var StructureElementRepository
      */
     private $structureElementRepo;
-
     /**
      * @param StructureElementRepository $ser
      */
@@ -105,6 +114,27 @@ class SearchRepository extends RepositoryBase
         $cols = array_merge($cols, SearchQueryUtils::addRestrictionValuesToQuery($this->querySettings, $q));
 
         SearchQueryUtils::executeInsert($this->db, $q, $context->getTableName(), $cols);
+        $context->isRestrictionFiltered = false;
+        $context->consolidatedOnLevel = false;
+    }
+
+    /**
+     * Marks all objects matched by full text search for search
+     * @param SearchContext $context The search context
+     * @param int $shopId The shop to search in
+     * @param string $term The search term
+     * @param int $menuId Optional restriction to menu sub tree
+     */
+    public function findByFullText(SearchContext $context, $shopId, $term, $menuId = 0)
+    {
+        if (array_key_exists($menuId, $context->handledFullTextMenuIds)) {
+            return;
+        }
+
+        $context->handledFullTextMenuIds[$menuId] = true;
+
+        $this->ftBackend->insertFullTextMatches($context->getTableName(), $shopId, $term, $menuId);
+
         $context->isRestrictionFiltered = false;
         $context->consolidatedOnLevel = false;
     }
