@@ -57,6 +57,13 @@ class PimObjectCollection
     }
 
     /**
+     * @return int
+     */
+    public function count() {
+        return count($this->objects);
+    }
+
+    /**
      * @param int $type
      * @return PimObject[]
      */

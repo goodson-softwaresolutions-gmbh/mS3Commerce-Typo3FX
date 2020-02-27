@@ -112,6 +112,19 @@ abstract class PimObject extends AbstractEntity
         return $this->collection;
     }
 
+    /**
+     * @return PimObject
+     */
+    public function detached() {
+        if ($this->collection == null) {
+            return $this;
+        }
+        /** @var PimObject $copy */
+        $copy = clone $this;
+        $copy->collection = null;
+        return $copy;
+    }
+
     public function isGroup() : bool {
         return $this->getEntityType() == self::TypeGroup;
     }
@@ -136,8 +149,22 @@ abstract class PimObject extends AbstractEntity
         return $this->children;
     }
 
+    /**
+     * @return bool
+     */
     public function childrenLoaded() : bool {
         return $this->children  !== null;
+    }
+
+    /**
+     * @return PimObject|null
+     */
+    public function getFirstChild() {
+        $this->getChildren();
+        if ($this->children && count($this->children) > 0) {
+            return $this->children[0]->detached();
+        }
+        return null;
     }
 
     /**
