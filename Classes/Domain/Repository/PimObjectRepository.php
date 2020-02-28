@@ -322,6 +322,10 @@ class PimObjectRepository extends RepositoryBase
             return null;
         }
 
+        if ($obj->getMenuId() != 0) {
+            $obj = clone $obj;
+        }
+
         $obj->_setProperty('menuId', $menuId);
         $menuObj->setObject($obj);
         $this->store->registerObject($menuObj);

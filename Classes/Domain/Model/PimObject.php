@@ -60,7 +60,7 @@ abstract class PimObject extends AbstractEntity
     /**
      * @return int
      */
-    public function getMenuId(): int
+    public function getMenuId()
     {
         return $this->menuId;
     }
