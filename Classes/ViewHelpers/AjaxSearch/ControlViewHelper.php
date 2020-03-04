@@ -47,8 +47,12 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
             $attr = $attrParam->getAttribute();
         } else if ($attrParam instanceof Attribute) {
             $attr = $attrParam;
+        } else if ($attrParam == null) {
+            return '';
         } else {
-            //$attr = (string)$attrParam; // Assume string, or _toString exists
+            if (gettype($attrParam) == "object")
+                throw new \Exception("Parameter 'attribute' must be AttributeValue or Attribute, " . get_class($attrParam) . " given");
+            throw new \Exception("Parameter 'attribute' must be AttributeValue or Attribute, " . gettype($attrParam) . " given");
         }
 
         if ($view !== false) {
