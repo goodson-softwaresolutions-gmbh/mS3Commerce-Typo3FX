@@ -25,7 +25,7 @@ class GeneralUtilities
      * @return string The sane name
      */
     public static function sanitizeFluidAccessName($name) {
-        return preg_replace('/\W/', '_', $name);
+        return preg_replace('/[^a-zA-Z_0-9]/u', '_', $name);
     }
 
     /**

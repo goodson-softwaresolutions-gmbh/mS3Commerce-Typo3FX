@@ -224,6 +224,9 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
     private $categorization;
     private $pos;
 
+    /** @var AttributeValue */
+    private $filledAttributes;
+
     /**
      * CategorizationProxy constructor.
      * @param PimObject $obj
@@ -250,7 +253,7 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         return $this->categorization->getAttributes();
     }
 
-    /* ArrayAccess implementation */
+    /* ArrayAccess implementation: Access by position in categorization */
     public function offsetExists($offset)
     {
         return array_key_exists($offset, $this->categorization->getAttributes());
@@ -259,7 +262,12 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
     public function offsetGet($offset)
     {
         $attr = $this->categorization->getAttributes()[$offset];
-        return $this->obj->getAttributes()[$attr->getSaneName()];
+        // If object has no value, this will be null. Create dummy value
+        $va = $this->obj->getAttributes()[$attr->getSaneName()];
+        if ($va == null) {
+            $va = AttributeValue::createEmptyFromObjectAndAttribute($this->obj, $attr);
+        }
+        return $va;
     }
 
     public function offsetSet($offset, $value)
@@ -272,13 +280,10 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         // not implemented
     }
 
-    /* Iterator implementation */
+    /* Iterator implementation: Access only attributes with values */
     public function current()
     {
-        /** @var Attribute $attr */
-        $attr = $this->categorization->getAttributes()[$this->pos];
-        $ret = $this->obj->getAttributes()[$attr->getSaneName()];
-        return $ret;
+        return $this->getFilledAttributes()[$this->pos];
     }
 
     public function next()
@@ -293,11 +298,24 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
 
     public function valid()
     {
-        return $this->pos < count($this->categorization->getAttributes());
+        return $this->pos < count($this->getFilledAttributes());
     }
 
     public function rewind()
     {
         $this->pos = 0;
+    }
+
+    private function getFilledAttributes() {
+        if ($this->filledAttributes == null) {
+            $this->filledAttributes = [];
+            foreach ($this->categorization->getAttributes() as $attr) {
+                $fa = $this->obj->getAttributes()[$attr->getSaneName()];
+                if ($fa) {
+                    $this->filledAttributes[] = $fa;
+                }
+            }
+        }
+        return $this->filledAttributes;
     }
 }
