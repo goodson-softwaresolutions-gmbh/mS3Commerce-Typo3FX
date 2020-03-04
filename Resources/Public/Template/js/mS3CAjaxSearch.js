@@ -61,7 +61,7 @@ function Ms3CAjaxSearchController(formName) {
     Ms3CAjaxSearchController.prototype.initializeFilters = function (filterValues) {
         for (let key in filterValues) {
             if (key in this.controls) {
-                this.controls[key].initialValues = filterValues[key];
+                this.controls[key].init(filterValues[key]);
             }
         }
         this.reset();
@@ -153,7 +153,10 @@ function Ms3CAjaxSearchCheckbox(controller, attribute, element) {
     this.initialValues = [];
 }
 (function() {
-    Ms3CAjaxSearchCheckbox.prototype.reset = function () {
+    Ms3CAjaxSearchCheckbox.prototype.init = function(initialValues) {
+        this.initialValues = initialValues;
+    };
+    Ms3CAjaxSearchCheckbox.prototype.reset = function() {
         this.setFilterValues(this.initialValues, []);
     };
 
