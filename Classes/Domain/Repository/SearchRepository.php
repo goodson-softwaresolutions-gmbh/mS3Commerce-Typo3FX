@@ -97,7 +97,7 @@ class SearchRepository extends RepositoryBase
             ->innerJoin('m', 'Product', 'p', 'p.Id = m.ProductId');
 
         $q->innerJoin('m', 'Menu', 'pm',
-            $q->expr()->like('m.Path', "CONCAT(pm.Path, '%')"));
+            $q->expr()->like('m.Path', "CONCAT(pm.Path, '/', pm.Id, '%')"));
         $q->andWhere($q->expr()->eq('pm.Id', $menuId));
 
         $cols = array_merge(['MenuId', 'Path', 'Sort'], $this->addObjectKeyToQuery($q));
