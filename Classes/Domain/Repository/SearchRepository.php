@@ -187,6 +187,7 @@ class SearchRepository extends RepositoryBase
      */
     public function consolidateMenuIds(SearchContext $context, $structureElement, $start, $limit) {
         $this->consolidateResults($context, $structureElement);
+        $this->filterConsolidatedResults($context, $structureElement);
 
         $q = $this->_q();
         $q->select('m.Id AS MenuId, m.OrderPath') // ORDER Column must be in select for DISTINCT
@@ -269,7 +270,7 @@ class SearchRepository extends RepositoryBase
                 $q->where("t.filter_sum = $ct");
             }
 
-            SearchQueryUtils::executeInsert($this->db, $q, $context->getTableName('cons'));
+            SearchQueryUtils::executeInsert($this->db, $q, $context->getTableName('cons'), ['MenuId', 'StructureElementId', 'ParentId']);
 
             // Loop up in hierarchy until no more changes
             do {
@@ -285,6 +286,49 @@ class SearchRepository extends RepositoryBase
             } while ($ct > 0);
 
             $context->consolidatedOnLevel = $structureElement;
+        }
+    }
+
+    private function filterConsolidatedResults(SearchContext $context, $structureElement)
+    {
+        $this->injectFilterColumnsForConsolidation($context, $structureElement);
+        $this->restriction->filterRestrictionTable($context->getTableName('cons'), $this->db->getConnection());
+    }
+
+    private function injectFilterColumnsForConsolidation(SearchContext $context, $structureElement)
+    {
+        $q = $this->_q();
+        $q->update($context->getTableName('cons') . ' AS s, Menu AS m')
+            ->set('s.ObjectKey', "CONCAT('" . PimObject::TypeGroup . ":', m.GroupId)")
+            ->where($q->expr()->eq('s.MenuId', 'm.Id'));
+        $ct = $q->execute();
+
+        if ($this->querySettings->isMarketRestricted()) {
+            $strElem = $this->structureElementRepo->getStructureElementByName($structureElement);
+            $attr = $this->attrRepo->getEffectiveAttributeForStructureElement($this->querySettings->getMarketRestrictionAttribute(), $strElem->getOrderNr());
+            $q = $this->_q();
+            $q->update($context->getTableName('cons') . ' AS s, Menu AS m, GroupValue AS gv')
+                ->set('s.MarketRestriction', 'gv.ContentPlain')
+                ->where($q->expr()->andX(
+                    $q->expr()->eq('s.MenuId', 'm.Id'),
+                    $q->expr()->eq('m.GroupId', 'gv.GroupId'),
+                    $q->expr()->eq('gv.FeatureId', $attr->getId())
+                ));
+            $ct = $q->execute();
+        }
+
+        if ($this->querySettings->isUserRestricted()) {
+            $strElem = $this->structureElementRepo->getStructureElementByName($structureElement);
+            $attr = $this->attrRepo->getEffectiveAttributeForStructureElement($this->querySettings->getUserRestrictionAttribute(), $strElem->getOrderNr());
+            $q = $this->_q();
+            $q->update($context->getTableName('cons') . ' AS s, Menu AS m, GroupValue AS gv')
+                ->set('s.UserRestriction', 'gv.ContentPlain')
+                ->where($q->expr()->andX(
+                    $q->expr()->eq('s.MenuId', 'm.Id'),
+                    $q->expr()->eq('m.GroupId', 'gv.GroupId'),
+                    $q->expr()->eq('gv.FeatureId', $attr->getId())
+                ));
+            $ct = $q->execute();
         }
     }
 
@@ -479,7 +523,15 @@ XXX
             CREATE TEMPORARY TABLE {$context->getTableName('cons')} (
                 MenuId INT NOT NULL,
                 StructureElementId INT NOT NULL,
-                ParentId INT NULL
+                ParentId INT NULL,
+                -- For filter after consolidation
+                ObjectKey VARCHAR(15) NULL,
+                MarketRestriction VARCHAR(255) NULL,
+                UserRestriction VARCHAR(255) NULL,
+                RestrictionFiltered BIT NOT NULL DEFAULT 0,
+                INDEX idx_menuId (MenuId),
+                INDEX idx_objectKey (ObjectKey),
+                INDEX idx_visible (RestrictionFiltered)
             ) ENGINE = Memory;
 XXX
         );

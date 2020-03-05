@@ -38,6 +38,19 @@ class SearchQueryUtils
     }
 
     /**
+     * Adds an object key to the given query to insert into search table
+     * @param \Doctrine\DBAL\Query\QueryBuilder $q
+     * @return string[] The added insert column names
+     */
+    public static function addGroupObjectKeyToQuery($q)
+    {
+        $q->addSelect('g.Id');
+        $q->addSelect("CONCAT('".PimObject::TypeGroup.":', g.Id) AS ObjectKey");
+
+        return ['GroupId', 'ObjectKey'];
+    }
+
+    /**
      * Adds restriction values to the given query to insert into search table
      * @param QuerySettings $querySettings
      * @param \Doctrine\DBAL\Query\QueryBuilder $q
@@ -68,16 +81,70 @@ class SearchQueryUtils
 
         if ($querySettings->isUserRestricted()) {
             $productLevel = $structure->getProductLevel();
-            $marketAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getUserRestrictionAttribute(), $productLevel->getId());
+            $userAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getUserRestrictionAttribute(), $productLevel->getId());
 
-            if ($marketAttr != null) {
+            if ($userAttr != null) {
                 $q->leftJoin('p', 'ProductValue', 'pv_user', $q->expr()->andX(
                     $q->expr()->eq('pv_user.ProductId', 'p.Id'),
-                    $q->expr()->eq('pv_user.FeatureId', $marketAttr->getId())
+                    $q->expr()->eq('pv_user.FeatureId', $userAttr->getId())
                 ));
                 $q->addSelect('pv_user.ContentPlain');
                 $cols[] = 'UserRestriction';
             }
+        }
+
+        return $cols;
+    }
+
+    /**
+     * Adds restriction values to the given query to insert into search table
+     * @param QuerySettings $querySettings
+     * @param \Doctrine\DBAL\Query\QueryBuilder $q
+     * @param string $structureElementName Name of structure element
+     * @param $addEmptyIfNotRestricted If true, an empty column will be added to query if not restricted
+     * @return string[] The added insert column names
+     */
+    public static function addGroupRestrictionValuesToQuery($querySettings, $q, $structureElementName, $addEmptyIfNotRestricted)
+    {
+        // Assume they are reused instances with dependencies injected
+        /** @var StructureElementRepository $structure */
+        $structure = GeneralUtility::makeInstance(StructureElementRepository::class);
+        /** @var AttributeRepository $attr */
+        $attr = GeneralUtility::makeInstance(AttributeRepository::class);
+
+        $cols = [];
+        if ($querySettings->isMarketRestricted()) {
+            $level = $structure->getStructureElementByName($structureElementName);
+            $marketAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getMarketRestrictionAttribute(), $level->getOrderNr());
+
+            if ($marketAttr != null) {
+                $q->leftJoin('g', 'GroupValue', 'gv_market', $q->expr()->andX(
+                    $q->expr()->eq('gv_market.GroupId', 'g.Id'),
+                    $q->expr()->eq('gv_market.FeatureId', $marketAttr->getId())
+                ));
+                $q->addSelect('gv_market.ContentPlain AS MarketRestriction');
+                $cols[] = 'MarketRestriction';
+            }
+        } else if ($addEmptyIfNotRestricted) {
+            $q->addSelect('NULL AS MarketRestriction');
+            $cols[] = 'MarketRestriction';
+        }
+
+        if ($querySettings->isUserRestricted()) {
+            $level = $structure->getStructureElementByName($structureElementName);
+            $userAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getUserRestrictionAttribute(), $level->getId());
+
+            if ($userAttr != null) {
+                $q->leftJoin('g', 'GroupValue', 'gv_user', $q->expr()->andX(
+                    $q->expr()->eq('gv_user.GroupId', 'g.Id'),
+                    $q->expr()->eq('gv_user.FeatureId', $userAttr->getId())
+                ));
+                $q->addSelect('gv_user.ContentPlain AS UserRestriction');
+                $cols[] = 'UserRestriction';
+            }
+        } else if ($addEmptyIfNotRestricted) {
+            $q->addSelect('NULL AS UserRestriction');
+            $cols[] = 'UserRestriction';
         }
 
         return $cols;

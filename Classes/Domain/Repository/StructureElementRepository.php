@@ -60,7 +60,7 @@ class StructureElementRepository extends RepositoryBase
 
     /**
      * Gets a structure element by its name.
-     * @param $name The name
+     * @param string $name The name
      * @return StructureElement|null
      */
     public function getStructureElementByName($name) {
