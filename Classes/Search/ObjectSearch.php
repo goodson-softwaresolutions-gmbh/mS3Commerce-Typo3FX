@@ -30,6 +30,40 @@ class ObjectSearch implements SingletonInterface
         $this->repo = $repo;
     }
 
+    public function fulltextSearchObjects(SearchContext $context, $shopId, $term, $start, $limit) {
+        $s = $this->repo->getSearchRepository();
+        $s->initObjectSearch($context);
+        $s->findByFullText($context, $shopId, $term);
+
+        return $this->fetchAllResults($context, $start, $limit);
+    }
+
+    public function fulltextSearchObjectsInMenu(SearchContext $context, $rootId, $term, $start, $limit) {
+        $s = $this->repo->getSearchRepository();
+        $s->initObjectSearch($context);
+        $shop = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
+        $s->findByFullText($context, $shop->getShopId(), $term, $rootId);
+
+        return $this->fetchAllResults($context, $start, $limit);
+    }
+
+    public function fulltextSearchObjectsConsolidated(SearchContext $context, $shopId, $term, $structureElement, $start, $limit) {
+        $s = $this->repo->getSearchRepository();
+        $s->initObjectSearch($context);
+        $s->findByFullText($context, $shopId, $term);
+
+        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
+    }
+
+    public function fulltextSearchObjectsInMenuConsolidated(SearchContext $context, $rootId, $term, $structureElement, $start, $limit) {
+        $s = $this->repo->getSearchRepository();
+        $s->initObjectSearch($context);
+        $shop = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
+        $s->findByFullText($context, $shop->getShopId(), $term, $rootId);
+
+        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
+    }
+
     public function searchObjects(SearchContext $context, $rootId, $start, $limit) {
         $s = $this->repo->getSearchRepository();
         $s->initObjectSearch($context);

@@ -82,6 +82,9 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     public function injectSearch(SearchRepository $sr) {
         $this->search = $sr;
     }
+    /**
+     * @return SearchRepository
+     */
     public function getSearchRepository() {
         return $this->search;
     }

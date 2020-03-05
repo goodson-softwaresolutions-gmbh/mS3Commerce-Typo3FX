@@ -95,6 +95,56 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     * Finds objects by a given attribute value
+     * @param string $attributeName The attribute's name
+     * @param string $value The value to find
+     * @param int $entityType Types of entities to find. Must be {@see PimObject::TypeGroup}, {@see PimObject::TypeProduct} or {@see PimObject::TypeNone}. If None, finds all types
+     * @param bool $like If true, performs LIKE query, otherwise equals
+     * @return PimObject[]
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getByAttributeValue($attributeName, $value, $entityType = PimObject::TypeNone, $like = false)
+    {
+        $qG = '';
+        if ($entityType == PimObject::TypeGroup || $entityType == PimObject::TypeNone) {
+            $qG = $this->_q();
+            $qG->select('gm.Id')
+                ->from('GroupValue', 'gv')
+                ->innerJoin('gv', 'Menu', 'gm', $qG->expr()->eq('gv.GroupId', 'gm.GroupId'))
+                ->innerJoin('gv', 'Feature', 'gf', $qG->expr()->eq('gv.FeatureId', 'gf.Id'))
+                ->where($qG->expr()->eq('gf.Name', ':attr'));
+            if ($like) {
+                $qG->andWhere($qG->expr()->like('gv.ContentPlain', ':val'));
+            } else {
+                $qG->andWhere($qG->expr()->eq('gv.ContentPlain', ':val'));
+            }
+            $qG = $qG->getSQL();
+        }
+
+        $qP = '';
+        if ($entityType == PimObject::TypeProduct || $entityType == PimObject::TypeNone) {
+            $qP = $this->_q();
+            $qP->select('pm.Id')
+                ->from('ProductValue', 'pv')
+                ->innerJoin('pv', 'Menu', 'pm', $qP->expr()->eq('pv.ProductId', 'pm.ProductId'))
+                ->innerJoin('pv', 'Feature', 'pf', $qP->expr()->eq('pv.FeatureId', 'pf.Id'))
+                ->where($qP->expr()->eq('pf.Name', ':attr'));
+            if ($like) {
+                $qP->andWhere($qP->expr()->like('pv.ContentPlain', ':val'));
+            } else {
+                $qP->andWhere($qP->expr()->eq('pv.ContentPlain', ':val'));
+            }
+            $qP = $qP->getSQL();
+        }
+
+        $q = implode(' UNION ', array_filter([$qG, $qP]));
+        $res = $this->db->getConnection()->executeQuery($q, [':attr' => $attributeName, ':val' => $value]);
+        $menuIds = $res->fetchAll();
+        $menuIds = GeneralUtilities::flattenArray($menuIds);
+        return $this->getByMenuIds($menuIds);
+    }
+
+    /**
      * Loads all children of a object
      * @param PimObject $object The object for which to get children
      */
@@ -270,6 +320,10 @@ class PimObjectRepository extends RepositoryBase
 
         if (!$obj) {
             return null;
+        }
+
+        if ($obj->getMenuId() != 0) {
+            $obj = clone $obj;
         }
 
         $obj->_setProperty('menuId', $menuId);

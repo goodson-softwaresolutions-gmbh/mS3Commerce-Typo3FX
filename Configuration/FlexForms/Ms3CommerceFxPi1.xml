@@ -16,6 +16,26 @@
                             </config>
                         </TCEforms>
                     </settings.templateFile>
+                    <switchableControllerActions>
+                        <TCEforms>
+                            <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.title</label>
+                            <config>
+                                <type>select</type>
+                                <items type="array">
+                                    <numIndex index="0">
+                                        <numIndex index="0">LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.list</numIndex>
+                                        <!-- Controller -> action -->
+                                        <numIndex index="1">Object->list</numIndex>
+                                    </numIndex>
+                                    <numIndex index="1">
+                                        <numIndex index="0">LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.searchresult</numIndex>
+                                        <numIndex index="1">Search->search</numIndex>
+                                    </numIndex>
+                                </items>
+                                <size>1</size>
+                            </config>
+                        </TCEforms>
+                    </switchableControllerActions>
                 </el>
             </ROOT>
         </sDEF>

@@ -39,6 +39,22 @@ class AttributeValue extends AbstractEntity
     }
 
     /**
+     * Creates an empty attribute value
+     * @param PimObject $object
+     * @param Attribute $attribute
+     * @return AttributeValue
+     */
+    public static function createEmptyFromObjectAndAttribute(PimObject $object, Attribute $attribute) {
+        $ret = new AttributeValue(0);
+        $ret->attribute = $attribute;
+        $ret->featureId = $attribute->getId();
+        $ret->languageId = $attribute->getLanguageId();
+        $ret->productId = $object->isProduct() ? $object->getId() : 0;
+        $ret->groupId = $object->isGroup() ? $object->getId() : 0;
+        return $ret;
+    }
+
+    /**
      * @return int|null
      */
     public function getObjectId() {

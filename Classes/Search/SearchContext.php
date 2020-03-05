@@ -32,6 +32,7 @@ class SearchContext
     var $consolidatedOnLevel = false;
     var $isInitialized = false;
     var $handledMenuIds = [];
+    var $handledFullTextMenuIds = [];
     var $filterAttributes = [];
 
     /** @var SearchContext */

@@ -9,6 +9,15 @@
             <trans-unit id="settings.commerce.templateFile" xml:space="preserve">
                 <source>Template File</source>
             </trans-unit>
+            <trans-unit id="settings.commerce.action.title" xml:space="preserve">
+                <source>Content type</source>
+            </trans-unit>
+            <trans-unit id="settings.commerce.action.list" xml:space="preserve">
+                <source>Object list</source>
+            </trans-unit>
+            <trans-unit id="settings.commerce.action.searchresult" xml:space="preserve">
+                <source>Search result</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>
