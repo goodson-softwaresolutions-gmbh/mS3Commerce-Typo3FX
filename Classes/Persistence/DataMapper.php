@@ -31,6 +31,10 @@ class DataMapper implements \TYPO3\CMS\Core\SingletonInterface
      * @param $prefix string Optional prefix of column names
      */
     public function mapObject(AbstractEntity $object, $row, $prefix = '') {
+        if ($object->_map($row, $prefix)) {
+            return;
+        }
+
         $props = $object->_getProperties();
         foreach ($row as $key => $value) {
             if (!empty($prefix)) {

@@ -58,6 +58,54 @@ abstract class PimObject extends AbstractEntity
     public abstract function getEntityType() : int;
 
     /**
+     * @return int
+     */
+    public function getMenuId(): int
+    {
+        return $this->menuId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuxiliaryName()
+    {
+        return $this->auxiliaryName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAsimOid()
+    {
+        return $this->asimOid;
+    }
+
+    /**
+     * @return int
+     */
+    public function getObjectId()
+    {
+        return $this->objectId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStructureElementId()
+    {
+        return $this->structureElementId;
+    }
+
+    /**
      * @return PimObjectCollection
      */
     public function getCollection() {
@@ -168,6 +216,13 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         return $this->categorization;
     }
 
+    /**
+     * @return Attribute[]
+     */
+    public function getAttributes() {
+        return $this->categorization->getAttributes();
+    }
+
     /* ArrayAccess implementation */
     public function offsetExists($offset)
     {
@@ -195,7 +250,8 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
     {
         /** @var Attribute $attr */
         $attr = $this->categorization->getAttributes()[$this->pos];
-        return $this->obj->getAttributes()[$attr->getSaneName()];
+        $ret = $this->obj->getAttributes()[$attr->getSaneName()];
+        return $ret;
     }
 
     public function next()

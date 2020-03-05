@@ -27,6 +27,9 @@ class Menu extends AbstractEntity
         parent::__construct($menuId);
     }
 
+    /**
+     * @return int
+     */
     public function getObjectEntityType() {
         if ($this->object != null) {
             return $this->object->getEntityType();
@@ -60,13 +63,98 @@ class Menu extends AbstractEntity
     protected $object;
 
     /**
+     * @return int
+     */
+    public function getLanguageId()
+    {
+        return $this->languageId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMarketId()
+    {
+        return $this->marketId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getParentId()
+    {
+        return $this->parentId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDepth()
+    {
+        return $this->depth;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrdinal()
+    {
+        return $this->ordinal;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContextID()
+    {
+        return $this->contextID;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGroupId()
+    {
+        return $this->groupId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getProductId()
+    {
+        return $this->productId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDocumentId()
+    {
+        return $this->documentId;
+    }
+
+    /**
      * @return PimObject
      */
     public function getObject() {
         return $this->object;
     }
 
+    /**
+     * @param PimObject $obj
+     */
     public function setObject(PimObject $obj) {
         $this->object = $obj;
     }
+
+
 }

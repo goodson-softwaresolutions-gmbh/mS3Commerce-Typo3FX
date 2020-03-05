@@ -15,13 +15,15 @@
 
 namespace Ms3\Ms3CommerceFx\Service;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
-use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
+use TYPO3\CMS\Core\SingletonInterface;
 
-class RestrictionService
+class RestrictionService implements SingletonInterface
 {
     private $visibleCache = [];
     private $invisibleCache = [];
@@ -49,21 +51,84 @@ class RestrictionService
         }
 
         $objects = GeneralUtilities::toDictionary($objects, [ObjectHelper::class, 'getKeyFromObject']);
-        $keys = array_keys($objects);
 
         // Remove things we already know
-        $invisibles = array_intersect($this->invisibleCache, $keys);
-        $visibles = array_intersect($this->visibleCache, $keys);
-        $checkKeys = array_diff($keys, $invisibles, $visibles);
+        $invisibles = array_intersect_key($this->invisibleCache, $objects);
+        $visibles = array_intersect_key($this->visibleCache, $objects);
+        $toCheck = array_diff_key($objects, $invisibles, $visibles);
 
         // Check restrictions of new objects. updated visible and invisible cache
-        $toCheck = GeneralUtilities::subset($objects, $checkKeys);
         $this->checkRestrictions($toCheck);
 
         // Get only objects that are visible
-        $visibleObjects = GeneralUtilities::subset($objects, $this->visibleCache);
+        $visibleObjects = GeneralUtilities::subsetKeys($objects, $this->visibleCache);
         return array_values($visibleObjects);
     }
+
+    /**
+     * Marks objects as valid by restriction in a given table. The table must have a certain layout:
+     * - ObjectKey (VARCHAR): The object's key (as in @see ObjectHelper::buildKeyForObject())
+     * - RestrictionFiltered (BIT): If the restriction was already applied to this object
+     * - MarketRestriction (VARCHAR): The value of the market restriction attribute
+     * - UserRestriction (VARCHAR): The value of the user restriction attribute
+     * As a result, all invalid objects will be DELETEd from the table, and all valid are marked as valid
+     * @param string $tableName The table name
+     * @param \Doctrine\DBAL\Connection $connection
+     */
+    public function filterRestrictionTable($tableName, $connection)
+    {
+        if (!$this->querySettings->isMarketRestricted() && !$this->querySettings->isUserRestricted()) {
+            $q = $connection->createQueryBuilder();
+            $q->update($tableName)
+                ->set('RestrictionFiltered', 1)
+                ->execute();
+            return;
+        }
+
+        // Remove known invisibles
+        $q = $connection->createQueryBuilder();
+        $q->delete($tableName)
+            ->where($q->expr()->in('ObjectKey', $q->createNamedParameter(array_keys($this->invisibleCache), Connection::PARAM_STR_ARRAY)))
+            ->execute();
+
+        // Mark visible known visibles
+        $q = $connection->createQueryBuilder();
+        $q->update($tableName)
+            ->set('RestrictionFiltered', 1)
+            ->where($q->expr()->in('ObjectKey', $q->createNamedParameter(array_keys($this->visibleCache), Connection::PARAM_STR_ARRAY)))
+            ->execute();
+
+        $markForInclusion = function($values) use ($connection, $tableName)
+        {
+            $q = $connection->createQueryBuilder();
+            $q->update($tableName)
+                ->set('RestrictionFiltered', 1);
+            $conditions = [
+                $q->expr()->isNull('MarketRestriction')
+            ];
+            foreach ($values as $val) {
+                $conditions[] = $q->expr()->like("CONCAT(';',MarketRestriction,';')", "CONCAT('%;',".$q->createNamedParameter($val).",';%')");
+            }
+            $q->where($q->expr()->andX(
+                'RestrictionFiltered = 0',
+                new CompositeExpression(CompositeExpression::TYPE_OR, $conditions)
+            ));
+            $q->execute();
+        };
+
+        if ($this->querySettings->isMarketRestricted()) {
+            $markForInclusion($this->querySettings->getMarketRestrictionValues());
+        }
+        if ($this->querySettings->isUserRestricted()) {
+            // TODO
+        }
+
+        $connection->createQueryBuilder()
+            ->delete($tableName)
+            ->where('RestrictionFiltered = 0')
+            ->execute();
+    }
+
 
     /**
      * @param PimObject[] $objects
@@ -75,13 +140,13 @@ class RestrictionService
         foreach ($objects as $k => $o) {
             $v = $this->applyFilter($vals[$k], $this->querySettings->getMarketRestrictionAttribute(), $this->querySettings->getMarketRestrictionValues());
             if (!$v) {
-                $this->invisibleCache[] = $k;
+                $this->invisibleCache[$k] = 1;
                 continue;
             }
 
             // TODO: Check User Restriction
 
-            $this->visibleCache[] = $k;
+            $this->visibleCache[$k] = 1;
         }
     }
 
@@ -101,7 +166,7 @@ class RestrictionService
             return true;
         }
 
-        $v = $v->getContentPlain();
+        // FOR FULL MODE: $v = $v->getContentPlain();
         if (empty($v)) {
             return true;
         }
@@ -133,8 +198,19 @@ class RestrictionService
         $loaded = array_filter($objects, function($o) { return $o->attributesLoaded();} );
 
         // Load attributes for not-loaded objects
+        $values = $this->repo->getObjectValueSubsetFlat($toLoad, $attrs);
+        // Map loaded objects to flat values
+        $values2 = array_map(function($o) {
+            return array_map(function($a) {
+              return $a->getContentPlain();
+            } ,$o->getAttributes());
+        }, $loaded);
+
+        /* FULL MODE
+        // Load attributes for not-loaded objects
         $values = $this->repo->getObjectValueSubset($toLoad, $attrs);
         $values2 = GeneralUtilities::toDictionary($loaded, [ObjectHelper::class, 'getKeyFromObjects'], function($o) { return $o->getAttributes(); });
+        */
 
         return array_merge($values, $values2);
     }

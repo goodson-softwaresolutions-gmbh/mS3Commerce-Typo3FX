@@ -43,6 +43,36 @@ class StructureElementRepository extends RepositoryBase
         return $this->allStructures;
     }
 
+    /**
+     * Returns the product level (lowest level in hierarchy)
+     * Note: Set Composition is not considered here.
+     * @return StructureElement|null
+     */
+    public function getProductLevel() {
+        $this->loadAll();
+        foreach ($this->allStructures as $structure) {
+            if ($structure->getOrderNr() == 1) {
+                return $structure;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets a structure element by its name.
+     * @param $name The name
+     * @return StructureElement|null
+     */
+    public function getStructureElementByName($name) {
+        $this->loadAll();
+        foreach ($this->allStructures as $structure) {
+            if ($structure->getName() == $name) {
+                return $structure;
+            }
+        }
+        return null;
+    }
+
     private function loadAll() {
         if ($this->allStructures != null) {
             return;

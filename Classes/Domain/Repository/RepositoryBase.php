@@ -33,6 +33,11 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
     protected $mapper;
 
     /**
+     * @var \Ms3\Ms3CommerceFx\Persistence\QuerySettings
+     */
+    protected $querySettings;
+
+    /**
      * @param \Ms3\Ms3CommerceFx\Persistence\DbBackend $backend
      */
     public function injectDbBackend(\Ms3\Ms3CommerceFx\Persistence\DbBackend $backend)
@@ -54,6 +59,13 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
     public function injectDataMapper(\Ms3\Ms3CommerceFx\Persistence\DataMapper $mapper)
     {
         $this->mapper = $mapper;
+    }
+
+    /**
+     * @param \Ms3\Ms3CommerceFx\Persistence\QuerySettings $settings
+     */
+    public function injectQuerySettings(\Ms3\Ms3CommerceFx\Persistence\QuerySettings $settings) {
+        $this->querySettings = $settings;
     }
 
     /**

@@ -31,6 +31,7 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
      */
     private $objectMap;
     private $identifierMap = [];
+    private $secondaryMap = [];
     public function __construct()
     {
         $this->objectMap = new ObjectStorage();
@@ -72,6 +73,19 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
         return $res;
     }
 
+    public function getObjectBySecondaryIdentifier($identifier, $className)
+    {
+        return $this->secondaryMap[$className][$identifier];
+    }
+
+    public function getObjectsBySecondaryIdentifiers($identifiers, $className) {
+        $res = [];
+        foreach ($identifiers as $id) {
+            $res[$id] = $this->getObjectBySecondaryIdentifier($id, $className);
+        }
+        return $res;
+    }
+
     public function getIdentifierByObject($object)
     {
         if ($this->hasObject($object))
@@ -83,6 +97,11 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
     {
         $this->objectMap[$object] = $object->getId();
         $this->identifierMap[get_class($object)][$object->getId()] = $object;
+    }
+
+    public function registerObjectSecondary($object, $key)
+    {
+        $this->secondaryMap[get_class($object)][$key] = $object;
     }
 
     public function unregisterObject($object)

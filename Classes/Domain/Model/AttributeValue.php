@@ -38,10 +38,77 @@ class AttributeValue extends AbstractEntity
         return $this->contentPlain;
     }
 
+    /**
+     * @return int|null
+     */
     public function getObjectId() {
         if ($this->groupId) return $this->groupId;
         if ($this->productId) return $this->productId;
         return null;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGroupId()
+    {
+        return $this->groupId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getProductId()
+    {
+        return $this->productId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFeatureId()
+    {
+        return $this->featureId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLanguageId()
+    {
+        return $this->languageId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentHtml(): string
+    {
+        return $this->contentHtml;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentPlain(): string
+    {
+        return $this->contentPlain;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getContentNumber()
+    {
+        return $this->contentNumber;
+    }
+
+    /**
+     * @return Attribute
+     */
+    public function getAttribute(): Attribute
+    {
+        return $this->attribute;
     }
 
     public function __call($name, $arguments)
@@ -51,5 +118,16 @@ class AttributeValue extends AbstractEntity
             return $this->attribute->__call($name, $arguments);
         }
         return $ret;
+    }
+
+    public function _map($row, $prefix) {
+        $this->groupId = $row[$prefix.'GroupId'];
+        $this->productId = $row[$prefix.'ProductId'];
+        $this->featureId = $row[$prefix.'FeatureId'];
+        $this->languageId = $row[$prefix.'LanguageId'];
+        $this->contentHtml = $row[$prefix.'ContentHtml'];
+        $this->contentPlain = $row[$prefix.'ContentPlain'];
+        $this->contentNumber = $row[$prefix.'ContentNumber'];
+        return true;
     }
 }

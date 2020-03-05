@@ -23,10 +23,22 @@ use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
+    /** @var ShopInfoRepository */
+    private $shopInfo;
+    public function injectShopInfo(ShopInfoRepository $si) {
+        $this->shopInfo = $si;
+    }
+    public function getShopInfoRepository() {
+        return $this->shopInfo;
+    }
+
     /** @var PimObjectRepository */
     private $object;
     public function injectObject(PimObjectRepository $or) {
         $this->object = $or;
+    }
+    public function getObjectRepository() {
+        return $this->object;
     }
 
     /** @var PimObjectCollectionRepository */
@@ -34,17 +46,44 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     public function injectObjectCollection(PimObjectCollectionRepository $ocr) {
         $this->objectCollection = $ocr;
     }
+    public function getObjectCollectionRepository() {
+        return $this->objectCollection;
+    }
+
+    /** @var AttributeRepository */
+    private $attribute;
+    public function injectAttribute(AttributeRepository $ar) {
+        $this->attribute = $ar;
+    }
+    public function getAttributeRepository() {
+        return $this->attribute;
+    }
 
     /** @var StructureElementRepository */
     private $structureElement;
     public function injectStructureElement(StructureElementRepository $ser) {
         $this->structureElement = $ser;
     }
+    public function getStructureElementRepository() {
+        return $this->structureElement;
+    }
 
     /** @var CategorizationRepository */
     private $categorization;
     public function injectCategorization(CategorizationRepository $cr) {
         $this->categorization = $cr;
+    }
+    public function getCategorizationRepository() {
+        return $this->categorization;
+    }
+
+    /** @var SearchRepository */
+    private $search;
+    public function injectSearch(SearchRepository $sr) {
+        $this->search = $sr;
+    }
+    public function getSearchRepository() {
+        return $this->search;
     }
 
     /** @var QuerySettings */
@@ -62,10 +101,18 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 
     /**
      * @param int $menuId
-     * @return Menu
+     * @return PimObject
      */
     public function getObjectByMenuId($menuId) {
         return $this->object->getByMenuId($menuId);
+    }
+
+    /**
+     * @param int[] $menuIds
+     * @return PimObject[]
+     */
+    public function getObjectsByMenuIds($menuIds) {
+        return $this->object->getByMenuIds($menuIds);
     }
 
     /**
@@ -97,6 +144,17 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function getObjectValueSubset($objects, $attributes) {
         return $this->object->getObjectAttributesSubset($objects, $attributes);
+    }
+
+    /**
+     * Returns values for certain attributes for a list of objects.
+     * Only the requested attributes are loaded. A simple value array for the plaint content is returned
+     * @param PimObject[] $objects The objects
+     * @param string[] $attributes The attribute names
+     * @return array Map of object key to AttributeName => ContentPlain
+     */
+    public function getObjectValueSubsetFlat($objects, $attributes) {
+        return $this->object->getObjectAttributesSubsetFlat($objects, $attributes);
     }
 
     /**

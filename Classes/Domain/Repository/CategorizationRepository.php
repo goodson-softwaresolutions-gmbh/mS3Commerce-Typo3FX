@@ -248,6 +248,8 @@ class CategorizationRepository extends RepositoryBase
         foreach ($attributeMap as $catId => $attrList) {
             $categoryMap[$catId] = [];
             foreach ($attrList as $attrId) {
+                if ($attributes[$attrId]->getName() == 'SMZ_GHOST_NODE')
+                    continue;
                 $categoryMap[$catId][] = $attributes[$attrId];
             }
         }

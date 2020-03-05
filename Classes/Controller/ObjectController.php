@@ -15,22 +15,32 @@
 
 namespace Ms3\Ms3CommerceFx\Controller;
 
+use Ms3\Ms3CommerceFx\Domain\Model\AttributeAccess;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 
+use Ms3\Ms3CommerceFx\Search\ObjectSearch;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class ObjectController extends AbstractController
 {
+    private $search;
+    public function injectSearch(ObjectSearch $search) {
+        $this->search = $search;
+    }
+
     /**
      * @param int $rootId
+     * @param int $start
      */
-    public function listAction($rootId = 0)
+    public function listAction($rootId = 0, $start = 0)
     {
         if ($rootId == 0) $rootId = $this->rootId;
         $obj = $this->repo->getObjectByMenuId($rootId);
         $this->view->assign('object', $obj);
+        $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
+        $this->view->assign('start', $start);
     }
 
     /**
@@ -40,5 +50,6 @@ class ObjectController extends AbstractController
     {
         $obj = $this->repo->getObjectByMenuId($rootId);
         $this->view->assign('object', $obj);
+        $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
     }
 }

@@ -45,16 +45,21 @@ abstract class AbstractEntity
      */
     public function getId() : int { return $this->id; }
 
+    private static $s_propertiesCache = [];
     public function _getProperties() {
-        $properties = get_object_vars($this);
-        foreach ($properties as $name => $value) {
-            if ($name[0] === '_') {
-                unset($properties[$name]);
-            } else if ($name == 'id') {
-                unset($properties[$name]);
+        if (!array_key_exists(get_class($this), self::$s_propertiesCache)) {
+            $properties = get_object_vars($this);
+            foreach ($properties as $name => $value) {
+                if ($name[0] === '_') {
+                    unset($properties[$name]);
+                } else if ($name == 'id') {
+                    unset($properties[$name]);
+                }
             }
+            self::$s_propertiesCache[get_class($this)] = $properties;
         }
-        return $properties;
+
+        return self::$s_propertiesCache[get_class($this)];
     }
 
     public function __call($name, $arguments)
@@ -93,5 +98,9 @@ abstract class AbstractEntity
             $this->repo = GeneralUtility::makeInstance(RepositoryFacade::class);
         }
         return $this->repo;
+    }
+
+    public function _map($row, $prefix) {
+        return false;
     }
 }

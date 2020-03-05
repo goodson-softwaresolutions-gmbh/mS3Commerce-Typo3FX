@@ -36,35 +36,59 @@ abstract class AbstractController extends ActionController
     }
 
     protected $rootId = 0;
+
     public function initializeAction()
     {
-        if (array_key_exists('rootId', $this->settings)) {
-            $this->rootId = $this->settings['rootId'];
+        $this->initializeRootId();
+        $this->initializeViewTemplate();
+        $this->initializeQuerySettings();
+    }
+
+    public function initializeView(ViewInterface $view)
+    {
+        if (!empty($this->settings['templateFile'])) {
+            $view->setTemplatePathAndFilename($this->settings['templateFile']);
         }
-        if (array_key_exists('templateFile', $this->settings)) {
+    }
+
+    protected function initializeRootId() {
+        if (!empty($this->settings['rootId'])) {
+            $this->rootId = $this->settings['rootId'];
+            $this->initializeShopParameters($this->rootId);
+        }
+    }
+
+    protected function initializeViewTemplate() {
+        if (!empty($this->settings['templateFile'])) {
             $this->defaultViewObjectName = StandaloneView::class;
         }
-        if (array_key_exists('includeUsageTypes', $this->settings)) {
+    }
+
+    protected function initializeQuerySettings() {
+        if (!empty($this->settings['includeUsageTypes'])) {
             $this->repo->getQuerySettings()->setIncludeUsageTypeIds($this->settings['includeUsageTypes']);
         }
         if (array_key_exists('marketRestriction', $this->settings)) {
             $vals = $this->settings['marketRestriction'];
-            if (array_key_exists('attribute', $vals) && array_key_exists('values', $vals)) {
+            if (!empty($vals['attribute'])) {
                 $this->repo->getQuerySettings()->setMarketRestriction($vals['attribute'], $vals['values']);
             }
         }
         if (array_key_exists('userRestriction', $this->settings)) {
             $vals = $this->settings['userRestriction'];
-            if (array_key_exists('attribute', $vals)) {
+            if (!empty($vals['attribute'])) {
                 $this->repo->getQuerySettings()->setUserRestriction($vals['attribute']);
             }
         }
     }
 
-    public function initializeView(ViewInterface $view)
+    protected function initializeShopParameters($rootId)
     {
-        if (array_key_exists('templateFile', $this->settings)) {
-            $view->setTemplatePathAndFilename($this->settings['templateFile']);
+        $shopInfo = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
+        if ($shopInfo) {
+            $this->repo->getQuerySettings()->setShopData($shopInfo->getId(), $shopInfo->getMarketId(), $shopInfo->getLanguageId());
+        } else {
+            $this->repo->getQuerySettings()->setShopData(0, 0, 0);
         }
     }
 }

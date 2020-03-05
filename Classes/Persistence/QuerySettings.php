@@ -17,6 +17,13 @@ namespace Ms3\Ms3CommerceFx\Persistence;
 
 class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
 {
+    /** @var int */
+    private $shopId = 0;
+    /** @var int */
+    private $marketId = 0;
+    /** @var int */
+    private $languageId = 0;
+
     /** @var int[] */
     private $includeUsageTypeIds = [];
     /** @var string */
@@ -27,6 +34,30 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     private $marketRestrictionValues = null;
 
     /**
+     * Sets the shop specific ids
+     * @param $shopId
+     * @param $marketId
+     * @param $languageId
+     */
+    public function setShopData($shopId, $marketId, $languageId) {
+        $this->shopId = $shopId;
+        $this->marketId = $marketId;
+        $this->languageId = $languageId;
+    }
+
+    public function getShopId() {
+        return $this->shopId;
+    }
+
+    public function getMarketId() {
+        return $this->marketId;
+    }
+
+    public function getLanguageId() {
+        return $this->languageId;
+    }
+
+    /**
      * Sets a filter for object usage types. Given as int[] or as ',' separated list
      * @param int[]|string $usageTypeIds The usage type ids to use
      */
@@ -34,7 +65,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         if (!is_array($usageTypeIds)) {
             $usageTypeIds = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $usageTypeIds);
         }
-        $this->includeUsageTypeIds = array_map(intval, $usageTypeIds);
+        $this->includeUsageTypeIds = array_map('intval', $usageTypeIds);
     }
 
     /**
@@ -72,7 +103,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @return string[] The allowed values for market restriciton
+     * @return string[] The allowed values for market restriction
      */
     public function getMarketRestrictionValues() {
         return $this->marketRestrictionValues;
@@ -83,7 +114,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
      * @param string $attribute The user restriction attribute
      */
     public function setUserRestriction($attribute) {
-
+        $this->userRestrictionAttr = $attribute;
     }
 
     /**

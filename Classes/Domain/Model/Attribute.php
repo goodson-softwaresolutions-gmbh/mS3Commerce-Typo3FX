@@ -37,18 +37,156 @@ class Attribute extends AbstractEntity
     protected $version;
     protected $tableData;
 
+    private $_saneName;
+    private $_saneAuxName;
+
     public function __construct($id) {
         parent::__construct($id);
     }
 
+    /**
+     * @return string
+     */
+    public function getAsimOid()
+    {
+        return $this->asimOid;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLanguageId()
+    {
+        return $this->languageId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMarketId()
+    {
+        return $this->marketId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserRights()
+    {
+        return $this->userRights;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStructureElementId()
+    {
+        return $this->structureElementId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuxiliaryName()
+    {
+        return $this->auxiliaryName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInfo()
+    {
+        return $this->info;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUnitToken()
+    {
+        return $this->unitToken;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDimension()
+    {
+        return $this->dimension;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrefix()
+    {
+        return $this->prefix;
+    }
+
+    /**
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return int
+     */
+    public function getVersion()
+    {
+        return $this->version;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableData()
+    {
+        return $this->tableData;
+    }
+
+    /**
+     * @return string
+     */
     public function getSaneName() {
-        return GeneralUtilities::sanitizeFluidAccessName($this->name);
+        if (empty($this->_saneName)) {
+            $this->_saneName = GeneralUtilities::sanitizeFluidAccessName($this->name);
+        }
+        return $this->_saneName;
     }
 
+    /**
+     * @return string
+     */
     public function getSaneAuxiliaryName() {
-        return GeneralUtilities::sanitizeFluidAccessName($this->auxiliaryName);
+        if (empty($this->_saneAuxName)) {
+            $this->_saneAuxName = GeneralUtilities::sanitizeFluidAccessName($this->auxiliaryName);
+        }
+        return $this->_saneAuxName;
     }
 
+    /**
+     * @return StructureElement
+     */
     public function getStructureElement() {
         return $this->getRepo()->getStructureElementById($this->structureElementId);
     }
