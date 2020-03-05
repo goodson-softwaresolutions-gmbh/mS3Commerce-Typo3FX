@@ -45,10 +45,11 @@ function Ms3CAjaxSearchController(formName) {
             let ctrl = jQuery(elem);
             let type = ctrl.data('controltype');
             let attr = ctrl.data('attribute');
+            let multi = !!ctrl.data('multi');
 
             if (Ms3CAjaxSearchControlFactory.hasControlType(type)) {
                 let ctr = Ms3CAjaxSearchControlFactory.getControlBuilder(type);
-                me.controls[attr] = new ctr(me, attr, elem);
+                me.controls[attr] = new ctr(me, attr, elem, multi);
             }
         });
 
@@ -102,7 +103,7 @@ function Ms3CAjaxSearchController(formName) {
     };
 
     Ms3CAjaxSearchController.prototype.updateAvailableFilters = function(filters, selectedValues) {
-        for (key in this.controls) {
+        for (let key in this.controls) {
             let ctrl = this.controls[key];
             if (key in filters) {
                 let selValues = (key in selectedValues) ? selectedValues[key] : [];
@@ -116,13 +117,23 @@ function Ms3CAjaxSearchController(formName) {
         }
     };
 
+    Ms3CAjaxSearchController.prototype.getMultiSelectFilters = function() {
+        let multiAttrs = [];
+        for (let key in this.controls) {
+            if (this.controls[key].isMultiValued) multiAttrs.push(key);
+        }
+        return multiAttrs;
+    };
+
     Ms3CAjaxSearchController.prototype.filterProducts = function(filters) {
         let me = this;
         let filterAttributes = this.getFilterAttributes();
+        let multiFilters = this.getMultiSelectFilters();
 
         let data = {
             selectedFilters: filters,
-            filterAttributes: filterAttributes
+            filterAttributes: filterAttributes,
+            multiAttributes: multiFilters
         };
         jQuery.ajax(me.form.attr('action'), {
             method: 'POST',
@@ -146,9 +157,10 @@ function Ms3CAjaxSearchController(formName) {
 })();
 
 
-function Ms3CAjaxSearchCheckbox(controller, attribute, element) {
+function Ms3CAjaxSearchCheckbox(controller, attribute, element, isMultiValued) {
     this.controller = controller;
     this.attribute = attribute;
+    this.isMultiValued = isMultiValued;
     this.element = jQuery(element);
     this.initialValues = [];
 }

@@ -96,7 +96,8 @@ class FormViewHelper extends AbstractTagBasedViewHelper
         if ($settings['initializeStaticResult']) {
             $filters = $context->getRegisteredFilters();
             $filterAttrs = array_map(function($f) { return $f['attribute']->getName(); }, $filters);
-            $filterValues = $search->getAvailableFilterValues($context, $rootId, $filterAttrs);
+            $multiAttrs = array_filter(array_map(function($f) {return $f['multi'] ? $f['attribute']->getName() : null;},$filters));
+            $filterValues = $search->getAvailableFilterValues($context, $rootId, $filterAttrs, $multiAttrs);
             $filterData = json_encode($filterValues);
         }
 

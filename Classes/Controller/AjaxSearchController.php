@@ -55,28 +55,29 @@ class AjaxSearchController extends AbstractController
         try {
             $filterAttrs = $this->inputVariables['filterAttributes'];
             $selAttrs = $this->inputVariables['selectedFilters'];
+            $multiAttrs = $this->inputVariables['multiAttributes'];
 
-            $selAttrs = array_filter($selAttrs);
+            $selValues = array_filter($selAttrs);
             $settings = $this->settings['ajaxSearch'];
 
             if ($settings['resultTemplate']) {
                 $limit = $settings['pageSize'];
                 $start = 0; // TODO ?
                 if (isset($settings['resultStructureElement'])) {
-                    $resObjects = $this->search->searchObjectsConsolidatedWithFilter($context, $rootId, $settings['resultStructureElement'], $selAttrs, $start, $limit);
+                    $resObjects = $this->search->searchObjectsConsolidatedWithFilter($context, $rootId, $settings['resultStructureElement'], $selValues, $multiAttrs, $start, $limit);
                 } else {
-                    $resObjects = $this->search->searchObjectsWithFilter($context, $rootId, $selAttrs, $start, $limit);
+                    $resObjects = $this->search->searchObjectsWithFilter($context, $rootId, $selValues, $multiAttrs, $start, $limit);
                 }
 
                 $resultContent = $this->renderResultTemplate($context, $settings['resultTemplate'], $resObjects);
             } else {
                 // Just prepare empty search
-                $this->search->searchFilterValuesWithFilter($context, $rootId, $selAttrs);
+                $this->search->searchFilterValuesWithFilter($context, $rootId, $selAttrs, $multiAttrs);
                 $resultContent = '';
             }
 
 
-            $filterValues = $this->search->getAvailableFilterValues($context, $rootId, $filterAttrs);
+            $filterValues = $this->search->getAvailableFilterValues($context, $rootId, $filterAttrs, $multiAttrs);
 
             //$this->search->searchObjectsConsolidatedWithFilter($context, $rootId, $)
 

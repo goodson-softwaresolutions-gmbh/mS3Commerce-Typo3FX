@@ -30,7 +30,8 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
         parent::initializeArguments();
         $this->registerArgument('type', 'string', 'Type of control', true);
         $this->registerArgument('attribute', 'mixed', 'PIM Attribute this control filters', true);
-        $this->registerArgument('variables', 'array', 'Additional ariables passed to control template', false);
+        $this->registerArgument('variables', 'array', 'Additional variables passed to control template', false);
+        $this->registerArgument('isMultiValued', 'bool', 'If the attribute is a multi-valued attribute', false, false);
     }
 
     public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
@@ -64,13 +65,15 @@ class ControlViewHelper extends AbstractTagBasedViewHelper
 
         $class = 'mS3Control mS3'.$ucType;
         $arguments['class'] .= $class;
+        $isMulti = !!$arguments['isMultiValued'];
 
         $arguments['data'] = [
             'controltype' => $type,
-            'attribute' => $attr->getName()
+            'attribute' => $attr->getName(),
+            'multi' => $isMulti
         ];
 
-        SearchContext::currentContext()->registerFilterAttribute($arguments['attribute'], $type);
+        SearchContext::currentContext()->registerFilterAttribute($arguments['attribute'], $type, $isMulti);
 
         return parent::renderTag('div', $content, $arguments);
     }
