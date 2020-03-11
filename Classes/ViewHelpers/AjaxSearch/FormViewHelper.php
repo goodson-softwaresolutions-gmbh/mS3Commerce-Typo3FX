@@ -32,6 +32,7 @@ class FormViewHelper extends AbstractTagBasedViewHelper
         parent::initializeArguments();
         $this->registerArgument('pageUid', 'int', 'Page UID where to send AJAX requests to', false);
         $this->registerArgument('root', 'mixed', '', false);
+        $this->registerArgument('controlObjectName', 'string', 'Name of Form Controller JS-Object Variable', false);
     }
 
     public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext)
@@ -49,6 +50,12 @@ class FormViewHelper extends AbstractTagBasedViewHelper
                 $context->setFormId($arguments['id']);
             }
 
+            if (isset($arguments['controlObjectName'])) {
+                $ctrlName = $arguments['controlObjectName'];
+            } else {
+                $ctrlName = 'ms3Control';
+            }
+
             $pageUid = (isset($arguments['pageUid']) && (int)$arguments['pageUid'] > 0) ? (int)$arguments['pageUid'] : null;
             $settings = self::getSettings($renderingContext);
 
@@ -57,7 +64,7 @@ class FormViewHelper extends AbstractTagBasedViewHelper
                 $rootId = $arguments['root']->getMenuId();
             }
 
-            $content .= self::initForm($search, $context, $rootId, $settings);
+            $content .= self::initForm($search, $context, $rootId, $settings, $ctrlName);
 
             parent::registerTagArgument('action');
             $arguments['action'] = self::getFormUri($pageUid, $rootId);
@@ -90,7 +97,7 @@ class FormViewHelper extends AbstractTagBasedViewHelper
 
     }
 
-    private static function initForm(ObjectSearch $search, SearchContext $context, $rootId, $settings)
+    private static function initForm(ObjectSearch $search, SearchContext $context, $rootId, $settings, $ctrlName)
     {
         $filterData = '[]';
         if ($settings['initializeStaticResult']) {
@@ -106,10 +113,11 @@ class FormViewHelper extends AbstractTagBasedViewHelper
         $initData = json_encode($init);
 
         $script = /** @lang JavaScript */<<<XXX
+var $ctrlName = null;
 jQuery(document).ready(function() {
-    let ms3Control = new Ms3CAjaxSearchController('{$context->getFormId()}');
-    ms3Control.init($initData);
-    ms3Control.initializeFilters($filterData);
+    $ctrlName = new Ms3CAjaxSearchController('{$context->getFormId()}');
+    $ctrlName.init($initData);
+    $ctrlName.initializeFilters($filterData);
 });
 XXX;
         $t = new TagBuilder('script', $script);
