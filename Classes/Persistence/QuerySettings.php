@@ -32,6 +32,8 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     private $userRestrictionAttr = null;
     /** @var string[] */
     private $marketRestrictionValues = null;
+    /** @var string */
+    private $priceMarket = null;
 
     /**
      * Sets the shop specific ids
@@ -129,5 +131,13 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function getUserRestrictionAttribute() {
         return $this->userRestrictionAttr;
+    }
+
+    public function setPriceMarket($market) {
+        $this->priceMarket = $market;
+    }
+
+    public function getPriceMaket() {
+        return $this->priceMarket;
     }
 }
