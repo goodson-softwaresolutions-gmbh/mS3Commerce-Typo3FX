@@ -16,6 +16,7 @@
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Search\FullTextSearchInterface;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
@@ -332,7 +333,7 @@ class SearchRepository extends RepositoryBase
         }
     }
 
-    public function filterMatchesByAttributes(SearchContext $context, $selectedFilters) {
+    public function filterMatchesByAttributes(SearchContext $context, $selectedFilters, $multiAttrs) {
         if ($context->isAttributeFiltered()) {
             if (empty(array_diff_key($selectedFilters, $context->filterAttributes))) {
                 // already filtered by the current attributes, ok
@@ -342,6 +343,8 @@ class SearchRepository extends RepositoryBase
             // Already filtered by something else??
             throw new \Exception('Result already filtered');
         }
+
+        $multiAttrs = array_flip($multiAttrs);
 
         $this->filterRestrictions($context);
         $context->filterAttributes = [];
@@ -358,6 +361,7 @@ class SearchRepository extends RepositoryBase
                 ->andWhere('pv.FeatureId = f.Id')
                 ->andWhere($q->expr()->eq('f.Name', $q->createNamedParameter($attrName)));
 
+            // Is user selected value single, or multiple?
             $isArr = false;
             if (is_array($values)) {
                 $values = array_filter($values);
@@ -369,10 +373,29 @@ class SearchRepository extends RepositoryBase
                 }
             }
 
-            if ($isArr) {
-                $q->andWhere($q->expr()->in('pv.ContentPlain', $q->createNamedParameter(array_filter($values), Connection::PARAM_STR_ARRAY)));
+            // Is DB value single or multiple?
+            if (!array_key_exists($attrName, $multiAttrs)) {
+                // DB value is single value
+                if (!$isArr) {
+                    // Single DB = Single User value
+                    $q->andWhere($q->expr()->eq('pv.ContentPlain', $q->createNamedParameter($values)));
+                } else {
+                    // Single DB IN (Multiple user values)
+                    $q->andWhere($q->expr()->in('pv.ContentPlain', $q->createNamedParameter(array_filter($values), Connection::PARAM_STR_ARRAY)));
+                }
             } else {
-                $q->andWhere($q->expr()->eq('pv.ContentPlain', $q->createNamedParameter($values)));
+                // DB value is ";"-separated list of values
+                if (!$isArr) {
+                    // Single User in ;-separated Multiple DB
+                    $q->andWhere($q->expr()->like("CONCAT(';',pv.ContentPlain,';')", "CONCAT('%;',{$q->createNamedParameter($values)},';%')"));
+                } else {
+                    // Multi-Match ;-separated user values with ;-separated Multiple DB values. Use OR with single matches
+                    $conditions = [];
+                    foreach ($values as $v) {
+                        $conditions[] = $q->expr()->like("CONCAT(';',pv.ContentPlain,';')", "CONCAT('%;',{$q->createNamedParameter($v)},';%')");
+                    }
+                    $q->andWhere(new CompositeExpression(CompositeExpression::TYPE_OR, $conditions));
+                }
             }
 
             $q->execute();
@@ -396,7 +419,7 @@ class SearchRepository extends RepositoryBase
             ->execute();
     }
 
-    public function getAvailableFilterValues(SearchContext $context, $filterAttributes) {
+    public function getAvailableFilterValues(SearchContext $context, $filterAttributes, $multiAttrs) {
         $this->filterRestrictions($context);
 
         $addCols = ($context->isAttributeFiltered()) ? ',t.filter_sum,t.filter_mask' : '';
@@ -429,7 +452,56 @@ class SearchRepository extends RepositoryBase
         $values = GeneralUtilities::groupBy($values, function($v) { return $v['Name']; });
         $this->extractAvailableFiltersValues($context, $values);
 
+        if (!empty($multiAttrs)) {
+            $multiAttrs = array_flip($multiAttrs);
+            foreach ($values as $attr => &$vals) {
+                if (array_key_exists($attr, $multiAttrs)) {
+                    $vals = $this->splitMultiValuedAttribute($vals);
+                }
+            }
+        }
         return $values;
+    }
+
+    private function splitMultiValuedAttribute($values) {
+        $existingValues = [];
+        $newVals = [];
+        foreach ($values as $v) {
+            $split = explode(';', $v['ContentPlain']);
+            if (count($split) > 1) {
+                // Extract single values
+                $singleValues = array_filter(explode(';', $v['ContentPlain']));
+                // Watch out for HTML: get enclosing tag
+                $matches = [];
+                if (preg_match('#(<[^>]+>)(.*)(</[^>]+>)#', $v['ContentHtml'], $matches)) {
+                    $pre = $matches[1];
+                    $post = $matches[3];
+                    $html = array_filter(explode(';', $matches[2]));
+                } else {
+                    $pre = $post = '';
+                    $html = array_filter(explode(';', $v['ContentHtml']));
+                }
+
+                for ($i = 0; $i < count($singleValues); $i++) {
+                    if (!array_key_exists($singleValues[$i], $existingValues)) {
+                        $newVals[] = [
+                            'Name' => $v['Name'],
+                            'ContentPlain' => $singleValues[$i],
+                            'ContentHtml' => $pre . $html[$i] . $post,
+                            'ContentNumber' => null
+                        ];
+                        $existingValues[$singleValues[$i]] = true;
+                    }
+                }
+            } else {
+                // Single value, just copy
+                if (!array_key_exists($v['ContentPlain'], $existingValues)) {
+                    $newVals[] = $v;
+                    $existingValues[$v['ContentPlain']] = true;
+                }
+            }
+        }
+        return $newVals;
     }
 
     private function extractAvailableFiltersValues(SearchContext $context, &$values) {

@@ -110,8 +110,8 @@ class SearchContext
         $this->resultElementId = $resultElementId;
     }
 
-    public function registerFilterAttribute($attributeName, $controlType) {
-        $this->registeredFilters[] = ['attribute' => $attributeName, 'type' => $controlType];
+    public function registerFilterAttribute($attributeName, $controlType, $isMultiValued) {
+        $this->registeredFilters[] = ['attribute' => $attributeName, 'type' => $controlType, 'multi' => $isMultiValued];
     }
 
     public function getRegisteredFilters() {

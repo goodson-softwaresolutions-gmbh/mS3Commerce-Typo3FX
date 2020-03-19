@@ -80,7 +80,7 @@ class ObjectSearch implements SingletonInterface
         return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
     }
 
-    public function searchObjectsWithFilter(SearchContext $context, $rootId, $selectedFilters, $start, $limit) {
+    public function searchObjectsWithFilter(SearchContext $context, $rootId, $selectedFilters, $multiAttrs, $start, $limit) {
         $selectedFilters = array_filter($selectedFilters);
         if (empty($selectedFilters)) {
             return $this->searchObjects($context, $rootId, $start, $limit);
@@ -89,11 +89,11 @@ class ObjectSearch implements SingletonInterface
         $s = $this->repo->getSearchRepository();
         $s->initObjectSearchForFilter($context, $selectedFilters);
         $s->findInMenuId($context, $rootId);
-        $s->filterMatchesByAttributes($context, $selectedFilters);
+        $s->filterMatchesByAttributes($context, $selectedFilters, $multiAttrs);
         return $this->fetchAllResults($context, $start, $limit);
     }
 
-    public function searchObjectsConsolidatedWithFilter(SearchContext $context, $rootId, $structureElement, $selectedFilters, $start, $limit) {
+    public function searchObjectsConsolidatedWithFilter(SearchContext $context, $rootId, $structureElement, $selectedFilters, $multiAttrs, $start, $limit) {
         $selectedFilters = array_filter($selectedFilters);
         if (empty($selectedFilters)) {
             return $this->searchObjectsConsolidated($context, $rootId, $structureElement, $start, $limit);
@@ -102,11 +102,11 @@ class ObjectSearch implements SingletonInterface
         $s = $this->repo->getSearchRepository();
         $s->initObjectSearchForFilter($context, $selectedFilters);
         $s->findInMenuId($context, $rootId);
-        $s->filterMatchesByAttributes($context, $selectedFilters);
+        $s->filterMatchesByAttributes($context, $selectedFilters, $multiAttrs);
         return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
     }
 
-    public function searchFilterValuesWithFilter(SearchContext $context, $rootId, $selectedFilters) {
+    public function searchFilterValuesWithFilter(SearchContext $context, $rootId, $selectedFilters, $multiAttrs) {
         $s = $this->repo->getSearchRepository();
         if (empty($selectedFilters)) {
             $s->initObjectSearch($context);
@@ -114,15 +114,15 @@ class ObjectSearch implements SingletonInterface
         } else {
             $s->initObjectSearchForFilter($context, $selectedFilters);
             $s->findInMenuId($context, $rootId);
-            $s->filterMatchesByAttributes($context, $selectedFilters);
+            $s->filterMatchesByAttributes($context, $selectedFilters, $multiAttrs);
         }
     }
 
-    public function getAvailableFilterValues(SearchContext $context, $rootId, $filterAttributes) {
+    public function getAvailableFilterValues(SearchContext $context, $rootId, $filterAttributes, $multiAttrs) {
         $s = $this->repo->getSearchRepository();
         $s->initObjectSearch($context);
         $s->findInMenuId($context, $rootId);
-        return $s->getAvailableFilterValues($context, $filterAttributes);
+        return $s->getAvailableFilterValues($context, $filterAttributes, $multiAttrs);
     }
 
     public function cleanupSearch(SearchContext $context) {
