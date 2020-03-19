@@ -22,11 +22,42 @@ namespace Ms3\Ms3CommerceFx\Domain\Model;
  */
 class Product extends PimObject
 {
+    /** @var Price[] */
+    protected $prices = null;
+
     /**
      * @return int
      */
     public function getEntityType(): int
     {
         return PimObject::TypeProduct;
+    }
+
+    /**
+     * @return Price[]|null
+     */
+    public function getPrices() {
+        $this->getRepo()->loadObjectPrices($this);
+        if (empty($this->prices)) {
+            return null;
+        }
+
+        return $this->prices;
+    }
+
+    /**
+     * @return Price|null
+     */
+    public function getPrice() {
+        $this->getRepo()->loadObjectPrices($this);
+        if (empty($this->prices)) {
+            return null;
+        }
+
+        return $this->prices[0];
+    }
+
+    public function pricesLoaded() {
+        return $this->prices != null;
     }
 }

@@ -90,6 +90,14 @@ abstract class PimObject extends AbstractEntity
     }
 
     /**
+     * @return string
+     */
+    public function getGuid()
+    {
+        return $this->asimOid;
+    }
+
+    /**
      * @return int
      */
     public function getObjectId()

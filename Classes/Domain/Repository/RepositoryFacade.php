@@ -19,10 +19,27 @@ use Ms3\Ms3CommerceFx\Domain\Model\Categorization;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
+use Ms3\Ms3CommerceFx\Persistence\DbBackend;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
+    private $db;
+    /**
+     * @param \Ms3\Ms3CommerceFx\Persistence\DbBackend $backend
+     */
+    public function injectDbBackend(\Ms3\Ms3CommerceFx\Persistence\DbBackend $backend)
+    {
+        $this->db = $backend;
+    }
+
+    /**
+     * @return DbBackend
+     */
+    public function getDbConnection() {
+        return $this->db;
+    }
+
     /** @var ShopInfoRepository */
     private $shopInfo;
     public function injectShopInfo(ShopInfoRepository $si) {
@@ -87,6 +104,15 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function getSearchRepository() {
         return $this->search;
+    }
+
+    /** @var PriceRepository */
+    private $price;
+    /**
+     * @param PriceRepository $price
+     */
+    public function injectPrices(PriceRepository $price) {
+        $this->price = $price;
     }
 
     /** @var QuerySettings */
@@ -181,6 +207,17 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
             $this->categorization->loadCategorizationsForObjects($object->getCollection()->all());
         } else {
             $this->categorization->loadCategorizationsForObject($object);
+        }
+    }
+
+    /**
+     * @param PimObject $object
+     */
+    public function loadObjectPrices($object) {
+        if ($object->getCollection()) {
+            $this->price->loadPrices($object->getCollection()->getOfType(PimObject::TypeProduct));
+        } else {
+            $this->price->loadPrices([$object]);
         }
     }
 

@@ -16,6 +16,7 @@
 namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
+use Ms3\Ms3CommerceFx\Service\NumberFormatter;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
@@ -42,6 +43,7 @@ abstract class AbstractController extends ActionController
         $this->initializeRootId();
         $this->initializeViewTemplate();
         $this->initializeQuerySettings();
+        $this->initializeFormats();
     }
 
     public function initializeView(ViewInterface $view)
@@ -83,6 +85,9 @@ abstract class AbstractController extends ActionController
                 $this->repo->getQuerySettings()->setUserRestriction($vals['attribute']);
             }
         }
+        if (array_key_exists('priceMarket', $this->settings)) {
+            $this->repo->getQuerySettings()->setPriceMarket($this->settings['priceMarket']);
+        }
     }
 
     protected function initializeShopParameters($rootId)
@@ -92,6 +97,12 @@ abstract class AbstractController extends ActionController
             $this->repo->getQuerySettings()->setShopData($shopInfo->getId(), $shopInfo->getMarketId(), $shopInfo->getLanguageId());
         } else {
             $this->repo->getQuerySettings()->setShopData(0, 0, 0);
+        }
+    }
+
+    protected function initializeFormats() {
+        if (array_key_exists('numberFormat', $this->settings)) {
+            NumberFormatter::setDefaultFormat($this->settings['numberFormat']['comma'], $this->settings['numberFormat']['thousands']);
         }
     }
 }
