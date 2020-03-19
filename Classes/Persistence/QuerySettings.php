@@ -137,7 +137,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         $this->priceMarket = $market;
     }
 
-    public function getPriceMaket() {
+    public function getPriceMarket() {
         return $this->priceMarket;
     }
 }

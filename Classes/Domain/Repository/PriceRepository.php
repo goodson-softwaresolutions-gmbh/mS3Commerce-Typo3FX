@@ -42,7 +42,7 @@ class PriceRepository extends RepositoryBase
             ->addOrderBy('VPE')
             ->addOrderBy('StartQty');
 
-        $market = $this->querySettings->getPriceMaket();
+        $market = $this->querySettings->getPriceMarket();
         if (!empty($market)) {
             $q->andWhere($q->expr()->eq('Market', $q->createNamedParameter($market)));
         }
