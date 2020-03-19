@@ -151,7 +151,7 @@ class SearchRepository extends RepositoryBase
             return;
         }
 
-        $this->restriction->filterRestrictionTable($context->getTableName(), $this->db->getConnection());
+        $this->restriction->filterRestrictionTable($context->getTableName(), $this->db->getConnection(), $this->structureElementRepo->getProductLevel()->getName());
         $context->isRestrictionFiltered = true;
         $context->consolidatedOnLevel = false;
     }
@@ -293,7 +293,7 @@ class SearchRepository extends RepositoryBase
     private function filterConsolidatedResults(SearchContext $context, $structureElement)
     {
         $this->injectFilterColumnsForConsolidation($context, $structureElement);
-        $this->restriction->filterRestrictionTable($context->getTableName('cons'), $this->db->getConnection());
+        $this->restriction->filterRestrictionTable($context->getTableName('cons'), $this->db->getConnection(), $structureElement);
     }
 
     private function injectFilterColumnsForConsolidation(SearchContext $context, $structureElement)
@@ -306,16 +306,18 @@ class SearchRepository extends RepositoryBase
 
         if ($this->querySettings->isMarketRestricted()) {
             $strElem = $this->structureElementRepo->getStructureElementByName($structureElement);
-            $attr = $this->attrRepo->getEffectiveAttributeForStructureElement($this->querySettings->getMarketRestrictionAttribute(), $strElem->getOrderNr());
-            $q = $this->_q();
-            $q->update($context->getTableName('cons') . ' AS s, Menu AS m, GroupValue AS gv')
-                ->set('s.MarketRestriction', 'gv.ContentPlain')
-                ->where($q->expr()->andX(
-                    $q->expr()->eq('s.MenuId', 'm.Id'),
-                    $q->expr()->eq('m.GroupId', 'gv.GroupId'),
-                    $q->expr()->eq('gv.FeatureId', $attr->getId())
-                ));
-            $ct = $q->execute();
+            $attr = $this->attrRepo->getEffectiveAttributeForStructureElement($this->querySettings->getStructureElementRestrictionAttribute($structureElement), $strElem->getOrderNr());
+            if ($attr != null) {
+                $q = $this->_q();
+                $q->update($context->getTableName('cons') . ' AS s, Menu AS m, GroupValue AS gv')
+                    ->set('s.MarketRestriction', 'gv.ContentPlain')
+                    ->where($q->expr()->andX(
+                        $q->expr()->eq('s.MenuId', 'm.Id'),
+                        $q->expr()->eq('m.GroupId', 'gv.GroupId'),
+                        $q->expr()->eq('gv.FeatureId', $attr->getId())
+                    ));
+                $ct = $q->execute();
+            }
         }
 
         if ($this->querySettings->isUserRestricted()) {

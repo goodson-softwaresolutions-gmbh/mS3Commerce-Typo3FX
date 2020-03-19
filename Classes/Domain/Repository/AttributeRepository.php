@@ -111,7 +111,7 @@ class AttributeRepository extends RepositoryBase
             ->from('Feature', 'f')
             ->innerJoin('f', 'FeatureValue', 'fv', 'f.Id = fv.FeatureId')
             ->where('f.Name = :fName')
-            ->setParameter(':fName', $this->querySettings->getMarketRestrictionAttribute());
+            ->setParameter(':fName', $attributeName);
 
         if ($row = $q->execute()->fetch()) {
             // Direct name

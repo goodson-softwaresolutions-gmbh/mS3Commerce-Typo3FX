@@ -26,12 +26,12 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
 
     /** @var int[] */
     private $includeUsageTypeIds = [];
-    /** @var string */
-    private $marketRestrictionAttr = null;
+    /** @var string[] */
+    private $marketRestrictionAttrs = [];
+    /** @var string[][] */
+    private $marketRestrictionValues = [];
     /** @var string */
     private $userRestrictionAttr = null;
-    /** @var string[] */
-    private $marketRestrictionValues = null;
     /** @var string */
     private $priceMarket = null;
 
@@ -81,34 +81,52 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
      * Sets a market restriction for objects
      * @param string $attribute The filter attribute
      * @param string[]|string $values The allowed values. Either string[] or ';' separated strings
+     * @param string $level The restricted level. If empty, setting for all unspecified levels
      */
-    public function setMarketRestriction($attribute, $values) {
-        $this->marketRestrictionAttr = $attribute;
+    public function setMarketRestriction($attribute, $values, $level = null) {
         if (!is_array($values)) {
             $values = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $values);
         }
-        $this->marketRestrictionValues = array_filter($values);
+        if (empty($values)) return;
+        if (empty($level)) $level = 0;
+        $this->marketRestrictionAttrs[$level] = $attribute;
+        $this->marketRestrictionValues[$level] = $values;
     }
 
     /**
      * @return bool If market restriction is activated
      */
-    public function isMarketRestricted() : bool{
-        return !empty($this->marketRestrictionAttr) && !empty($this->marketRestrictionValues);
+    public function isMarketRestricted() : bool {
+        return !empty($this->marketRestrictionAttrs);
     }
 
     /**
-     * @return string The market restriction attribute
+     * Gets the restriction attribute for the given structure element
+     * @param string $structureElementName The structure element name
+     * @return string The restriction attribute
      */
-    public function getMarketRestrictionAttribute() {
-        return $this->marketRestrictionAttr;
+    public function getStructureElementRestrictionAttribute($structureElementName) {
+        if (array_key_exists($structureElementName, $this->marketRestrictionAttrs))
+            return $this->marketRestrictionAttrs[$structureElementName];
+        return $this->marketRestrictionAttrs[0];
     }
 
     /**
-     * @return string[] The allowed values for market restriction
+     * @return string[] All market restriction attributes
      */
-    public function getMarketRestrictionValues() {
-        return $this->marketRestrictionValues;
+    public function getMarketRestrictionAttributes() {
+        return array_values($this->marketRestrictionAttrs);
+    }
+
+    /**
+     * Gets the restriction values for the given structure element
+     * @param string $structureElementName The structure element name
+     * @return string[] The restriction values
+     */
+    public function getStructureElementRestrictionValues($structureElementName) {
+        if (array_key_exists($structureElementName, $this->marketRestrictionValues))
+            return $this->marketRestrictionValues[$structureElementName];
+        return $this->marketRestrictionValues[0];
     }
 
     /**
@@ -133,10 +151,17 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         return $this->userRestrictionAttr;
     }
 
+    /**
+     * Sets the market for prices
+     * @param $market
+     */
     public function setPriceMarket($market) {
         $this->priceMarket = $market;
     }
 
+    /**
+     * @return string The market for prices
+     */
     public function getPriceMarket() {
         return $this->priceMarket;
     }
