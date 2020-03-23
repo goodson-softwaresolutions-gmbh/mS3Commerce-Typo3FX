@@ -15,7 +15,6 @@
 
 namespace Ms3\Ms3CommerceFx\ViewHelpers\AjaxSearch;
 
-use Ms3\Ms3CommerceFx\Domain\Model\PaginationInfo;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use Ms3\Ms3CommerceFx\Search\ObjectSearch;
 use Ms3\Ms3CommerceFx\ViewHelpers\AbstractTagBasedViewHelper;

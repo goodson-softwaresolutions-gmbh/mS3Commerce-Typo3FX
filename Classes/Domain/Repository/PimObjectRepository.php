@@ -25,6 +25,7 @@ use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use Ms3\Ms3CommerceFx\Service\RestrictionService;
+use TYPO3\CMS\Core\Exception;
 
 /**
  * Class PimObjectRepository
@@ -70,6 +71,44 @@ class PimObjectRepository extends RepositoryBase
         $menuObjs = $this->loadMenuBy($this->_q()->expr()->eq('m.Id', $menuId));
         if (!empty($menuObjs)) {
             return current($menuObjs)[0]->getObject();
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param int $type Object type, either {@see PimObject::TypeGroup} or {@see PimObject::TypeProduct}
+     * @param int $id The object's id
+     * @return PimObject|null The object
+     */
+    public function getObjectById($type, $id) {
+        switch ($type) {
+            case PimObject::TypeGroup:
+                $class = Group::class;
+                $table = 'Groups';
+                break;
+            case PimObject::TypeProduct:
+                $class = Product::class;
+                $table = 'Product';
+                break;
+            default:
+                throw new \Exception('Invalid object type');
+        }
+
+        $existing = $this->store->getObjectByIdentifier($id, $class);
+        if ($existing) {
+            return $existing;
+        }
+
+        $q = $this->_q();
+        $q->select('*')
+            ->from($table)
+            ->where($q->expr()->eq('Id', $id));
+
+        $res = $q->execute();
+        $row = $res->fetch();
+        if ($row) {
+            return $this->createObjectFromRow($row, $type);
         }
         return null;
     }

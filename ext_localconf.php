@@ -53,3 +53,9 @@ XXX
     );
 }
 unset($fullTextClass);
+
+
+if (TYPO3_MODE === 'FE') {
+    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart']['mS3Commerce']['Cart']['AddToCartFinisher'] =
+        \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::class;
+}
