@@ -25,6 +25,9 @@ class Product extends PimObject
     /** @var Price[] */
     protected $prices = null;
 
+    /** @var ProductAvailability[] */
+    protected $availability = null;
+
     /**
      * @return int
      */
@@ -59,5 +62,33 @@ class Product extends PimObject
 
     public function pricesLoaded() {
         return $this->prices != null;
+    }
+
+    /**
+     * @return ProductAvailability[]|null
+     */
+    public function getAvailabilities() {
+        $this->getRepo()->loadObjectAvailability($this);
+        if (empty($this->availability)) {
+            return null;
+        }
+
+        return $this->availability;
+    }
+
+    /**
+     * @return ProductAvailability|null
+     */
+    public function getAvailability() {
+        $this->getRepo()->loadObjectAvailability($this);
+        if (empty($this->availability)) {
+            return null;
+        }
+
+        return $this->availability[0];
+    }
+
+    public function availabilityLoaded() {
+        return $this->availability != null;
     }
 }
