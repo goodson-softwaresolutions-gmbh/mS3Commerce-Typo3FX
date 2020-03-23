@@ -67,7 +67,7 @@ class SearchQueryUtils
         $cols = [];
         if ($querySettings->isMarketRestricted()) {
             $productLevel = $structure->getProductLevel();
-            $marketAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getMarketRestrictionAttribute(), $productLevel->getOrderNr());
+            $marketAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getStructureElementRestrictionAttribute($productLevel->getName()), $productLevel->getOrderNr());
 
             if ($marketAttr != null) {
                 $q->leftJoin('p', 'ProductValue', 'pv_market', $q->expr()->andX(
@@ -115,7 +115,7 @@ class SearchQueryUtils
         $cols = [];
         if ($querySettings->isMarketRestricted()) {
             $level = $structure->getStructureElementByName($structureElementName);
-            $marketAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getMarketRestrictionAttribute(), $level->getOrderNr());
+            $marketAttr = $attr->getEffectiveAttributeForStructureElement($querySettings->getStructureElementRestrictionAttribute($level->getName()), $level->getOrderNr());
 
             if ($marketAttr != null) {
                 $q->leftJoin('g', 'GroupValue', 'gv_market', $q->expr()->andX(

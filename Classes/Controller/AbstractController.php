@@ -75,8 +75,15 @@ abstract class AbstractController extends ActionController
         }
         if (array_key_exists('marketRestriction', $this->settings)) {
             $vals = $this->settings['marketRestriction'];
-            if (!empty($vals['attribute'])) {
+            if (!empty($vals['attribute']) && !empty($vals['values'])) {
                 $this->repo->getQuerySettings()->setMarketRestriction($vals['attribute'], $vals['values']);
+            }
+            if (array_key_exists('levels', $vals)) {
+                foreach ($vals['levels'] as $level) {
+                    if (!empty($level['attribute']) && !empty($level['values'])) {
+                        $this->repo->getQuerySettings()->setMarketRestriction($level['attribute'], $level['values'], $level['name']);
+                    }
+                }
             }
         }
         if (array_key_exists('userRestriction', $this->settings)) {

@@ -75,7 +75,7 @@ class RestrictionService implements SingletonInterface
      * @param string $tableName The table name
      * @param \Doctrine\DBAL\Connection $connection
      */
-    public function filterRestrictionTable($tableName, $connection)
+    public function filterRestrictionTable($tableName, $connection, $structureElementName)
     {
         if (!$this->querySettings->isMarketRestricted() && !$this->querySettings->isUserRestricted()) {
             $q = $connection->createQueryBuilder();
@@ -117,7 +117,8 @@ class RestrictionService implements SingletonInterface
         };
 
         if ($this->querySettings->isMarketRestricted()) {
-            $markForInclusion($this->querySettings->getMarketRestrictionValues());
+            $vals = $this->querySettings->getStructureElementRestrictionValues($structureElementName);
+            $markForInclusion($vals);
         }
         if ($this->querySettings->isUserRestricted()) {
             // TODO
@@ -138,7 +139,11 @@ class RestrictionService implements SingletonInterface
         $vals = $this->getRestrictionAttributeValues($objects);
 
         foreach ($objects as $k => $o) {
-            $v = $this->applyFilter($vals[$k], $this->querySettings->getMarketRestrictionAttribute(), $this->querySettings->getMarketRestrictionValues());
+            $v = $this->applyFilter(
+                $vals[$k],
+                $this->querySettings->getStructureElementRestrictionAttribute($o->getStructureElement()->getName()),
+                $this->querySettings->getStructureElementRestrictionValues($o->getStructureElement()->getName())
+            );
             if (!$v) {
                 $this->invisibleCache[$k] = 1;
                 continue;
@@ -189,7 +194,12 @@ class RestrictionService implements SingletonInterface
             return [];
         }
 
-        $attrs = array_filter([$this->querySettings->getUserRestrictionAttribute(), $this->querySettings->getMarketRestrictionAttribute()]);
+        $attrs = array_filter(GeneralUtilities::flattenArray([
+            $this->querySettings->getUserRestrictionAttribute(),
+            // Note: This will load restriction attributes for all levels, not only required.
+            // Check will be level-specific
+            $this->querySettings->getMarketRestrictionAttributes()
+        ]));
         if (empty($attrs)) {
             return [];
         }
