@@ -15,19 +15,18 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
-use Doctrine\DBAL\ParameterType;
-use Ms3\Ms3CommerceFx\Domain\Model\Price;
 use Ms3\Ms3CommerceFx\Domain\Model\Product;
+use Ms3\Ms3CommerceFx\Domain\Model\ProductAvailability;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 
-class PriceRepository extends RepositoryBase
+class AvailabilityRepository extends RepositoryBase
 {
     /**
      * @param Product[] $products
      */
-    public function loadPrices($products)
+    public function loadAvailability($products)
     {
-        $products = array_filter($products, function($p) { return !$p->pricesLoaded(); });
+        $products = array_filter($products, function($p) { return !$p->availabilityLoaded(); });
         if (empty($products)) return;
 
         /** @var Product[] $productMap */
@@ -36,21 +35,17 @@ class PriceRepository extends RepositoryBase
 
         $q = $this->_q();
         $q->select('*, ProductAsimOID AS ProductGuid')
-            ->from('ShopPrices')
+            ->from('ShopAvailability')
             ->where($q->expr()->in('ProductAsimOID', $q->createNamedParameter($guids, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)))
-            ->orderBy('ProductAsimOID')
-            ->addOrderBy('VPE')
-            ->addOrderBy('StartQty');
+            ->orderBy('ProductAsimOID');
 
         $market = $this->querySettings->getPriceMarket();
         if (!empty($market)) {
             $q->andWhere($q->expr()->eq('Market', $q->createNamedParameter($market)));
         }
 
-        /* TODO USER Restriction*/
-
         $res = $q->execute();
-        $curPrices = [];
+        $curAvails = [];
         /** @var Product $curProduct */
         $curProduct = null;
         while ($row = $res->fetch()) {
@@ -58,27 +53,27 @@ class PriceRepository extends RepositoryBase
                 $curProduct = $productMap[$row['ProductAsimOID']];
             }
 
-            if ($curProduct->getGuid() != $row['ProductAsimOID'] && !empty($curPrices)) {
-                $curProduct->_setProperty('prices', $curPrices);
+            if ($curProduct->getGuid() != $row['ProductAsimOID'] && !empty($curAvails)) {
+                $curProduct->_setProperty('availability', $curAvails);
 
                 $curProduct = $productMap[$row['ProductAsimOID']];
-                $curPrices = [];
+                $curAvails = [];
             }
 
-            $price = new Price($row['Id']);
-            $this->mapper->mapObject($price, $row);
-            $curPrices[] = $price;
+            $avail = new ProductAvailability($row['Id']);
+            $this->mapper->mapObject($avail, $row);
+            $curAvails[] = $avail;
         }
 
-        // Set prices of last product
-        if ($curProduct && $curProduct->getGuid() != $row['ProductAsimOID'] && !empty($curPrices)) {
-            $curProduct->_setProperty('prices', $curPrices);
+        // Set availability of last product
+        if ($curProduct && $curProduct->getGuid() != $row['ProductAsimOID'] && !empty($curAvails)) {
+            $curProduct->_setProperty('availability', $curAvails);
         }
 
-        // Make empty array for all products without prices (don't trigger loading again)
+        // Make empty array for all products without availability (don't trigger loading again)
         foreach ($productMap as $p) {
-            if (!$p->pricesLoaded()) {
-                $p->_setProperty('prices', []);
+            if (!$p->availabilityLoaded()) {
+                $p->_setProperty('availability', []);
             }
         }
     }

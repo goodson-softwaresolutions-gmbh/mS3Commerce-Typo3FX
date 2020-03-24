@@ -25,7 +25,6 @@ use Ms3\Ms3CommerceFx\Service\DbHelper;
 use Ms3\Ms3CommerceFx\Service\GeneralUtilities;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use Ms3\Ms3CommerceFx\Service\RestrictionService;
-use TYPO3\CMS\Core\Exception;
 
 /**
  * Class PimObjectRepository

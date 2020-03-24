@@ -18,6 +18,7 @@ namespace Ms3\Ms3CommerceFx\Domain\Repository;
 use Ms3\Ms3CommerceFx\Domain\Model\Categorization;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
+use Ms3\Ms3CommerceFx\Domain\Model\ProductAvailability;
 use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
 use Ms3\Ms3CommerceFx\Persistence\DbBackend;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
@@ -113,6 +114,15 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function injectPrices(PriceRepository $price) {
         $this->price = $price;
+    }
+
+    /** @var AvailabilityRepository */
+    private $avail;
+    /**
+     * @param AvailabilityRepository $avail
+     */
+    public function injectAvailability(AvailabilityRepository $avail) {
+        $this->avail = $avail;
     }
 
     /** @var QuerySettings */
@@ -218,6 +228,17 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
             $this->price->loadPrices($object->getCollection()->getOfType(PimObject::TypeProduct));
         } else {
             $this->price->loadPrices([$object]);
+        }
+    }
+
+    /**
+     * @param PimObject $object
+     */
+    public function loadObjectAvailability($object) {
+        if ($object->getCollection()) {
+            $this->avail->loadAvailability($object->getCollection()->getOfType(PimObject::TypeProduct));
+        } else {
+            $this->avail->loadAvailability([$object]);
         }
     }
 
