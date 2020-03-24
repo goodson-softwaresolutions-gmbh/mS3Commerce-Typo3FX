@@ -107,8 +107,9 @@ function Ms3CAjaxSearchController(formName) {
             let ctrl = this.controls[key];
             if (key in filters) {
                 let selValues = (key in selectedValues) ? selectedValues[key] : [];
+                if (filters[key].length > 0) ctrl.show();
+                else ctrl.hide();
                 ctrl.setFilterValues(filters[key], selValues);
-                ctrl.show();
             } else {
                 // No values for this filter
                 ctrl.reset();
