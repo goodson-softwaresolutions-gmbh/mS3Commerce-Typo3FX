@@ -59,6 +59,34 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         return $this->languageId;
     }
 
+    public function initializeFromSettings($settings) {
+        if (!empty($settings['includeUsageTypes'])) {
+            $this->setIncludeUsageTypeIds($settings['includeUsageTypes']);
+        }
+        if (array_key_exists('marketRestriction', $settings)) {
+            $vals = $settings['marketRestriction'];
+            if (!empty($vals['attribute']) && !empty($vals['values'])) {
+                $this->setMarketRestriction($vals['attribute'], $vals['values']);
+            }
+            if (array_key_exists('levels', $vals)) {
+                foreach ($vals['levels'] as $level) {
+                    if (!empty($level['attribute']) && !empty($level['values'])) {
+                        $this->setMarketRestriction($level['attribute'], $level['values'], $level['name']);
+                    }
+                }
+            }
+        }
+        if (array_key_exists('userRestriction', $settings)) {
+            $vals = $settings['userRestriction'];
+            if (!empty($vals['attribute'])) {
+                $this->setUserRestriction($vals['attribute']);
+            }
+        }
+        if (array_key_exists('priceMarket', $settings)) {
+            $this->setPriceMarket($settings['priceMarket']);
+        }
+    }
+
     /**
      * Sets a filter for object usage types. Given as int[] or as ',' separated list
      * @param int[]|string $usageTypeIds The usage type ids to use

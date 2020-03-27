@@ -70,31 +70,7 @@ abstract class AbstractController extends ActionController
     }
 
     protected function initializeQuerySettings() {
-        if (!empty($this->settings['includeUsageTypes'])) {
-            $this->repo->getQuerySettings()->setIncludeUsageTypeIds($this->settings['includeUsageTypes']);
-        }
-        if (array_key_exists('marketRestriction', $this->settings)) {
-            $vals = $this->settings['marketRestriction'];
-            if (!empty($vals['attribute']) && !empty($vals['values'])) {
-                $this->repo->getQuerySettings()->setMarketRestriction($vals['attribute'], $vals['values']);
-            }
-            if (array_key_exists('levels', $vals)) {
-                foreach ($vals['levels'] as $level) {
-                    if (!empty($level['attribute']) && !empty($level['values'])) {
-                        $this->repo->getQuerySettings()->setMarketRestriction($level['attribute'], $level['values'], $level['name']);
-                    }
-                }
-            }
-        }
-        if (array_key_exists('userRestriction', $this->settings)) {
-            $vals = $this->settings['userRestriction'];
-            if (!empty($vals['attribute'])) {
-                $this->repo->getQuerySettings()->setUserRestriction($vals['attribute']);
-            }
-        }
-        if (array_key_exists('priceMarket', $this->settings)) {
-            $this->repo->getQuerySettings()->setPriceMarket($this->settings['priceMarket']);
-        }
+        $this->repo->getQuerySettings()->initializeFromSettings($this->settings);
     }
 
     protected function initializeShopParameters($rootId)
