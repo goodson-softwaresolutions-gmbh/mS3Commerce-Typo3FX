@@ -77,7 +77,7 @@ class AjaxSearchController extends AbstractController
             }
 
 
-            $filterValues = $this->search->getAvailableFilterValues($context, $rootId, $filterAttrs, $multiAttrs);
+            $filterValues = $this->search->getAvailableFilterValues($context, $rootId, $filterAttrs, $multiAttrs, $settings['sortFilterValues']);
 
             //$this->search->searchObjectsConsolidatedWithFilter($context, $rootId, $)
 
@@ -85,7 +85,8 @@ class AjaxSearchController extends AbstractController
             $view = $this->view;
             $view->assign('filter', $filterValues);
             $view->assign('result', $resultContent);
-            $view->setVariablesToRender(['filter', 'result']);
+            $view->assign('page', $resObjects['page']);
+            $view->setVariablesToRender(['filter', 'result', 'page']);
         } finally {
             $this->search->cleanupSearch($context);
             SearchContext::destroyContext();

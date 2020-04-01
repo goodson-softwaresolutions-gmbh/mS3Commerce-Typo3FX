@@ -118,15 +118,33 @@ class ObjectSearch implements SingletonInterface
         }
     }
 
-    public function getAvailableFilterValues(SearchContext $context, $rootId, $filterAttributes, $multiAttrs) {
+    public function getAvailableFilterValues(SearchContext $context, $rootId, $filterAttributes, $multiAttrs, $sortMode = '') {
         $s = $this->repo->getSearchRepository();
         $s->initObjectSearch($context);
         $s->findInMenuId($context, $rootId);
-        return $s->getAvailableFilterValues($context, $filterAttributes, $multiAttrs);
+        $values = $s->getAvailableFilterValues($context, $filterAttributes, $multiAttrs);
+        $this->sortFilterValues($values, $sortMode);
+        return $values;
     }
 
     public function cleanupSearch(SearchContext $context) {
         $this->repo->getSearchRepository()->cleanupSearch($context);
+    }
+
+    /**
+     * Sorts filter values
+     * @param array $filterValues The values to sort
+     * @param string $sortMode "natural" for natural sort mode. No other values supported
+     */
+    public function sortFilterValues(&$filterValues, $sortMode) {
+        if ($sortMode == 'natural') {
+            // Natural sort of values
+            foreach ($filterValues as $attr => &$vals) {
+                usort($vals, function($v1, $v2) {
+                    return strnatcasecmp($v1['ContentPlain'], $v2['ContentPlain']);
+                });
+            }
+        }
     }
 
     private function fetchAllResults(SearchContext $context, $start, $limit) {
