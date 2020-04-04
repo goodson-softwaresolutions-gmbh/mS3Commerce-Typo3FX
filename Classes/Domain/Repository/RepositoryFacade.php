@@ -16,12 +16,11 @@
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
 use Ms3\Ms3CommerceFx\Domain\Model\Categorization;
-use Ms3\Ms3CommerceFx\Domain\Model\Menu;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
-use Ms3\Ms3CommerceFx\Domain\Model\ProductAvailability;
 use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
 use Ms3\Ms3CommerceFx\Persistence\DbBackend;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
@@ -32,6 +31,24 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     public function injectDbBackend(\Ms3\Ms3CommerceFx\Persistence\DbBackend $backend)
     {
         $this->db = $backend;
+    }
+
+    private $basket = null;
+
+    /**
+     * @return \Extcode\Cart\Domain\Model\Cart\Cart|null
+     */
+    public function getTxCartsBasket() {
+        if ($this->basket == null) {
+            $pid = $this->querySettings->getTxCartBasketPid();
+            if ($pid !== null) {
+                $objManager = new ObjectManager();
+                /** @var \Extcode\Cart\Service\SessionHandler $handler */
+                $handler = $objManager->get(\Extcode\Cart\Service\SessionHandler::class);
+                $this->basket = $handler->restore($pid);
+            }
+        }
+        return $this->basket;
     }
 
     /**

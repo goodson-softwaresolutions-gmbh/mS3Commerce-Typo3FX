@@ -34,6 +34,24 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     private $userRestrictionAttr = null;
     /** @var string */
     private $priceMarket = null;
+    /** @var int */
+    private $txCartBasketPid = null;
+
+    /**
+     * @return int
+     */
+    public function getTxCartBasketPid(): int
+    {
+        return $this->txCartBasketPid;
+    }
+
+    /**
+     * @param int $txCartBasketPid
+     */
+    public function setTxCartBasketPid(int $txCartBasketPid): void
+    {
+        $this->txCartBasketPid = $txCartBasketPid;
+    }
 
     /**
      * Sets the shop specific ids
@@ -84,6 +102,9 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         }
         if (array_key_exists('priceMarket', $settings)) {
             $this->setPriceMarket($settings['priceMarket']);
+        }
+        if (array_key_exists('tx_cart', $settings)) {
+            $this->setTxCartBasketPid($settings['tx_cart']['basketPid']);
         }
     }
 

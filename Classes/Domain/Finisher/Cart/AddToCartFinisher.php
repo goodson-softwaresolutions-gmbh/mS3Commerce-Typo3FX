@@ -73,6 +73,11 @@ class AddToCartFinisher implements AddToCartFinisherInterface
             $qty
         );
 
+        // Add mode: replace product count, or sum (=default)?
+        if ($config['tx_cart']['addBasketMode'] == 'replace') {
+            $cart->removeProductById($product->getId());
+        }
+
         return [[/*errors*/], [/*product*/$product]];
     }
 }

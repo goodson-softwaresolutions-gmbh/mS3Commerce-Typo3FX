@@ -36,6 +36,17 @@ class Product extends PimObject
         return PimObject::TypeProduct;
     }
 
+    public function getBasketQuantity() {
+        $cart = $this->getRepo()->getTxCartsBasket();
+        if (!$cart) return null;
+        $product = $cart->getProduct('mS3Commerce_'.$this->id);
+        if ($product) {
+            return $product->getQuantity();
+        }
+
+        return 0;
+    }
+
     /**
      * @return Price[]|null
      */
