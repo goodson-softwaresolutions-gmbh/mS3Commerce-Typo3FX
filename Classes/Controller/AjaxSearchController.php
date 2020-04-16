@@ -76,10 +76,7 @@ class AjaxSearchController extends AbstractController
                 $resultContent = '';
             }
 
-
             $filterValues = $this->search->getAvailableFilterValues($context, $rootId, $filterAttrs, $multiAttrs, $settings['sortFilterValues']);
-
-            //$this->search->searchObjectsConsolidatedWithFilter($context, $rootId, $)
 
             /** @var JsonView $view */
             $view = $this->view;

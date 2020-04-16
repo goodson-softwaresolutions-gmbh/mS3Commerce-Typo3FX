@@ -145,6 +145,11 @@ class ObjectSearch implements SingletonInterface
                 });
             }
         }
+        else if (strpos($sortMode, 'custom') === 0)
+        {
+            $func = substr($sortMode, 7);
+            $filterValues = call_user_func($func, $filterValues);
+        }
     }
 
     private function fetchAllResults(SearchContext $context, $start, $limit) {
