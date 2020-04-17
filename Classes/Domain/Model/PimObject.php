@@ -44,6 +44,8 @@ abstract class PimObject extends AbstractEntity
 
     /** @var PimObject[] */
     protected $children;
+    /** @var PimObject[] */
+    protected $parentPath;
     /** @var AttributeValue[] */
     protected $attributes;
     /** @var Categorization[] */
@@ -152,6 +154,21 @@ abstract class PimObject extends AbstractEntity
     /**
      * @return PimObject[]
      */
+    public function getParentPath() {
+        $this->getRepo()->loadObjectParentPath($this);
+        return $this->parentPath;
+    }
+
+    /**
+     * @return bool
+     */
+    public function parentPathLoaded() : bool {
+        return $this->parentPath !== null;
+    }
+
+    /**
+     * @return PimObject[]
+     */
     public function getChildren() {
         $this->getRepo()->loadObjectChildren($this);
         return $this->children;
@@ -161,7 +178,7 @@ abstract class PimObject extends AbstractEntity
      * @return bool
      */
     public function childrenLoaded() : bool {
-        return $this->children  !== null;
+        return $this->children !== null;
     }
 
     /**

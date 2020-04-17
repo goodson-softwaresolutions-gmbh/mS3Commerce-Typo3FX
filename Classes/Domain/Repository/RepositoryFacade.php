@@ -197,6 +197,15 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
+     * @param PimObject $object
+     */
+    public function loadObjectParentPath($object) {
+        if ($object->parentPathLoaded()) return;
+        $path = $this->object->getParentPathForMenuId($object->getMenuId());
+        $object->_setProperty('parentPath', $path);
+    }
+
+    /**
      * Fills in the child objects of an object
      * @param PimObject $object
      */
