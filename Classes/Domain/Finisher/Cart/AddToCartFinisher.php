@@ -29,7 +29,18 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class AddToCartFinisher implements AddToCartFinisherInterface
 {
-    protected const PIM_PRODUCT_KEY = 'PimProduct';
+    /**
+     * The product type for tx_carts
+     */
+    public const PRODUCT_TYPE = 'mS3Commerce';
+
+    /**
+     * Key to access the {@see \Ms3\Ms3CommerceFx\Domain\Model\Product}
+     * of a {@see \Extcode\Cart\Domain\Model\Cart\Product} via {@see Product::getAdditional()}
+     */
+    public const PIM_PRODUCT_KEY = 'PimProduct';
+
+
 
     /** @var ObjectManager */
     private $objectManager = null;
@@ -103,7 +114,7 @@ class AddToCartFinisher implements AddToCartFinisherInterface
      */
     protected function getCartProductForRequest(Request $request, Cart $cart) {
         $type = $request->getArgument('productType');
-        if ($type != 'mS3Commerce') {
+        if ($type != AddToCartFinisher::PRODUCT_TYPE) {
             throw new \Exception('Invalid product type');
         }
 
@@ -121,7 +132,7 @@ class AddToCartFinisher implements AddToCartFinisherInterface
         $tc = $this->getTaxClass($pimProduct, $request, $cart);
 
         $product = new \Extcode\Cart\Domain\Model\Cart\Product(
-            'mS3Commerce',
+            self::PRODUCT_TYPE,
             $productId,
             $pimProduct->getName(),
             $pimProduct->getAuxiliaryName(),
