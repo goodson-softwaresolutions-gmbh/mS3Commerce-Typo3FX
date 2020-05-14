@@ -137,6 +137,49 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     *
+     * @param int $type Object type, either {@see PimObject::TypeGroup} or {@see PimObject::TypeProduct}
+     * @param int[] $ids The objects' ids
+     * @return PimObject[]|null The objects
+     */
+    public function getObjectsByIds($type, $ids) {
+        switch ($type) {
+            case PimObject::TypeGroup:
+                $class = Group::class;
+                $table = 'Groups';
+                break;
+            case PimObject::TypeProduct:
+                $class = Product::class;
+                $table = 'Product';
+                break;
+            default:
+                throw new \Exception('Invalid object type');
+        }
+
+        $ids = array_unique($ids);
+
+        $toLoad = $this->store->filterKnownIdentifiers($ids, $class);
+        $existingIds = array_diff($ids, $toLoad);
+        $existing = $this->store->getObjectsByIdentifiers($existingIds, $class);
+
+        if (empty($toLoad)) {
+            return $existing;
+        }
+
+        $q = $this->_q();
+        $q->select('*')
+            ->from($table)
+            ->where($q->expr()->in('Id', $toLoad));
+
+        $res = $q->execute();
+        while ($row = $res->fetch()) {
+            $obj = $this->createObjectFromRow($row, $type);
+            $existing[$row['Id']] = $obj;
+        }
+        return $existing;
+    }
+
+    /**
      * Loads a single object by menu id
      * @param int[] $menuIds The menu id
      * @return PimObject[] The objects

@@ -142,6 +142,15 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         $this->avail = $avail;
     }
 
+    /** @var RelationRepository */
+    private $relation;
+    /**
+     * @param RelationRepository $rel
+     */
+    public function injectRelations(RelationRepository $rel) {
+        $this->relation = $rel;
+    }
+
     /** @var QuerySettings */
     private $querySettings;
     public function injectQuerySettings(QuerySettings $settings) {
@@ -274,5 +283,28 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function getStructureElementById($id) {
         return $this->structureElement->getStructureElementById($id);
+    }
+
+    /**
+     * @param PimObject $object
+     */
+    public function loadObjectRelations($object) {
+        if ($object->getCollection()) {
+            $this->relation->loadRelations($object->getCollection()->all());
+        } else {
+            $this->relation->loadRelations([$object]);
+        }
+    }
+
+    /**
+     * @param PimObject $object
+     * @param string $relationType
+     */
+    public function loadObjectRelationChildren($object, $relationType) {
+        if ($object->getCollection()) {
+            $this->relation->loadRelationChildren($object->getCollection()->all(), $relationType);
+        } else {
+            $this->relation->loadRelationChildren([$object], $relationType);
+        }
     }
 }
