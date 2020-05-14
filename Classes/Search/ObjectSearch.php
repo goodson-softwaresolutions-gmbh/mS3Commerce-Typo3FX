@@ -61,7 +61,7 @@ class ObjectSearch implements SingletonInterface
         $shop = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
         $s->findByFullText($context, $shop->getShopId(), $term, $rootId);
 
-        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
+        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit, $rootId);
     }
 
     public function searchObjects(SearchContext $context, $rootId, $start, $limit) {
@@ -77,7 +77,7 @@ class ObjectSearch implements SingletonInterface
         $s->initObjectSearch($context);
         $s->findInMenuId($context, $rootId);
 
-        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
+        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit, $rootId);
     }
 
     public function searchObjectsWithFilter(SearchContext $context, $rootId, $selectedFilters, $multiAttrs, $start, $limit) {
@@ -103,7 +103,7 @@ class ObjectSearch implements SingletonInterface
         $s->initObjectSearchForFilter($context, $selectedFilters);
         $s->findInMenuId($context, $rootId);
         $s->filterMatchesByAttributes($context, $selectedFilters, $multiAttrs);
-        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit);
+        return $this->fetchConsolidatedResults($context, $structureElement, $start, $limit, $rootId);
     }
 
     public function searchFilterValuesWithFilter(SearchContext $context, $rootId, $selectedFilters, $multiAttrs) {
@@ -166,12 +166,12 @@ class ObjectSearch implements SingletonInterface
         ];
     }
 
-    private function fetchConsolidatedResults(SearchContext $context, $structureElement, $start, $limit) {
+    private function fetchConsolidatedResults(SearchContext $context, $structureElement, $start, $limit, $inPathId = 0) {
         $s = $this->repo->getSearchRepository();
-        $menuIds = $s->consolidateMenuIds($context, $structureElement, $start, $limit);
+        $menuIds = $s->consolidateMenuIds($context, $structureElement, $inPathId, $start, $limit);
         $menuIds = array_map(function($r) { return $r['MenuId']; }, $menuIds);
         $res = $this->repo->getObjectsByMenuIds($menuIds);
-        $total = $s->countConsolidatedMatches($context, $structureElement);
+        $total = $s->countConsolidatedMatches($context, $structureElement, $inPathId);
 
         $page = new PaginationInfo($start + 1, count($res), $limit, $total);
         return [
