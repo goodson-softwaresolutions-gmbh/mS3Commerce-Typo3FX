@@ -82,6 +82,9 @@ class AbstractTagBasedViewHelper extends \TYPO3Fluid\Fluid\Core\ViewHelper\Abstr
         $file = $renderingContext->getTemplatePaths()->getPartialPathAndFilename($fileName);
         $view = self::getView($variables);
         $view->setTemplatePathAndFilename($file);
+        /** @var  \TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext $ctx */
+        $ctx = $view->getRenderingContext()->getControllerContext();
+        $ctx->setRequest($renderingContext->getControllerContext()->getRequest());
         return $view;
     }
 
