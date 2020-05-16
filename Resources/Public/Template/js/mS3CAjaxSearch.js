@@ -85,6 +85,11 @@ function Ms3CAjaxSearchController(formName) {
         this.filterProducts(filters);
     };
 
+    Ms3CAjaxSearchController.prototype.gotoPage = function(page) {
+        let filters = this.getSelectedFilters();
+        this.filterProducts(filters, page);
+    };
+
     Ms3CAjaxSearchController.prototype.getSelectedFilters = function() {
         let filters = {};
         for (let key in this.controls) {
@@ -126,15 +131,17 @@ function Ms3CAjaxSearchController(formName) {
         return multiAttrs;
     };
 
-    Ms3CAjaxSearchController.prototype.filterProducts = function(filters) {
+    Ms3CAjaxSearchController.prototype.filterProducts = function(filters, page) {
         let me = this;
         let filterAttributes = this.getFilterAttributes();
         let multiFilters = this.getMultiSelectFilters();
+        page = (!page)?1:page;
 
         let data = {
             selectedFilters: filters,
             filterAttributes: filterAttributes,
-            multiAttributes: multiFilters
+            multiAttributes: multiFilters,
+            page: page
         };
         jQuery.ajax(me.form.attr('action'), {
             method: 'POST',

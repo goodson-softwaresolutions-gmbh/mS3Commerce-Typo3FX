@@ -15,6 +15,7 @@
 
 namespace Ms3\Ms3CommerceFx\Controller;
 
+use Ms3\Ms3CommerceFx\Domain\Model\PaginationInfo;
 use Ms3\Ms3CommerceFx\Search\ObjectSearch;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -56,13 +57,14 @@ class AjaxSearchController extends AbstractController
             $filterAttrs = $this->inputVariables['filterAttributes'];
             $selAttrs = $this->inputVariables['selectedFilters'];
             $multiAttrs = $this->inputVariables['multiAttributes'];
+            $page = $this->inputVariables['page'];
 
             $selValues = array_filter($selAttrs);
             $settings = $this->settings['ajaxSearch'];
 
             if ($settings['resultTemplate']) {
                 $limit = $settings['pageSize'];
-                $start = 0; // TODO ?
+                $start = PaginationInfo::startItemForPage($page, $limit);
                 if (isset($settings['resultStructureElement'])) {
                     $resObjects = $this->search->searchObjectsConsolidatedWithFilter($context, $rootId, $settings['resultStructureElement'], $selValues, $multiAttrs, $start, $limit);
                 } else {
