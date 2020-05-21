@@ -98,6 +98,7 @@ class AjaxSearchController extends AbstractController
         /* @var StandaloneView $view */
         $view = $mgm->get(StandaloneView::class);
         $view->setTemplatePathAndFilename($template);
+        $view->assign('settings', $this->settings);
         $view->assign('result', $result);
         return $view->render();
     }

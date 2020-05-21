@@ -32,12 +32,17 @@ class ObjectController extends AbstractController
 
     /**
      * @param int $rootId
+     * @param string $rootGuid
      * @param int $start
      */
-    public function listAction($rootId = 0, $start = 0)
+    public function listAction($rootId = 0, $rootGuid = '', $start = 0)
     {
-        if ($rootId == 0) $rootId = $this->rootId;
-        $obj = $this->repo->getObjectByMenuId($rootId);
+        if ($rootGuid) {
+            $obj = $this->repo->getOBjectByMenuGuid($rootGuid);
+        } else {
+            if ($rootId == 0) $rootId = $this->rootId;
+            $obj = $this->repo->getObjectByMenuId($rootId);
+        }
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
         $this->view->assign('start', $start);

@@ -66,6 +66,18 @@ class PimObjectRepository extends RepositoryBase
         return null;
     }
 
+    /**
+     * Loads a single object by menu guid
+     * @param string $menuGuid The menu guid
+     * @return PimObject The object
+     */
+    public function getByMenuGuid($menuGuid)
+    {
+        $menu = $this->getMenuByGuid($menuGuid);
+        if ($menu) return $menu->getObject();
+        return null;
+    }
+
     public function getMenuById($menuId)
     {
         /** @var Menu */
@@ -75,6 +87,16 @@ class PimObjectRepository extends RepositoryBase
         }
 
         $menuObjs = $this->loadMenuBy($this->_q()->expr()->eq('m.Id', $menuId));
+        if (!empty($menuObjs)) {
+            return current($menuObjs)[0];
+        }
+        return null;
+    }
+
+    public function getMenuByGuid($menuGuid)
+    {
+        $q = $this->_q();
+        $menuObjs = $this->loadMenuBy($q->expr()->eq('m.ContextID', $q->createNamedParameter($menuGuid)), '', $q->getParameters());
         if (!empty($menuObjs)) {
             return current($menuObjs)[0];
         }
@@ -365,9 +387,10 @@ class PimObjectRepository extends RepositoryBase
      * Reuses already loaded objects
      * @param mixed $expr The condition. Either a string, or a Doctrine\DBAL Constraint
      * @param string $order The order clause
+     * @param array $parameters Named parameters to add to query for expression
      * @return Menu[][] The loaded menus, grouped by parent id
      */
-    protected function loadMenuBy($expr, $order = '')
+    protected function loadMenuBy($expr, $order = '', $parameters = [])
     {
         $q = $this->_q();
         $q->select(DbHelper::getTableColumnAs('Menu', 'menu_', 'm'));
@@ -392,6 +415,10 @@ class PimObjectRepository extends RepositoryBase
 
         if ($order) {
             $q->orderBy($order);
+        }
+
+        if ($parameters) {
+            $q->setParameters($parameters);
         }
 
         $retMap = [];

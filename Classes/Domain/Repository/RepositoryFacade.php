@@ -173,6 +173,14 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
+     * @param string $menuGuid
+     * @return PimObject
+     */
+    public function getObjectByMenuGuid($menuGuid) {
+        return $this->object->getByMenuGuid($menuGuid);
+    }
+
+    /**
      * @param int[] $menuIds
      * @return PimObject[]
      */
