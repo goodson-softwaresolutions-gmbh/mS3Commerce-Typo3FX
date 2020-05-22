@@ -15,47 +15,46 @@
 
 namespace Ms3\Ms3CommerceFx\ViewHelpers\Link;
 
-use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
-use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
-use Ms3\Ms3CommerceFx\Service\ObjectHelper;
+use Ms3\Ms3CommerceFx\Service\LinkService;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Fluid\ViewHelpers\Link\PageViewHelper;
 
-class ObjectViewHelper extends PageViewHelper
+class ObjectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\PageViewHelper
 {
-
     public function initializeArguments()
     {
         parent::initializeArguments();
         $this->registerArgument('object', 'mixed', 'Object to link to', true);
     }
 
+    /** @var LinkService */
+    private $linker;
+    /**
+     * @return LinkService
+     */
+    private function getLinker() {
+        if (!$this->linker) {
+            $mgm = new ObjectManager();
+            $this->linker = $mgm->get(LinkService::class);
+        }
+        return $this->linker;
+    }
+
     public function render()
     {
-        /** @var PimObject $object */
         $object = $this->arguments['object'];
         $settings = $this->renderingContext->getVariableProvider()->getByPath('settings.link');
-        if (!isset($this->arguments['pageUid']) && array_key_exists('pid', $settings)) {
-            $pid = $settings['pid'];
-            // TODO: Level dependent overrides
-            if ($pid) {
-                $this->arguments['pageUid'] = $pid;
-            }
-        }
+        $uri = $this->getLinker()->buildObjectUri($object, $settings, $this->arguments);
 
-        $params = isset($this->arguments['additionalParams']) ? $this->arguments['additionalParams'] : [];
-        if ($settings['byGuid']) {
-            $manager = new ObjectManager();
-            /** @var PimObjectRepository $repo */
-            $repo = $manager->get(PimObjectRepository::class);
-            $menu = $repo->getMenuById($object->getMenuId());
-            $params['tx_ms3commercefx_pi1']['rootGuid'] = $menu->getContextID();
+        /** @see \TYPO3\CMS\Fluid\ViewHelpers\Link\PageViewHelper */
+        if ((string)$uri !== '') {
+            $this->tag->addAttribute('href', $uri);
+            $this->tag->setContent($this->renderChildren());
+            $this->tag->forceClosingTag(true);
+            $result = $this->tag->render();
         } else {
-            $params['tx_ms3commercefx_pi1']['rootId'] = $object->getMenuId();
+            $result = $this->renderChildren();
         }
-
-        $this->arguments['additionalParams'] = $params;
-
-        return parent::render();
+        return $result;
     }
+
 }

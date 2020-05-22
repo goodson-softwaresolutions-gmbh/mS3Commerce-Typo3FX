@@ -78,6 +78,10 @@ class PimObjectRepository extends RepositoryBase
         return null;
     }
 
+    /**
+     * @param int $menuId
+     * @return Menu
+     */
     public function getMenuById($menuId)
     {
         /** @var Menu */
@@ -93,6 +97,10 @@ class PimObjectRepository extends RepositoryBase
         return null;
     }
 
+    /**
+     * @param string $menuGuid
+     * @return Menu
+     */
     public function getMenuByGuid($menuGuid)
     {
         $q = $this->_q();
