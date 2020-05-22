@@ -34,6 +34,9 @@ $iconRegistry->registerIcon(
     ['source' => 'EXT:ms3commercefx/Resources/Public/Icons/Extension.png']
 );
 
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['routing']['aspects']['Ms3CommerceFxRoutingMapper'] =
+    \Ms3\Ms3CommerceFx\Routing\Aspect\PersistedAspectMapper::class;
+
 $fullTextClass = '';
 if (MS3C_SEARCH_BACKEND == 'MySQL') {
     $fullTextClass = 'MySqlFullTextSearch';
@@ -53,7 +56,6 @@ XXX
     );
 }
 unset($fullTextClass);
-
 
 if (TYPO3_MODE === 'FE') {
     if (MS3C_SHOP_SYSTEM == 'tx_cart') {
