@@ -135,33 +135,9 @@ class PimObjectRepository extends RepositoryBase
      * @return PimObject|null The object
      */
     public function getObjectById($type, $id) {
-        switch ($type) {
-            case PimObject::TypeGroup:
-                $class = Group::class;
-                $table = 'Groups';
-                break;
-            case PimObject::TypeProduct:
-                $class = Product::class;
-                $table = 'Product';
-                break;
-            default:
-                throw new \Exception('Invalid object type');
-        }
-
-        $existing = $this->store->getObjectByIdentifier($id, $class);
-        if ($existing) {
-            return $existing;
-        }
-
-        $q = $this->_q();
-        $q->select('*')
-            ->from($table)
-            ->where($q->expr()->eq('Id', $id));
-
-        $res = $q->execute();
-        $row = $res->fetch();
-        if ($row) {
-            return $this->createObjectFromRow($row, $type);
+        $obj = $this->getObjectsByIds($type, [$id]);
+        if ($obj) {
+            return current($obj);
         }
         return null;
     }
@@ -177,10 +153,12 @@ class PimObjectRepository extends RepositoryBase
             case PimObject::TypeGroup:
                 $class = Group::class;
                 $table = 'Groups';
+                $joinField = 'GroupId';
                 break;
             case PimObject::TypeProduct:
                 $class = Product::class;
                 $table = 'Product';
+                $joinField = 'ProductId';
                 break;
             default:
                 throw new \Exception('Invalid object type');
@@ -196,15 +174,26 @@ class PimObjectRepository extends RepositoryBase
             return $existing;
         }
 
+        // Must add a MenuId to loaded object. Take MIN MenuId...
+        // For Min MenuId, GROUP BY must also include all other columns. Build this here:
+        $cols = DbHelper::getTableColumnNames($table);
+        $cols = array_map(function($c) {return "o.$c";}, $cols);
+        $cols = implode(',', $cols);
+
         $q = $this->_q();
-        $q->select('*')
-            ->from($table)
-            ->where($q->expr()->in('Id', $toLoad));
+        $q->select(DbHelper::getTableColumnAs($table, 'o_', 'o'))
+            ->addSelect('MIN(m.Id) AS m_Id')
+            ->from($table, 'o')
+            ->leftJoin('o', 'Menu', 'm', $q->expr()->eq("m.$joinField", 'o.Id'))
+            ->where($q->expr()->in('o.Id', $toLoad))
+            ->groupBy("m.$joinField,$cols")
+        ;
 
         $res = $q->execute();
         while ($row = $res->fetch()) {
-            $obj = $this->createObjectFromRow($row, $type);
-            $existing[$row['Id']] = $obj;
+            $obj = $this->createObjectFromRow($row, $type, 'o_');
+            $obj->_setProperty('menuId', $row['m_Id']);
+            $existing[$row['o_Id']] = $obj;
         }
         return $existing;
     }
