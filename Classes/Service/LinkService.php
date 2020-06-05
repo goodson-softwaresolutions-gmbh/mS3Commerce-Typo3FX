@@ -72,8 +72,11 @@ class LinkService implements SingletonInterface
 
         $params = isset($arguments['additionalParams']) ? $arguments['additionalParams'] : [];
         if ($settings['byGuid'] == 1) {
-            $menu = $this->repo->getMenuById($object->getMenuId());
-            $params['tx_ms3commercefx_pi1']['rootGuid'] = $menu->getContextID();
+            $id = $object->getMenuId();
+            if ($id) {
+                $menu = $this->repo->getMenuById($id);
+                $params['tx_ms3commercefx_pi1']['rootGuid'] = $menu->getContextID();
+            }
         } else {
             $params['tx_ms3commercefx_pi1']['rootId'] = $object->getMenuId();
         }
