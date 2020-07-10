@@ -72,11 +72,10 @@ class AddToCartFinisher implements AddToCartFinisherInterface
     /**
      * Returns the tax class for the given product
      * @param \Ms3\Ms3CommerceFx\Domain\Model\Product $product
-     * @param Request $request
      * @param Cart $cart
      * @return \Extcode\Cart\Domain\Model\Cart\TaxClass
      */
-    protected function getTaxClass(\Ms3\Ms3CommerceFx\Domain\Model\Product $product, Request $request, Cart $cart) {
+    protected function getTaxClass(\Ms3\Ms3CommerceFx\Domain\Model\Product $product, Cart $cart) {
         $taxClasses = $cart->getTaxClasses();
 
         // TODO tax classes. For now we choose 0% fixed (if exists, otherwise first)
@@ -94,10 +93,18 @@ class AddToCartFinisher implements AddToCartFinisherInterface
      * Gets the PIM Product for the request
      * @param Request $request
      * @return \Ms3\Ms3CommerceFx\Domain\Model\Product
-     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\NoSuchArgumentException
      */
     protected function getPimProductForRequest(Request $request) {
         $productId = $request->getArgument('productId');
+        return $this->getPimProduct($productId);
+    }
+
+    /**
+     * Gets the PIM Product by id
+     * @param int $productId
+     * @return \Ms3\Ms3CommerceFx\Domain\Model\Product
+     */
+    protected function getPimProduct($productId) {
         /** @var PimObjectRepository $repo */
         $repo = $this->getObjectManager()->get(PimObjectRepository::class);
         /** @var \Ms3\Ms3CommerceFx\Domain\Model\Product $product */
@@ -124,12 +131,24 @@ class AddToCartFinisher implements AddToCartFinisherInterface
         $productId = $request->getArgument('productId');
         $qty = $request->getArgument('quantity');
 
-        $pimProduct = $this->getPimProductForRequest($request);
+        return $this->getCartProduct($productId, $qty, $cart);
+    }
+
+    /**
+     * Builds a tx_cart mS3Commerce Product for an id
+     * @param int $productId
+     * @param int $qty
+     * @param Cart $cart
+     * @return Product
+     */
+    protected function getCartProduct($productId, $qty, Cart $cart)
+    {
+        $pimProduct = $this->getPimProduct($productId);
         if (!$pimProduct) {
             return null;
         }
 
-        $tc = $this->getTaxClass($pimProduct, $request, $cart);
+        $tc = $this->getTaxClass($pimProduct, $cart);
 
         $product = new \Extcode\Cart\Domain\Model\Cart\Product(
             self::PRODUCT_TYPE,
