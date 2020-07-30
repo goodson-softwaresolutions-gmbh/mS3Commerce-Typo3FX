@@ -16,6 +16,7 @@
 namespace Ms3\Ms3CommerceFx\Controller;
 
 
+use Ms3\Ms3CommerceFx\Domain\Model\PaginationInfo;
 use Ms3\Ms3CommerceFx\Domain\Repository\ShopInfoRepository;
 use Ms3\Ms3CommerceFx\Search\ObjectSearch;
 use Ms3\Ms3CommerceFx\Search\SearchContext;
@@ -51,7 +52,8 @@ class SearchController extends AbstractController
         $shop = $this->shopInfo->getByContainedId($rootId);
         $settings = $this->settings['fulltextSearch'];
         $limit = $settings['pageSize'];
-        $start = 0;
+        $page = GeneralUtility::_GP('page') ?? 0;
+        $start = PaginationInfo::startItemForPage($page, $limit);
 
         $context = SearchContext::createContext();
         try {
@@ -61,6 +63,7 @@ class SearchController extends AbstractController
                 $res = $this->search->fulltextSearchObjects($context, $shop->getShopId(), $term, $start, $limit);
             }
             $this->view->assign('result', $res);
+            $this->view->assign('term', $term);
         } finally {
             $this->search->cleanupSearch($context);
             SearchContext::destroyContext();

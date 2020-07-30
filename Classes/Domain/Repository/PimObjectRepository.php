@@ -61,17 +61,41 @@ class PimObjectRepository extends RepositoryBase
      */
     public function getByMenuId($menuId)
     {
+        $menu = $this->getMenuById($menuId);
+        if ($menu) return $menu->getObject();
+        return null;
+    }
+
+    public function getMenuById($menuId)
+    {
         /** @var Menu */
         $menuObj = $this->store->getObjectByIdentifier($menuId, Menu::class);
         if ($menuObj != null) {
-            return $menuObj->getObject();
+            return $menuObj;
         }
 
         $menuObjs = $this->loadMenuBy($this->_q()->expr()->eq('m.Id', $menuId));
         if (!empty($menuObjs)) {
-            return current($menuObjs)[0]->getObject();
+            return current($menuObjs)[0];
         }
         return null;
+    }
+
+    /**
+     * @param int $menuId
+     * @return PimObject[]
+     */
+    public function getParentPathForMenuId($menuId) {
+        $menu = $this->getMenuById($menuId);
+        $path = array_filter(explode('/', $menu->getPath()));
+        $parents = $this->getByMenuIds($path);
+        // Ensure correct sorting
+        $parents = GeneralUtilities::toDictionary($parents, function($p) { return $p->getMenuId(); });
+        $ret = [];
+        foreach ($path as $p) {
+            $ret[] = $parents[$p];
+        }
+        return $ret;
     }
 
     /**

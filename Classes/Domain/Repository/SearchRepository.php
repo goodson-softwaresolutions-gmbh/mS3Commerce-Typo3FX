@@ -181,12 +181,13 @@ class SearchRepository extends RepositoryBase
      * Consolidates found search objects on a given level. Supports windowing
      * @param SearchContext $context
      * @param string $structureElement The level to consolidate on
+     * @param int $inPathId Restriction of results in a certain menu Id. If 0, no restriction
      * @param int $start Window start
      * @param int $limit Window size
      * @return mixed[] The consolidated objects, key MenuId contains the menu ids
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function consolidateMenuIds(SearchContext $context, $structureElement, $start, $limit) {
+    public function consolidateMenuIds(SearchContext $context, $structureElement, $inPathId, $start, $limit) {
         $this->consolidateResults($context, $structureElement);
         $this->filterConsolidatedResults($context, $structureElement);
 
@@ -196,6 +197,8 @@ class SearchRepository extends RepositoryBase
             ->innerJoin('c', 'Menu', 'm', 'c.MenuId = m.Id')
             ->orderBy('m.OrderPath')
             ->distinct();
+
+        $this->addInPathRestriction($q, $inPathId, 'm');
 
         $sql = $q->getSQL();
 
@@ -225,17 +228,22 @@ class SearchRepository extends RepositoryBase
      * Returns the number of consolidated search objects
      * @param SearchContext $context
      * @param string $structureElement The level to consolidate on
+     * @param int $inPathId Restriction of results in a certain menu Id. If 0, no restriction
      * @return int The number of consolidated objects
      */
-    public function countConsolidatedMatches(SearchContext $context, $structureElement) {
+    public function countConsolidatedMatches(SearchContext $context, $structureElement, $inPathId) {
         $this->consolidateResults($context, $structureElement);
 
         $q = $this->_q();
-        $sql = $q
-            ->select('*') // ORDER Column must be in select for DISTINCT
-            ->from($context->getTableName('cons'), 't')
+        $q->select('c.*')
+            ->from($context->getTableName('cons'), 'c')
+            ->innerJoin('c', 'Menu', 'm', 'c.MenuId = m.Id')
             ->distinct()
-            ->getSQL();
+            ;
+
+        $this->addInPathRestriction($q, $inPathId, 'm');
+
+        $sql = $q->getSQL();
 
         $q = $this->_q();
         $res = $q->select('COUNT(*) AS ct')
@@ -244,6 +252,20 @@ class SearchRepository extends RepositoryBase
             ->fetch();
 
         return $res['ct'];
+    }
+
+    /**
+     * @param QueryBuilder $q
+     * @param int $id
+     * @param string $menuAlias
+     */
+    private function addInPathRestriction($q, $id, $menuAlias) {
+        if ($id) {
+            $q->innerJoin($menuAlias, 'Menu', 'root', $q->expr()->andX(
+                $q->expr()->eq('root.Id', $id),
+                $q->expr()->like("$menuAlias.Path", 'CONCAT(root.Path,"/",root.Id,"%")')
+            ));
+        }
     }
 
     private function consolidateResults(SearchContext $context, $structureElement) {
