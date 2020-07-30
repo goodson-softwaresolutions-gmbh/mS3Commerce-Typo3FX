@@ -56,6 +56,10 @@ unset($fullTextClass);
 
 
 if (TYPO3_MODE === 'FE') {
-    $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart']['mS3Commerce']['Cart']['AddToCartFinisher'] =
-        \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::class;
+    if (MS3C_SHOP_SYSTEM == 'tx_cart') {
+        if (!defined('MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS') || !MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS) {
+            $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart'][\Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::PRODUCT_TYPE]['Cart']['AddToCartFinisher'] =
+                \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::class;
+        }
+    }
 }

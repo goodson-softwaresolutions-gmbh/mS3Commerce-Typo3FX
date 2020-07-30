@@ -34,6 +34,24 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     private $userRestrictionAttr = null;
     /** @var string */
     private $priceMarket = null;
+    /** @var int */
+    private $txCartBasketPid = null;
+
+    /**
+     * @return int
+     */
+    public function getTxCartBasketPid(): int
+    {
+        return $this->txCartBasketPid;
+    }
+
+    /**
+     * @param int $txCartBasketPid
+     */
+    public function setTxCartBasketPid(int $txCartBasketPid): void
+    {
+        $this->txCartBasketPid = $txCartBasketPid;
+    }
 
     /**
      * Sets the shop specific ids
@@ -57,6 +75,37 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
 
     public function getLanguageId() {
         return $this->languageId;
+    }
+
+    public function initializeFromSettings($settings) {
+        if (!empty($settings['includeUsageTypes'])) {
+            $this->setIncludeUsageTypeIds($settings['includeUsageTypes']);
+        }
+        if (array_key_exists('marketRestriction', $settings)) {
+            $vals = $settings['marketRestriction'];
+            if (!empty($vals['attribute']) && !empty($vals['values'])) {
+                $this->setMarketRestriction($vals['attribute'], $vals['values']);
+            }
+            if (array_key_exists('levels', $vals)) {
+                foreach ($vals['levels'] as $level) {
+                    if (!empty($level['attribute']) && !empty($level['values'])) {
+                        $this->setMarketRestriction($level['attribute'], $level['values'], $level['name']);
+                    }
+                }
+            }
+        }
+        if (array_key_exists('userRestriction', $settings)) {
+            $vals = $settings['userRestriction'];
+            if (!empty($vals['attribute'])) {
+                $this->setUserRestriction($vals['attribute']);
+            }
+        }
+        if (array_key_exists('priceMarket', $settings)) {
+            $this->setPriceMarket($settings['priceMarket']);
+        }
+        if (array_key_exists('tx_cart', $settings)) {
+            $this->setTxCartBasketPid($settings['tx_cart']['basketPid']);
+        }
     }
 
     /**

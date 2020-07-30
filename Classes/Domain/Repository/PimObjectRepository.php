@@ -157,6 +157,25 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     * Returns a Prodcut by its name
+     * @param string $objectName The product's name
+     * @return Product
+     */
+    public function getProductByName($objectName)
+    {
+        $q = $this->_q();
+        $q->select('m.Id')
+            ->from('Product', 'p')
+            ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
+            ->where($q->expr()->eq('Name', $q->createNamedParameter($objectName)));
+        $res = $q->execute()->fetch();
+        if ($res) {
+            return $this->getByMenuId($res['Id']);
+        }
+        return null;
+    }
+
+    /**
      * Finds objects by a given attribute value
      * @param string $attributeName The attribute's name
      * @param string $value The value to find
