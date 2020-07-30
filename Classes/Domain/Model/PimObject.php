@@ -52,6 +52,8 @@ abstract class PimObject extends AbstractEntity
     protected $categorizations;
     /** @var PimObjectCollection */
     protected $collection;
+    /** @var Relation[][] */
+    protected $relations;
 
     public function __construct($id = 0) {
         parent::__construct($id);
@@ -238,6 +240,24 @@ abstract class PimObject extends AbstractEntity
         foreach ($this->categorizations as $cat) {
             $this->valuedCategorizations[$cat->getSaneType()] = new CategorizationProxy($this, $cat);
         }
+    }
+
+    /**
+     * @return Relation[][]
+     */
+    public function getRelations() {
+        $this->getRepo()->loadObjectRelations($this);
+        return $this->relations;
+    }
+
+    public function relationsLoaded(): bool {
+        return $this->relations !== null;
+    }
+
+    public function loadRelationChildren($name) {
+        $name = GeneralUtilities::sanitizeFluidAccessName($name);
+        if (!array_key_exists($name, $this->relations)) return;
+        $this->getRepo()->loadObjectRelationChildren($this, $name);
     }
 }
 
