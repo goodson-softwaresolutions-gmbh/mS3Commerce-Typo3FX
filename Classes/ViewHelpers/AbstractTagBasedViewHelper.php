@@ -85,6 +85,7 @@ class AbstractTagBasedViewHelper extends \TYPO3Fluid\Fluid\Core\ViewHelper\Abstr
         /** @var  \TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext $ctx */
         $ctx = $view->getRenderingContext()->getControllerContext();
         $ctx->setRequest($renderingContext->getControllerContext()->getRequest());
+        $view->assign('settings', $renderingContext->getVariableProvider()->get('settings'));
         return $view;
     }
 
