@@ -13,6 +13,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 class PimProductViewHelper extends AbstractViewHelper
 {
+    protected $escapeOutput = false;
     public function initializeArguments()
     {
         parent::initializeArguments();
