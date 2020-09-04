@@ -21,7 +21,10 @@ use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 class RestrictionService implements SingletonInterface
 {
@@ -98,31 +101,33 @@ class RestrictionService implements SingletonInterface
             ->where($q->expr()->in('ObjectKey', $q->createNamedParameter(array_keys($this->visibleCache), Connection::PARAM_STR_ARRAY)))
             ->execute();
 
-        $markForInclusion = function($values) use ($connection, $tableName)
+        $markForInclusion = function($q, $values, $type) use ($connection, $tableName)
         {
-            $q = $connection->createQueryBuilder();
-            $q->update($tableName)
-                ->set('RestrictionFiltered', 1);
             $conditions = [
-                $q->expr()->isNull('MarketRestriction')
+                $q->expr()->isNull($type)
             ];
             foreach ($values as $val) {
-                $conditions[] = $q->expr()->like("CONCAT(';',MarketRestriction,';')", "CONCAT('%;',".$q->createNamedParameter($val).",';%')");
+                $conditions[] = $q->expr()->like("CONCAT(';',$type,';')", "CONCAT('%;',".$q->createNamedParameter($val).",';%')");
             }
-            $q->where($q->expr()->andX(
-                'RestrictionFiltered = 0',
-                new CompositeExpression(CompositeExpression::TYPE_OR, $conditions)
-            ));
-            $q->execute();
+            return new CompositeExpression(CompositeExpression::TYPE_OR, $conditions);
         };
 
+        $q = $connection->createQueryBuilder();
+        $q->update($tableName)
+            ->set('RestrictionFiltered', 1);
+
+        $conditions = ['RestrictionFiltered = 0'];
         if ($this->querySettings->isMarketRestricted()) {
             $vals = $this->querySettings->getStructureElementRestrictionValues($structureElementName);
-            $markForInclusion($vals);
+            $conditions[] = $markForInclusion($q, $vals,'MarketRestriction');
         }
         if ($this->querySettings->isUserRestricted()) {
-            // TODO
+            $vals = $this->getUserRestrictionValues();
+            $conditions[] = $markForInclusion($q, $vals,'UserRestriction');
         }
+
+        $q->where(new CompositeExpression(CompositeExpression::TYPE_AND, $conditions));
+        $q->execute();
 
         $connection->createQueryBuilder()
             ->delete($tableName)
@@ -149,10 +154,39 @@ class RestrictionService implements SingletonInterface
                 continue;
             }
 
-            // TODO: Check User Restriction
+            $v = $this->applyFilter(
+                $vals[$k],
+                $this->querySettings->getUserRestrictionAttribute(),
+                $this->getUserRestrictionValues()
+            );
+            if (!$v) {
+                $this->invisibleCache[$k] = 1;
+                continue;
+            }
 
             $this->visibleCache[$k] = 1;
         }
+    }
+
+    private $userRights;
+    public function getUserRestrictionValues() {
+        if (!$this->userRights) {
+            /** @var Context $context */
+            $context = GeneralUtility::makeInstance(Context::class);
+            $userIsLoggedIn = $context->getPropertyFromAspect('frontend.user', 'isLoggedIn');
+            if(!$userIsLoggedIn) {
+                $this->userRights = $this->querySettings->getUserRestrictionNotLoggedInValues();
+            } else {
+                $tsfe = $this->getTypoScriptFrontendController();
+                $userRights = $tsfe->fe_user->user['ms3c_user_rights'];
+                $defaultRights = $this->querySettings->getUserRestrictionDefaultValues();
+                $rights = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $userRights);
+                // TODO Group Rights
+                $rights = array_merge($rights, $defaultRights);
+                $this->userRights = $rights;
+            }
+        }
+        return $this->userRights;
     }
 
     /**
@@ -225,4 +259,11 @@ class RestrictionService implements SingletonInterface
         return array_merge($values, $values2);
     }
 
+    /**
+     * @return TypoScriptFrontendController
+     */
+    protected function getTypoScriptFrontendController()
+    {
+        return $GLOBALS['TSFE'];
+    }
 }

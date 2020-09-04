@@ -32,6 +32,10 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     private $marketRestrictionValues = [];
     /** @var string */
     private $userRestrictionAttr = null;
+    /** @var string[] */
+    private $userRestrictionDefaultValues = [];
+    /** @var string[] */
+    private $userRestrictionNotLoggedInValues = [];
     /** @var string */
     private $priceMarket = null;
     /** @var int */
@@ -97,7 +101,7 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
         if (array_key_exists('userRestriction', $settings)) {
             $vals = $settings['userRestriction'];
             if (!empty($vals['attribute'])) {
-                $this->setUserRestriction($vals['attribute']);
+                $this->setUserRestriction($vals['attribute'], $vals['defaultValues'], $vals['notLoggedInValues']);
             }
         }
         if (array_key_exists('priceMarket', $settings)) {
@@ -181,9 +185,27 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
     /**
      * Sets a user restriction for objects
      * @param string $attribute The user restriction attribute
+     * @param $defaultValues
+     * @param $notLoggedInValues
      */
-    public function setUserRestriction($attribute) {
+    public function setUserRestriction($attribute,$defaultValues,$notLoggedInValues) {
+        if (!is_array($defaultValues)) {
+            $defaultValues = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $defaultValues);
+        }
+        if (!is_array($notLoggedInValues)) {
+            $notLoggedInValues = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(';', $notLoggedInValues);
+        }
         $this->userRestrictionAttr = $attribute;
+        $this->userRestrictionDefaultValues = $defaultValues;
+        $this->userRestrictionNotLoggedInValues = $notLoggedInValues;
+    }
+
+    public function getUserRestrictionNotLoggedInValues(){
+        return $this->userRestrictionNotLoggedInValues;
+    }
+
+    public function getUserRestrictionDefaultValues(){
+        return $this->userRestrictionDefaultValues;
     }
 
     /**
