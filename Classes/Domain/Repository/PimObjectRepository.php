@@ -84,10 +84,13 @@ class PimObjectRepository extends RepositoryBase
      */
     public function getMenuById($menuId)
     {
-        /** @var Menu */
+        /** @var Menu $menuObj */
         $menuObj = $this->store->getObjectByIdentifier($menuId, Menu::class);
         if ($menuObj != null) {
-            return $menuObj;
+            if ($this->restrictionService->filterRestrictionObjects([$menuObj->getObject()])) {
+                return $menuObj;
+            }
+            return null;
         }
 
         $menuObjs = $this->loadMenuBy($this->_q()->expr()->eq('m.Id', $menuId));
@@ -170,32 +173,35 @@ class PimObjectRepository extends RepositoryBase
         $existingIds = array_diff($ids, $toLoad);
         $existing = $this->store->getObjectsByIdentifiers($existingIds, $class);
 
-        if (empty($toLoad)) {
-            return $existing;
+        if (!empty($toLoad)) {
+            // Must add a MenuId to loaded object. Take MIN MenuId...
+            // For Min MenuId, GROUP BY must also include all other columns. Build this here:
+            $cols = DbHelper::getTableColumnNames($table);
+            $cols = array_map(function ($c) {
+                return "o.$c";
+            }, $cols);
+            $cols = implode(',', $cols);
+
+            $q = $this->_q();
+            $q->select(DbHelper::getTableColumnAs($table, 'o_', 'o'))
+                ->addSelect('MIN(m.Id) AS m_Id')
+                ->from($table, 'o')
+                ->leftJoin('o', 'Menu', 'm', $q->expr()->eq("m.$joinField", 'o.Id'))
+                ->where($q->expr()->in('o.Id', $toLoad))
+                ->groupBy("m.$joinField,$cols");
+
+            $res = $q->execute();
+            while ($row = $res->fetch()) {
+                $obj = $this->createObjectFromRow($row, $type, 'o_');
+                $obj->_setProperty('menuId', $row['m_Id']);
+                $existing[$row['o_Id']] = $obj;
+            }
         }
 
-        // Must add a MenuId to loaded object. Take MIN MenuId...
-        // For Min MenuId, GROUP BY must also include all other columns. Build this here:
-        $cols = DbHelper::getTableColumnNames($table);
-        $cols = array_map(function($c) {return "o.$c";}, $cols);
-        $cols = implode(',', $cols);
-
-        $q = $this->_q();
-        $q->select(DbHelper::getTableColumnAs($table, 'o_', 'o'))
-            ->addSelect('MIN(m.Id) AS m_Id')
-            ->from($table, 'o')
-            ->leftJoin('o', 'Menu', 'm', $q->expr()->eq("m.$joinField", 'o.Id'))
-            ->where($q->expr()->in('o.Id', $toLoad))
-            ->groupBy("m.$joinField,$cols")
-        ;
-
-        $res = $q->execute();
-        while ($row = $res->fetch()) {
-            $obj = $this->createObjectFromRow($row, $type, 'o_');
-            $obj->_setProperty('menuId', $row['m_Id']);
-            $existing[$row['o_Id']] = $obj;
-        }
-        return $existing;
+        $filtered = $this->restrictionService->filterRestrictionObjects($existing);
+        // Must restore mapping ObjectId => Object
+        $ret = GeneralUtilities::toDictionary($filtered, function($o) { return $o->getId();});
+        return $ret;
     }
 
     /**
@@ -397,7 +403,7 @@ class PimObjectRepository extends RepositoryBase
             ->leftJoin('m', 'Groups', 'g', 'g.Id = m.GroupId')
             ->leftJoin('m', 'Product', 'p', 'p.Id = m.ProductId')
             ->leftJoin('m', 'StructureElement', 's', 'p.StructureElementId = s.Id OR g.StructureElementId = s.Id')
-            ;
+        ;
         $includePageTypes = $this->querySettings->getIncludeUsageTypeIds();
         if (!empty($includePageTypes)) {
             $q->where(
@@ -678,7 +684,7 @@ class PimObjectRepository extends RepositoryBase
     private function fetchByQuery($q)
     {
 
-    	/*
+        /*
         $timers = [
             'att1' => 0,
             'att2' => 0,

@@ -77,10 +77,16 @@ class RelationRepository extends RepositoryBase
             $map[$key][] = $rel;
         }
 
+        // Must materialize now, as destination might be not visible
+        $rrr = GeneralUtilities::flattenArray($map);
+        $this->materializeRelations($rrr);
+
         foreach ($groups as $k => $g) {
             $rels = [];
             if (array_key_exists($k, $map)) {
                 $rels = $map[$k];
+                // Remove invisible relations
+                $rels = array_filter($rels, function($r) { return $r->_getProperty('child');} );
                 $rels = GeneralUtilities::groupBy($rels, function($x) { return GeneralUtilities::sanitizeFluidAccessName($x->getName());});
             }
             $g->_setProperty('relations', $rels);
@@ -90,6 +96,8 @@ class RelationRepository extends RepositoryBase
             $rels = [];
             if (array_key_exists($k, $map)) {
                 $rels = $map[$k];
+                // Remove invisible relations
+                $rels = array_filter($rels, function($r) { return $r->_getProperty('child');} );
                 $rels = GeneralUtilities::groupBy($rels, function($x) { return GeneralUtilities::sanitizeFluidAccessName($x->getName());});
             }
             $p->_setProperty('relations', $rels);
@@ -100,7 +108,8 @@ class RelationRepository extends RepositoryBase
      * @param PimObject[] $objects
      * @param string $relationType
      */
-    public function loadRelationChildren($objects, $relationType) {
+    public function loadRelationChildren($objects, $relationType)
+    {
         /** @var Relation[] $loadRelations */
         $loadRelations = [];
         foreach ($objects as $o) {
@@ -113,6 +122,11 @@ class RelationRepository extends RepositoryBase
             $loadRelations = array_merge($loadRelations, $rels);
         }
 
+        $this->materializeRelations($loadRelations);
+    }
+
+    private function materializeRelations($loadRelations)
+    {
         $relations = GeneralUtilities::groupBy($loadRelations, function($x) { return $x->getDestinationType(); }, function($x) { return $x->getDestinationId(); });
         $groups = $this->objRepo->getObjectsByIds(PimObject::TypeGroup, $relations[PimObject::TypeGroup]);
         $products = $this->objRepo->getObjectsByIds(PimObject::TypeProduct, $relations[PimObject::TypeProduct]);
