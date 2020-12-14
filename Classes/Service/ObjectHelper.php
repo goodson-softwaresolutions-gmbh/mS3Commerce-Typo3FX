@@ -32,6 +32,7 @@ class ObjectHelper
      */
     public static function getObjectsFromMenus($menus)
     {
+        if (!is_array($menus)) return [];
         return array_map(function($m) {
             return $m->getObject();
         }, $menus);

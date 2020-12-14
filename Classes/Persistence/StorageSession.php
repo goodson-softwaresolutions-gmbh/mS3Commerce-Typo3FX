@@ -54,6 +54,7 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
      * @return int[] All identifiers that are not stored
      */
     public function filterKnownIdentifiers($identifiers, $className) {
+        if (!is_array($identifiers)) return [];
         if (!is_array($this->identifierMap[$className])) {
             return $identifiers;
         }
@@ -67,6 +68,7 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
 
     public function getObjectsByIdentifiers($identifiers, $className) {
         $res = [];
+        if (!is_iterable($identifiers)) return $res;
         foreach ($identifiers as $id) {
             $res[$id] = $this->getObjectByIdentifier($id, $className);
         }

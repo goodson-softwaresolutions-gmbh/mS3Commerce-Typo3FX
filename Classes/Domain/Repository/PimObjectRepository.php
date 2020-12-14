@@ -152,6 +152,7 @@ class PimObjectRepository extends RepositoryBase
      * @return PimObject[]|null The objects
      */
     public function getObjectsByIds($type, $ids) {
+        if (!is_array($ids) || empty($ids)) return [];
         switch ($type) {
             case PimObject::TypeGroup:
                 $class = Group::class;
@@ -170,7 +171,9 @@ class PimObjectRepository extends RepositoryBase
         $ids = array_unique($ids);
 
         $toLoad = $this->store->filterKnownIdentifiers($ids, $class);
-        $existingIds = array_diff($ids, $toLoad);
+        if (!empty($toLoad)) {
+            $existingIds = array_diff($ids, $toLoad);
+        }
         $existing = $this->store->getObjectsByIdentifiers($existingIds, $class);
 
         if (!empty($toLoad)) {
