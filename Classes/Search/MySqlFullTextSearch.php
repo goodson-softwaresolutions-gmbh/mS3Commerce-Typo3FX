@@ -36,6 +36,7 @@ class MySqlFullTextSearch extends RepositoryBase implements FullTextSearchInterf
                 $q->expr()->eq('ft.ParentType', 2)
                 ))
             ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
+            ->distinct()
             ;
 
         // TODO: restrict to rootMenuId

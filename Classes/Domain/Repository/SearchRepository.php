@@ -192,13 +192,23 @@ class SearchRepository extends RepositoryBase
         $this->filterConsolidatedResults($context, $structureElement);
 
         $q = $this->_q();
-        $q->select('m.Id AS MenuId, m.OrderPath') // ORDER Column must be in select for DISTINCT
+        $q->select('MIN(m.Id) AS MenuId')
             ->from($context->getTableName('cons'), 'c')
             ->innerJoin('c', 'Menu', 'm', 'c.MenuId = m.Id')
-            ->orderBy('m.OrderPath')
-            ->distinct();
+            ->groupBy('m.GroupId')
+            ->addGroupBy('m.GroupId')
+        ;
 
         $this->addInPathRestriction($q, $inPathId, 'm');
+
+        $sql = $q->getSQL();
+        $q = $this->_q() // ORDER Column must be in select for DISTINCT
+            ->select('m.Id AS MenuId, m.OrderPath')
+            ->from('Menu', 'm')
+            ->where($q->expr()->in('m.Id', $sql))
+            ->orderBy('m.OrderPath')
+            ->distinct()
+            ;
 
         $sql = $q->getSQL();
 
@@ -235,9 +245,11 @@ class SearchRepository extends RepositoryBase
         $this->consolidateResults($context, $structureElement);
 
         $q = $this->_q();
-        $q->select('c.*')
+        $q->select('MIN(c.MenuId)')
             ->from($context->getTableName('cons'), 'c')
             ->innerJoin('c', 'Menu', 'm', 'c.MenuId = m.Id')
+            ->groupBy('m.GroupId')
+            ->addGroupBy('m.ProductId')
             ->distinct()
             ;
 
