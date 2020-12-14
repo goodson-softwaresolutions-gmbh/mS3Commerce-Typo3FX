@@ -73,6 +73,8 @@ class MySqlFullTextSearch extends RepositoryBase implements FullTextSearchInterf
 
     private function processTerm($term) {
         // Build boolean terms => append '*' to each single word. TODO: Add +? ("And" query)
+        //$term = preg_replace('/[+\-><\(\)~*\"@]+/', ' ', $term);
+        $term = str_replace('-', '~', $term);
         $terms = preg_split('/\s+/', $term, -1, PREG_SPLIT_NO_EMPTY);
         $termsBool = array_map(function($t) { return strtolower($t).'*'; }, $terms);
         return implode(' +', $termsBool);
