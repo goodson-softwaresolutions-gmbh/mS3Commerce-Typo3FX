@@ -9,9 +9,9 @@
         }
     ],
     "require": {
-        "typo3/cms-core": ">=6.2 <10",
+        "typo3/cms-core": ">=6.2 <11",
         "php": "7.2 - 7.4",
-        "ms3commerce/datatransfer": "6.3.*"
+        "ms3commerce/datatransfer": "6.4.*"
     },
     "autoload": {
         "psr-4": {
