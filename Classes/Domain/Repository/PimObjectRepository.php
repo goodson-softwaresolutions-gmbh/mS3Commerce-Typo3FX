@@ -173,6 +173,8 @@ class PimObjectRepository extends RepositoryBase
         $toLoad = $this->store->filterKnownIdentifiers($ids, $class);
         if (!empty($toLoad)) {
             $existingIds = array_diff($ids, $toLoad);
+        } else {
+            $existingIds = $ids;
         }
         $existing = $this->store->getObjectsByIdentifiers($existingIds, $class);
 
