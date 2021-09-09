@@ -9,10 +9,10 @@ $EM_CONF[$_EXTKEY] = [
     'author_email' => 'info@goodson.at',
     'state' => 'stable',
     'clearCacheOnLoad' => true,
-    'version' => '6.3.1.21310',
+    'version' => '6.4.0.21060',
     'constraints' => [
         'depends' => [
-            'typo3' => '9.0.0-9.9.99',
+            'typo3' => '9.0.0-10.9.99',
         ],
     ],
     'autoload' => [
