@@ -18,6 +18,7 @@ namespace Ms3\Ms3CommerceFx\Service;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 
 class LinkService implements SingletonInterface
@@ -89,30 +90,37 @@ class LinkService implements SingletonInterface
     {
         /** @see \TYPO3\CMS\Fluid\ViewHelpers\Uri\PageViewHelper */
         $pageUid = $arguments['pageUid'];
-        $additionalParams = $arguments['additionalParams'];
-        $pageType = $arguments['pageType'];
-        $noCache = $arguments['noCache'];
-        $noCacheHash = $arguments['noCacheHash'];
-        $section = $arguments['section'];
-        $linkAccessRestrictedPages = $arguments['linkAccessRestrictedPages'];
-        $absolute = $arguments['absolute'];
-        $addQueryString = $arguments['addQueryString'];
-        $argumentsToBeExcludedFromQueryString = $arguments['argumentsToBeExcludedFromQueryString'] ?? [];
-        $addQueryStringMethod = $arguments['addQueryStringMethod'] ?? [];
-
+        $additionalParams = $arguments['additionalParams']??[];
+        $pageType = $arguments['pageType']??0;
+        $noCache = $arguments['noCache']??false;
+        if (isset($arguments['noCacheHash'])) {
+            trigger_error('Using the argument "noCacheHash" in <f:uri.page> ViewHelper has no effect anymore. Remove the argument in your fluid template, as it will result in a fatal error.', E_USER_DEPRECATED);
+        }
+        $section = $arguments['section']??'';
+        $language = $arguments['language'] ?? null;
+        $linkAccessRestrictedPages = $arguments['linkAccessRestrictedPages']??false;
+        $absolute = $arguments['absolute']??false;
+        $addQueryString = $arguments['addQueryString']??false;
+        $argumentsToBeExcludedFromQueryString = $arguments['argumentsToBeExcludedFromQueryString']??[];
+        $addQueryStringMethod = $arguments['addQueryStringMethod']??'';
         $uri = $this->builder
-            ->setTargetPageUid($pageUid)
+            ->reset()
             ->setTargetPageType($pageType)
             ->setNoCache($noCache)
-            ->setUseCacheHash(!$noCacheHash)
             ->setSection($section)
+            ->setLanguage($language)
             ->setLinkAccessRestrictedPages($linkAccessRestrictedPages)
             ->setArguments($additionalParams)
             ->setCreateAbsoluteUri($absolute)
             ->setAddQueryString($addQueryString)
             ->setArgumentsToBeExcludedFromQueryString($argumentsToBeExcludedFromQueryString)
-            ->setAddQueryStringMethod($addQueryStringMethod)
-            ->build();
-        return $uri;
+        ;
+        if (MathUtility::canBeInterpretedAsInteger($pageUid)) {
+            $this->builder->setTargetPageUid((int)$pageUid);
+        }
+        if (is_string($addQueryStringMethod)) {
+            $this->builder->setAddQueryStringMethod($addQueryStringMethod);
+        }
+        return $uri->build();
     }
 }
