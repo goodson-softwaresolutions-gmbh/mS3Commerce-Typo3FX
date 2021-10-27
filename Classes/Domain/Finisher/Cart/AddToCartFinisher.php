@@ -45,7 +45,7 @@ class AddToCartFinisher implements AddToCartFinisherInterface
     /** @var ObjectManager */
     private $objectManager = null;
     protected function getObjectManager() {
-        if (!$this->objectManager) $this->objectManager = new ObjectManager();
+        if (!$this->objectManager) $this->objectManager = GeneralUtility::makeInstance(ObjectManager::class);
         return $this->objectManager;
     }
 

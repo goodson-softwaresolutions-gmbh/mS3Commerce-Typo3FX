@@ -35,7 +35,7 @@ class PimProductViewHelper extends AbstractViewHelper
         $pimProduct = $cartProduct->getAdditional(AddToCartFinisher::PIM_PRODUCT_KEY);
         if (!$pimProduct) {
             // TODO
-            $mgr = new ObjectManager();
+            $mgr = GeneralUtility::makeInstance(ObjectManager::class);
             /** @var PimObjectRepository $repo */
             $repo = $mgr->get(PimObjectRepository::class);
             $pimProduct = $repo->getProductByName($cartProduct->getSku());

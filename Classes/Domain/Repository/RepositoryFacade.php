@@ -20,6 +20,7 @@ use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\StructureElement;
 use Ms3\Ms3CommerceFx\Persistence\DbBackend;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
@@ -42,7 +43,7 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         if ($this->basket == null) {
             $pid = $this->querySettings->getTxCartBasketPid();
             if ($pid !== null) {
-                $objManager = new ObjectManager();
+                $objManager = GeneralUtility::makeInstance(ObjectManager::class);
                 /** @var \Extcode\Cart\Service\SessionHandler $handler */
                 $handler = $objManager->get(\Extcode\Cart\Service\SessionHandler::class);
                 $this->basket = $handler->restore($pid);

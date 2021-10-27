@@ -16,6 +16,7 @@
 namespace Ms3\Ms3CommerceFx\ViewHelpers\Link;
 
 use Ms3\Ms3CommerceFx\Service\LinkService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class ObjectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\PageViewHelper
@@ -28,12 +29,20 @@ class ObjectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\PageViewHelper
 
     /** @var LinkService */
     private $linker;
+
+    /**
+     * @param LinkService $linkerService
+     */
+    public function injectLinkerService(LinkService $linkerService) {
+        $this->linker = $linkerService;
+    }
+
     /**
      * @return LinkService
      */
     private function getLinker() {
         if (!$this->linker) {
-            $mgm = new ObjectManager();
+            $mgm = GeneralUtility::makeInstance(ObjectManager::class);
             $this->linker = $mgm->get(LinkService::class);
         }
         return $this->linker;
