@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Service\NumberFormatter;
+use Ms3\Ms3CommerceFx\Service\ShopService;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
@@ -29,11 +30,24 @@ abstract class AbstractController extends ActionController
     protected $repo;
 
     /**
+     * @var ShopService
+     */
+    protected $shopService;
+
+    /**
      * @param \Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade $repository
      */
     public function injectRepository(\Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade $repository)
     {
         $this->repo = $repository;
+    }
+
+    /**
+     * @param ShopService $service
+     */
+    public function injectShopService(ShopService $service)
+    {
+        $this->shopService = $service;
     }
 
     protected $rootId = 0;
@@ -76,11 +90,7 @@ abstract class AbstractController extends ActionController
     protected function initializeShopParameters($rootId)
     {
         $shopInfo = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
-        if ($shopInfo) {
-            $this->repo->getQuerySettings()->setShopData($shopInfo->getId(), $shopInfo->getMarketId(), $shopInfo->getLanguageId());
-        } else {
-            $this->repo->getQuerySettings()->setShopData(0, 0, 0);
-        }
+        $this->repo->getQuerySettings()->setShopData($shopInfo);
     }
 
     protected function initializeFormats() {
