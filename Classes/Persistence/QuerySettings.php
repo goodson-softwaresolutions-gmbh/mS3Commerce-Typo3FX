@@ -15,14 +15,12 @@
 
 namespace Ms3\Ms3CommerceFx\Persistence;
 
+use Ms3\Ms3CommerceFx\Domain\Model\ShopInfo;
+
 class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
 {
-    /** @var int */
-    private $shopId = 0;
-    /** @var int */
-    private $marketId = 0;
-    /** @var int */
-    private $languageId = 0;
+    /** @var ShopInfo */
+    private $shopInfo = null;
 
     /** @var int[] */
     private $includeUsageTypeIds = [];
@@ -59,26 +57,29 @@ class QuerySettings implements \TYPO3\CMS\Core\SingletonInterface
 
     /**
      * Sets the shop specific ids
-     * @param $shopId
-     * @param $marketId
-     * @param $languageId
+     * @param $shopInfo
      */
-    public function setShopData($shopId, $marketId, $languageId) {
-        $this->shopId = $shopId;
-        $this->marketId = $marketId;
-        $this->languageId = $languageId;
+    public function setShopData($shopInfo) {
+        $this->shopInfo = $shopInfo;
+    }
+
+    /**
+     * @return ShopInfo|null
+     */
+    public function getShopData() {
+        return $this->shopInfo;
     }
 
     public function getShopId() {
-        return $this->shopId;
+        return $this->shopInfo ? $this->shopInfo->getShopId() : 0;
     }
 
     public function getMarketId() {
-        return $this->marketId;
+        return $this->shopInfo ? $this->shopInfo->getMarketId() : 0;
     }
 
     public function getLanguageId() {
-        return $this->languageId;
+        return $this->shopInfo ? $this->shopInfo->getLanguageId() : 0;
     }
 
     public function initializeFromSettings($settings) {
