@@ -1,7 +1,7 @@
 <?php
 /***************************************************************
  * Part of mS3 Commerce Fx
- * Copyright (C) 2019 Goodson GmbH <http://www.goodson.at>
+ * Copyright (C) 2021 Goodson GmbH <http://www.goodson.at>
  *  All rights reserved
  *
  * Dieses Computerprogramm ist urheberrechtlich sowie durch internationale
@@ -15,10 +15,9 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Finisher\Cart;
 
-use Extcode\Cart\Domain\Finisher\Cart\AddToCartFinisherInterface;
+
 use Extcode\Cart\Domain\Model\Cart\Cart;
 use Extcode\Cart\Domain\Model\Cart\Product;
-use Extcode\Cart\Domain\Model\Dto\AvailabilityResponse;
 use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
@@ -27,7 +26,7 @@ use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Web\Request;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
-class AddToCartFinisher implements AddToCartFinisherInterface
+class AddToCartFinisher
 {
     /**
      * The product type for tx_carts
@@ -119,7 +118,7 @@ class AddToCartFinisher implements AddToCartFinisherInterface
      * @return Product
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\NoSuchArgumentException
      */
-    protected function getCartProductForRequest(Request $request, Cart $cart) {
+    protected function getCartProductForRequest($request, Cart $cart) {
         $type = $request->getArgument('productType');
         if ($type != AddToCartFinisher::PRODUCT_TYPE) {
             throw new \Exception('Invalid product type');
@@ -177,23 +176,5 @@ class AddToCartFinisher implements AddToCartFinisherInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function checkAvailability(Request $request, Product $cartProduct, Cart $cart): AvailabilityResponse
-    {
-        /** @var AvailabilityResponse $response */
-        $response = GeneralUtility::makeInstance(AvailabilityResponse::class);
-        return $response;
-    }
 
-    /**
-     * @inheritDoc
-     */
-    public function getProductFromRequest(Request $request, Cart $cart)
-    {
-        $product = $this->getCartProductForRequest($request, $cart);
-        $this->handleAddBasketMode($product, $cart);
-        return [[/*errors*/], [/*product*/$product]];
-    }
 }

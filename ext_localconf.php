@@ -1,4 +1,5 @@
 <?php
+
 defined('TYPO3_MODE') || die('Access denied.');
 
 require_once(\TYPO3\CMS\Core\Core\Environment::getPublicPath().'/dataTransfer/runtime_config.php');
@@ -39,29 +40,27 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['routing']['aspects']['Ms3CommerceFxRoutingMa
 
 $fullTextClass = '';
 if (MS3C_SEARCH_BACKEND == 'MySQL') {
-    $fullTextClass = 'MySqlFullTextSearch';
+    $fullTextClass = \Ms3\Ms3CommerceFx\Search\MySqlFullTextSearch::class;
 } else if (MS3C_SEARCH_BACKEND == 'ElasticSearch') {
-    $fullTextClass = 'ElasticFullTextSearch';
+    // TODO Not yet supported
+    //$fullTextClass = 'ElasticFullTextSearch';
 }
 
 if (!empty($fullTextClass)) {
-    \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScriptSetup(
-        <<<XXX
-config.tx_extbase.objects {
-	Ms3\Ms3CommerceFx\Search\FullTextSearchInterface {
-		className = Ms3\Ms3CommerceFx\Search\\$fullTextClass
-	}
-}
-XXX
-    );
+    \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\Container\Container::class)
+        ->registerImplementation(Ms3\Ms3CommerceFx\Search\FullTextSearchInterface::class, $fullTextClass);
 }
 unset($fullTextClass);
 
 if (TYPO3_MODE === 'FE') {
     if (MS3C_SHOP_SYSTEM == 'tx_cart') {
-        if (!defined('MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS') || !MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS) {
-            $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart'][\Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::PRODUCT_TYPE]['Cart']['AddToCartFinisher'] =
-                \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::class;
+        $cartVersion = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getExtensionVersion('cart');
+        if ($cartVersion && version_compare($cartVersion, '7.0.0', '<')) {
+            if (!defined('MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS') || !MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS) {
+                $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart'][\Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::PRODUCT_TYPE]['Cart']['AddToCartFinisher'] =
+                    \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisherAdapter::class;
+            }
         }
+        unset($cartVersion);
     }
 }

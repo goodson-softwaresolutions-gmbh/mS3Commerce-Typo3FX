@@ -103,4 +103,14 @@ class ShopInfo extends AbstractEntity
     {
         return $this->uploadDate;
     }
+
+    /**
+     * @param int $id
+     * @return bool
+     */
+    public function containsId(int $id): bool
+    {
+        return $this->startId <= $id
+            && $id < $this->endId;
+    }
 }

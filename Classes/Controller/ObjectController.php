@@ -38,11 +38,12 @@ class ObjectController extends AbstractController
     public function listAction($rootId = 0, $rootGuid = '', $start = 0)
     {
         if ($rootGuid) {
-            $obj = $this->repo->getOBjectByMenuGuid($rootGuid);
+            $obj = $this->repo->getObjectByMenuGuid($rootGuid);
         } else {
             if ($rootId == 0) $rootId = $this->rootId;
             $obj = $this->repo->getObjectByMenuId($rootId);
         }
+        $obj = $this->shopService->getObjectInCurrentShop($obj);
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
         $this->view->assign('start', $start);
@@ -54,6 +55,7 @@ class ObjectController extends AbstractController
     public function detailAction($rootId)
     {
         $obj = $this->repo->getObjectByMenuId($rootId);
+        $obj = $this->shopService->getObjectInCurrentShop($obj);
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
     }

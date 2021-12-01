@@ -17,5 +17,10 @@
         "psr-4": {
           "Ms3\\Ms3CommerceFx\\": "Classes/"
         }
-    }
+    },
+	"extra": {
+      "typo3/cms": {
+         "extension-key": "ms3commercefx"
+      }
+   }
 }
