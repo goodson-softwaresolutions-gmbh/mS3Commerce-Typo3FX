@@ -7,8 +7,9 @@ use Ms3\Ms3CommerceFx\Domain\Model\PimObject;
 use Ms3\Ms3CommerceFx\Domain\Model\ShopInfo;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Persistence\StorageSession;
+use TYPO3\CMS\Core\SingletonInterface;
 
-class ShopService
+class ShopService implements SingletonInterface
 {
     /**
      * @var RepositoryFacade
@@ -88,6 +89,28 @@ class ShopService
      */
     public function getObjectInCurrentShop(?PimObject $object) {
         return $this->getObjectInShop($object, $this->repo->getQuerySettings()->getShopId());
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Query\QueryBuilder $query
+     * @param string $field
+     * @param int $shopId
+     */
+    public function addShopIdRestriction($query, $field, $shopId) {
+        $shop = $this->getShop($shopId);
+        $this->addShopRestriction($query, $field, $shop);
+    }
+
+    /**
+     * @param \Doctrine\DBAL\Query\QueryBuilder $query
+     * @param string $field
+     * @param ShopInfo $shop
+     */
+    public function addShopRestriction($query, $field, $shop) {
+        $query->andWhere($query->expr()->and(
+            $query->expr()->lte($shop->getStartId(), $field),
+            $query->expr()->lt($field, $shop->getEndId())
+        ));
     }
 
     private function getShop($id) {

@@ -38,6 +38,11 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
     protected $querySettings;
 
     /**
+     * @var \Ms3\Ms3CommerceFx\Service\ShopService
+     */
+    protected $shopService;
+
+    /**
      * @param \Ms3\Ms3CommerceFx\Persistence\DbBackend $backend
      */
     public function injectDbBackend(\Ms3\Ms3CommerceFx\Persistence\DbBackend $backend)
@@ -66,6 +71,13 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function injectQuerySettings(\Ms3\Ms3CommerceFx\Persistence\QuerySettings $settings) {
         $this->querySettings = $settings;
+    }
+
+    /**
+     * @param \Ms3\Ms3CommerceFx\Service\ShopService $shopService
+     */
+    public function injectShopService(\Ms3\Ms3CommerceFx\Service\ShopService $shopService) {
+        $this->shopService = $shopService;
     }
 
     /**

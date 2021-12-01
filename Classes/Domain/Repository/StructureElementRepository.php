@@ -48,11 +48,14 @@ class StructureElementRepository extends RepositoryBase
      * Note: Set Composition is not considered here.
      * @return StructureElement|null
      */
-    public function getProductLevel() {
+    public function getProductLevel($shopId = 0) {
         $this->loadAll();
+        if ($shopId <= 0) $shopId = $this->querySettings->getShopId();
         foreach ($this->allStructures as $structure) {
             if ($structure->getOrderNr() == 1) {
-                return $structure;
+                if ($this->shopService->isIdInShopId($structure->getId(), $shopId)) {
+                    return $structure;
+                }
             }
         }
         return null;
@@ -61,13 +64,18 @@ class StructureElementRepository extends RepositoryBase
     /**
      * Gets a structure element by its name.
      * @param string $name The name
+     * @param int $shopId The shop to search in (if 0 uses global query settings)
      * @return StructureElement|null
      */
-    public function getStructureElementByName($name) {
+    public function getStructureElementByName($name, $shopId = 0) {
         $this->loadAll();
+        if ($shopId <= 0) $shopId = $this->querySettings->getShopId();
+
         foreach ($this->allStructures as $structure) {
             if ($structure->getName() == $name) {
-                return $structure;
+                if ($this->shopService->isIdInShopId($structure->getId(), $shopId)) {
+                    return $structure;
+                }
             }
         }
         return null;

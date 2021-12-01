@@ -48,8 +48,9 @@ class SearchController extends AbstractController
      */
     public function searchAction($rootId = 0) {
         if ($rootId == 0) $rootId = $this->rootId;
+        $this->initializeShopParameters($rootId);
+        $shop = $this->repo->getQuerySettings()->getShopData();
         $term = GeneralUtility::_GP('term');
-        $shop = $this->shopInfo->getByContainedId($rootId);
         $settings = $this->settings['fulltextSearch'];
         $limit = $settings['pageSize'];
         $page = GeneralUtility::_GP('page') ?? 0;
