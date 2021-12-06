@@ -54,13 +54,16 @@ class CategorizationRepository extends RepositoryBase
 
     /**
      * @param string $name
+     * @param int $shopId The shop to search in (if 0 uses global query settings)
      * @return Categorization
      */
-    public function getCategorizationByName($name) {
+    public function getCategorizationByName($name, $shopId = 0) {
         $q = $this->_q();
-        $r = $q->select('*')->from('featureCompilation')->where($q->expr()->eq('Name', $q->createNamedParameter($name)))->execute();
-        if ($r) {
-            return $this->getCategorizationById($r['Id']);
+        $q->select('*')->from('featureCompilation')->where($q->expr()->eq('Name', $q->createNamedParameter($name)));
+        $this->shopService->addShopIdRestriction($q, 'Id', $shopId ?: $this->querySettings->getShopId());
+        $id = $q->execute()->fetchOne();
+        if ($id) {
+            return $this->getCategorizationById($id);
         }
         return null;
     }
