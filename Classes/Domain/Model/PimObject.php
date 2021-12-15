@@ -55,6 +55,32 @@ abstract class PimObject extends AbstractEntity
     /** @var Relation[][] */
     protected $relations;
 
+    public function __sleep()
+    {
+        $data = parent::__sleep();
+        $data = array_flip($data);
+        unset($data['children']);
+        unset($data['parentPath']);
+        unset($data['attributes']);
+        unset($data['categorizations']);
+        unset($data['collection']);
+        unset($data['relations']);
+        unset($data['menuId']);
+        return array_flip($data);
+    }
+
+    public function __wakeup()
+    {
+        parent::__wakeup();
+        $this->children = null;
+        $this->parentPath = null;
+        $this->attributes = null;
+        $this->categorizations = null;
+        $this->collection = null;
+        $this->relations = null;
+        $this->menuId = null;
+    }
+
     public function __construct($id = 0) {
         parent::__construct($id);
     }
