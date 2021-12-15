@@ -16,5 +16,5 @@ return function (ContainerConfigurator $container, ContainerBuilder $containerBu
         'event' => 'Extcode\Cart\Event\RetrieveProductsFromRequestEvent',
     ]);
 
-    $containerBuilder->setDefinition(\Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisherListener::class, $d);
+    $containerBuilder->setDefinition(\Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart\AddToCartFinisherListener::class, $d);
 };

@@ -4,7 +4,7 @@
 namespace Ms3\Ms3CommerceFx\ViewHelpers\Shop;
 
 
-use Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher;
+use Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart\AddToCartFinisher;
 use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;

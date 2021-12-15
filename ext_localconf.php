@@ -54,13 +54,6 @@ unset($fullTextClass);
 
 if (TYPO3_MODE === 'FE') {
     if (MS3C_SHOP_SYSTEM == 'tx_cart') {
-        $cartVersion = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getExtensionVersion('cart');
-        if ($cartVersion && version_compare($cartVersion, '7.0.0', '<')) {
-            if (!defined('MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS') || !MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS) {
-                $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart'][\Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisher::PRODUCT_TYPE]['Cart']['AddToCartFinisher'] =
-                    \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisherAdapter::class;
-            }
-        }
-        unset($cartVersion);
+        \Ms3\Ms3CommerceFx\Integration\Carts\Hooks\CartHooks::initializeHooks();
     }
 }
