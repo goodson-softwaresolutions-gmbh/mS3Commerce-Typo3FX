@@ -250,6 +250,26 @@ class PimObjectRepository extends RepositoryBase
         return null;
     }
 
+    public function getProductsByNames($objectNames, $shopId = 0)
+    {
+        $q = $this->_q();
+        $q->select('MIN(m.Id)')
+            ->from('Product', 'p')
+            ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
+            ->where($q->expr()->in('Name', $q->createNamedParameter($objectNames, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)))
+            ->groupBy('p.Id')
+        ;
+        $this->shopService->addShopIdRestriction($q, 'm.Id', $shopId ?: $this->querySettings->getShopId());
+        $res = $q->execute()->fetchFirstColumn();
+        if ($res) {
+            return $this->getByMenuIds($res);
+        }
+        if (is_array($res) && empty($res)) {
+            return [];
+        }
+        return null;
+    }
+
     /**
      * Finds objects by a given attribute value
      * @param string $attributeName The attribute's name
