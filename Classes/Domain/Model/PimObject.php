@@ -188,6 +188,13 @@ abstract class PimObject extends AbstractEntity
     }
 
     /**
+     * @return PimObject
+     */
+    public function getParentObject() {
+        return $this->getRepo()->getParentObject($this);
+    }
+
+    /**
      * @return bool
      */
     public function parentPathLoaded() : bool {

@@ -101,6 +101,28 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     * Loads multiple menus by their ids
+     * @param int[] $menuIds
+     * @return Menu[]
+     */
+    public function getMenusByIds($menuIds)
+    {
+        $toLoad = $this->store->filterKnownIdentifiers($menuIds, Menu::class);
+
+        if (!empty($toLoad)) {
+            $this->loadMenuBy($this->_q()->expr()->in('m.Id', $toLoad));
+        }
+
+        $menus = $this->store->getObjectsByIdentifiers($menuIds, Menu::class);
+        $objects = ObjectHelper::getObjectsFromMenus($menus);
+
+        // Must be cached already here
+        $realObjects = $this->restrictionService->filterRestrictionObjects($objects);
+        $realMenuIds = ObjectHelper::getMenuIdsFromObjects($realObjects);
+        return GeneralUtilities::subset($menus, $realMenuIds);
+    }
+
+    /**
      * @param string $menuGuid
      * @return Menu
      */
@@ -216,17 +238,8 @@ class PimObjectRepository extends RepositoryBase
      */
     public function getByMenuIds($menuIds)
     {
-        $toLoad = $this->store->filterKnownIdentifiers($menuIds, Menu::class);
-
-        if (!empty($toLoad)) {
-            $this->loadMenuBy($this->_q()->expr()->in('m.Id', $toLoad));
-        }
-
-        $menus = $this->store->getObjectsByIdentifiers($menuIds, Menu::class);
-        $objects = ObjectHelper::getObjectsFromMenus($menus);
-
-        // Must be cached already here
-        return $this->restrictionService->filterRestrictionObjects($objects);
+        $menus = $this->getMenusByIds($menuIds);
+        return ObjectHelper::getObjectsFromMenus($menus);
     }
 
     /**
