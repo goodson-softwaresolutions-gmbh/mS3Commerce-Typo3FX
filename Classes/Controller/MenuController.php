@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
@@ -25,9 +26,16 @@ class MenuController extends AbstractController
 {
     public function menuAction()
     {
-        if (array_key_exists('startId', $this->settings)) {
+        $startId = 0;
+        if (isset($this->settings['startId'])) {
             $startId = $this->settings['startId'];
-        } else {
+        } else if (isset($this->settings['startGuid'])) {
+            $guid = ObjectHelper::createShopGuid($this->settings['startGuid'], $this->repo->getQuerySettings()->getShopId());
+            $root = $this->repo->getObjectByMenuGuid($guid);
+            $startId = $root ? $root->getMenuId() : 0;
+        }
+
+        if (!$startId) {
             $startId = $this->rootId;
         }
         $obj = $this->repo->getObjectByMenuId($startId);

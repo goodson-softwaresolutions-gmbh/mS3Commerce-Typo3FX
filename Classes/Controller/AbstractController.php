@@ -17,6 +17,7 @@ namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Service\NumberFormatter;
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use Ms3\Ms3CommerceFx\Service\ShopService;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
@@ -74,6 +75,18 @@ abstract class AbstractController extends ActionController
         if (!empty($this->settings['rootId'])) {
             $this->rootId = $this->settings['rootId'];
             $this->initializeShopParameters($this->rootId);
+        } else if (!empty($this->settings['rootGuid'])) {
+            $rg = $this->settings['rootGuid'];
+            if (!ObjectHelper::isShopGuid($rg)) {
+                if (isset($this->settings['shopId'])) {
+                    $rg = ObjectHelper::createShopGuid($rg, $this->settings['shopId']);
+                }
+            }
+            $m = $this->repo->getObjectRepository()->getMenuByGuid($rg);
+            if ($m) {
+                $this->rootId = $m->getId();
+                $this->initializeShopParameters($this->rootId);
+            }
         }
     }
 

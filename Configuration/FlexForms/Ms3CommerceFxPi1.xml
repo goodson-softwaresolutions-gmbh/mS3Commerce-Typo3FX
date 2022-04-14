@@ -16,6 +16,29 @@
                             </config>
                         </TCEforms>
                     </settings.templateFile>
+                    <config.rootStructureElement>
+                        <TCEforms>
+                            <label>Root Structure Element</label>
+                            <onChange>reload</onChange>
+                            <config>
+                                <type>select</type>
+                                <renderType>selectSingle</renderType>
+                                <itemsProcFunc>Ms3\Ms3CommerceFx\Backend\ItemSelector->getStructureElementsFlex</itemsProcFunc>
+                                <items></items>
+                            </config>
+                        </TCEforms>
+                    </config.rootStructureElement>
+                    <settings.rootGuid>
+                        <TCEforms>
+                            <label>RootId</label>
+                            <config>
+                                <type>select</type>
+                                <renderType>selectSingle</renderType>
+                                <itemsProcFunc>Ms3\Ms3CommerceFx\Backend\ItemSelector->getItemListFlex</itemsProcFunc>
+                                <items></items>
+                            </config>
+                        </TCEforms>
+                    </settings.rootGuid>
                     <switchableControllerActions>
                         <TCEforms>
                             <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.title</label>

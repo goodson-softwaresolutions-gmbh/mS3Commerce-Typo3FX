@@ -26,6 +26,26 @@ class ObjectHelper
     }
 
     /**
+     * Checks if the given GUID has a ShopId in ti
+     * @param string $guid
+     * @return bool
+     */
+    public static function isShopGuid($guid) {
+        return strpos($guid, ':') !== false;
+    }
+
+    /**
+     * @param string $guid
+     * @param int $shopId
+     * @return string
+     */
+    public static function createShopGuid($guid, $shopId) {
+        if (self::isShopGuid($guid))
+            $guid = substr($guid, 0, strpos($guid, ':'));
+        return $guid.':'.$shopId;
+    }
+
+    /**
      * Returns the objects of the given menus
      * @param Menu[] $menus
      * @return PimObject[]
