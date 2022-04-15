@@ -24,8 +24,12 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class MenuController extends AbstractController
 {
-    public function menuAction()
+    /**
+     * @param int $rootId
+     */
+    public function menuAction($rootId = 0)
     {
+        $currentObjectId = $rootId;
         $startId = 0;
         if (isset($this->settings['startId'])) {
             $startId = $this->settings['startId'];
@@ -40,5 +44,7 @@ class MenuController extends AbstractController
         }
         $obj = $this->repo->getObjectByMenuId($startId);
         $this->view->assign('object', $obj);
+        $cur = $this->repo->getObjectByMenuId($currentObjectId);
+        $this->view->assign('current', $cur);
     }
 }
