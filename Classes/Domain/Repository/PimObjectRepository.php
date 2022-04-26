@@ -542,18 +542,18 @@ class PimObjectRepository extends RepositoryBase
                 if ($existing) {
                     return $existing;
                 }
-                $obj = new Group($row[$prefix.'Id']);
+                $obj = $this->objectCreation->createGroup($row[$prefix.'Id']);
                 $this->mapper->mapObject($obj, $row, $prefix);
-                $this->store->registerObject($obj);
+                $this->store->registerObject($obj, Group::class);
                 return $obj;
             case PimObject::TypeProduct:
                 $existing = $this->store->getObjectByIdentifier($row[$prefix.'Id'], Product::class);
                 if ($existing) {
                     return $existing;
                 }
-                $obj = new Product($row[$prefix.'Id']);
+                $obj = $this->objectCreation->createProduct($row[$prefix.'Id']);
                 $this->mapper->mapObject($obj, $row, $prefix);
-                $this->store->registerObject($obj);
+                $this->store->registerObject($obj, Product::class);
                 return $obj;
             default:
                 return null;
