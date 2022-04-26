@@ -18,6 +18,12 @@
             <trans-unit id="settings.commerce.action.searchresult" xml:space="preserve">
                 <source>Search result</source>
             </trans-unit>
+            <trans-unit id="settings.commerce.rootStructureElement" xml:space="preserve">
+                <source>Root Level</source>
+            </trans-unit>
+            <trans-unit id="settings.commerce.overrideRootGuid" xml:space="preserve">
+                <source>Root Element</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

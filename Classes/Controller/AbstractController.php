@@ -75,14 +75,24 @@ abstract class AbstractController extends ActionController
         if (!empty($this->settings['rootId'])) {
             $this->rootId = $this->settings['rootId'];
             $this->initializeShopParameters($this->rootId);
+            return;
+        }
+
+        $rootGuid = '';
+        if (!empty($this->settings['overrideRootGuid'])) {
+            $rootGuid = $this->settings['overrideRootGuid'];
         } else if (!empty($this->settings['rootGuid'])) {
-            $rg = $this->settings['rootGuid'];
-            if (!ObjectHelper::isShopGuid($rg)) {
+            $rootGuid = $this->settings['rootGuid'];
+        }
+
+
+        if (!empty($rootGuid)) {
+            if (!ObjectHelper::isShopGuid($rootGuid)) {
                 if (isset($this->settings['shopId'])) {
-                    $rg = ObjectHelper::createShopGuid($rg, $this->settings['shopId']);
+                    $rootGuid = ObjectHelper::createShopGuid($rootGuid, $this->settings['shopId']);
                 }
             }
-            $m = $this->repo->getObjectRepository()->getMenuByGuid($rg);
+            $m = $this->repo->getObjectRepository()->getMenuByGuid($rootGuid);
             if ($m) {
                 $this->rootId = $m->getId();
                 $this->initializeShopParameters($this->rootId);

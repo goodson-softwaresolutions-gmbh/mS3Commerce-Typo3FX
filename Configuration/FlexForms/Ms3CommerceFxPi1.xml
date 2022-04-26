@@ -18,7 +18,7 @@
                     </settings.templateFile>
                     <config.rootStructureElement>
                         <TCEforms>
-                            <label>Root Structure Element</label>
+                            <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.rootStructureElement</label>
                             <onChange>reload</onChange>
                             <config>
                                 <type>select</type>
@@ -28,9 +28,9 @@
                             </config>
                         </TCEforms>
                     </config.rootStructureElement>
-                    <settings.rootGuid>
+                    <settings.overrideRootGuid>
                         <TCEforms>
-                            <label>RootId</label>
+                            <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.overrideRootGuid</label>
                             <config>
                                 <type>select</type>
                                 <renderType>selectSingle</renderType>
@@ -38,7 +38,7 @@
                                 <items></items>
                             </config>
                         </TCEforms>
-                    </settings.rootGuid>
+                    </settings.overrideRootGuid>
                     <switchableControllerActions>
                         <TCEforms>
                             <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.title</label>
