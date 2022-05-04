@@ -15,6 +15,7 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Doctrine\DBAL\ParameterType;
 use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Domain\Model\Group;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
@@ -286,7 +287,7 @@ class PimObjectRepository extends RepositoryBase
     /**
      * Finds objects by a given attribute value
      * @param string $attributeName The attribute's name
-     * @param string $value The value to find
+     * @param string|string[] $value The value to find
      * @param int $entityType Types of entities to find. Must be {@see PimObject::TypeGroup}, {@see PimObject::TypeProduct} or {@see PimObject::TypeNone}. If None, finds all types
      * @param bool $like If true, performs LIKE query, otherwise equals
      * @return PimObject[]
@@ -305,7 +306,11 @@ class PimObjectRepository extends RepositoryBase
             if ($like) {
                 $qG->andWhere($qG->expr()->like('gv.ContentPlain', ':val'));
             } else {
-                $qG->andWhere($qG->expr()->eq('gv.ContentPlain', ':val'));
+                if (is_array($value)) {
+                    $qG->andWhere($qG->expr()->in('gv.ContentPlain', ':val'));
+                } else {
+                    $qG->andWhere($qG->expr()->eq('gv.ContentPlain', ':val'));
+                }
             }
             $qG = $qG->getSQL();
         }
@@ -321,13 +326,23 @@ class PimObjectRepository extends RepositoryBase
             if ($like) {
                 $qP->andWhere($qP->expr()->like('pv.ContentPlain', ':val'));
             } else {
-                $qP->andWhere($qP->expr()->eq('pv.ContentPlain', ':val'));
+                if (is_array($value)) {
+                    $qP->andWhere($qP->expr()->in('pv.ContentPlain', ':val'));
+                } else {
+                    $qP->andWhere($qP->expr()->eq('pv.ContentPlain', ':val'));
+                }
             }
             $qP = $qP->getSQL();
         }
 
         $q = implode(' UNION ', array_filter([$qG, $qP]));
-        $res = $this->db->getConnection()->executeQuery($q, [':attr' => $attributeName, ':val' => $value]);
+        $params = [':attr' => $attributeName, ':val' => $value];
+        if (is_array($value)) {
+            $types = [':val' => \Doctrine\DBAL\Connection::PARAM_STR_ARRAY];
+        } else {
+            $types = [];
+        }
+        $res = $this->db->getConnection()->executeQuery($q, $params, $types);
         $menuIds = $res->fetchAll();
         $menuIds = GeneralUtilities::flattenArray($menuIds);
         return $this->getByMenuIds($menuIds);
