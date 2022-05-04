@@ -26,10 +26,16 @@ class MenuController extends AbstractController
 {
     /**
      * @param int $rootId
+     * @param string $rootGuid
      */
-    public function menuAction($rootId = 0)
+    public function menuAction($rootId = 0, $rootGuid = '')
     {
-        $currentObjectId = $rootId;
+        if ($rootGuid) {
+            $cur = $this->repo->getObjectByMenuGuid($rootGuid);
+            $currentObjectId = $cur->getMenuId();
+        } else {
+            $currentObjectId = $rootId;
+        }
         $startId = 0;
         if (isset($this->settings['startId'])) {
             $startId = $this->settings['startId'];
