@@ -263,7 +263,8 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
     public function getParentObject($object) {
         // If parent path is loaded, just take it from there
         if ($object->parentPathLoaded()) {
-            return last($object->getParentPath());
+            $pp = $object->getParentPath();
+            return end($pp);
         }
         if ($object->getCollection()) {
             $this->objectCollection->loadParentObjects($object->getCollection());
