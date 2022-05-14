@@ -84,7 +84,7 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
     }
 
     /**
-     * @param ObjectCreationService $ocs
+     * @param \Ms3\Ms3CommerceFx\Service\ObjectCreationService $ocs
      */
     public function injectObjectCreationService(\Ms3\Ms3CommerceFx\Service\ObjectCreationService $ocs) {
         $this->objectCreation = $ocs;
