@@ -16,6 +16,7 @@
 namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
+use Ms3\Ms3CommerceFx\Service\CacheUtils;
 use Ms3\Ms3CommerceFx\Service\NumberFormatter;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use Ms3\Ms3CommerceFx\Service\ShopService;
@@ -59,6 +60,7 @@ abstract class AbstractController extends ActionController
         $this->initializeViewTemplate();
         $this->initializeQuerySettings();
         $this->initializeFormats();
+        CacheUtils::markPageForT3Cache();
     }
 
     public function initializeView(ViewInterface $view)
