@@ -51,6 +51,7 @@ class ObjectViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\PageViewHelper
     public function render()
     {
         $object = $this->arguments['object'];
+        if (!$object) return "";
         $settings = $this->renderingContext->getVariableProvider()->getByPath('settings.link');
         $uri = $this->getLinker()->buildObjectUri($object, $settings, $this->arguments);
 
