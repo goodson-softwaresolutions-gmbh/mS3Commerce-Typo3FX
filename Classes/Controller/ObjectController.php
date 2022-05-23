@@ -44,6 +44,7 @@ class ObjectController extends AbstractController
             $obj = $this->repo->getObjectByMenuId($rootId);
         }
         $obj = $this->shopService->getObjectInCurrentShop($obj);
+        if (!$obj) $this->handleNotFound();
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
         $this->view->assign('start', $start);
@@ -56,6 +57,7 @@ class ObjectController extends AbstractController
     {
         $obj = $this->repo->getObjectByMenuId($rootId);
         $obj = $this->shopService->getObjectInCurrentShop($obj);
+        if (!$obj) $this->handleNotFound();
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
     }

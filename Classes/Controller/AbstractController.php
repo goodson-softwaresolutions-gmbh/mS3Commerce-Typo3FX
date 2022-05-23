@@ -20,9 +20,12 @@ use Ms3\Ms3CommerceFx\Service\CacheUtils;
 use Ms3\Ms3CommerceFx\Service\NumberFormatter;
 use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use Ms3\Ms3CommerceFx\Service\ShopService;
+use TYPO3\CMS\Core\Http\ImmediateResponseException;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
+use TYPO3\CMS\Frontend\Controller\ErrorController;
 
 abstract class AbstractController extends ActionController
 {
@@ -123,4 +126,22 @@ abstract class AbstractController extends ActionController
             NumberFormatter::setDefaultFormat($this->settings['numberFormat']['comma'], $this->settings['numberFormat']['thousands']);
         }
     }
+
+    protected function handleNotFound()
+    {
+        if ($this->settings['notFoundMode'] == '404') {
+            // This will throw and thus terminate
+            $this->send404();
+        }
+        // Nothing to do, continue as normal
+    }
+
+    protected function send404() {
+        $response = GeneralUtility::makeInstance(ErrorController::class)->pageNotFoundAction(
+            $GLOBALS['TYPO3_REQUEST'],
+            ''
+        );
+        throw new ImmediateResponseException($response, 1591428020);
+    }
+
 }
