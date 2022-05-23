@@ -55,5 +55,7 @@ if ($__cartVersion && version_compare($__cartVersion, '7.0.0', '<')) {
             return [[/*errors*/], [/*product*/ $product]];
         }
     }
+} else {
+    class AddToCartFinisherAdapter{}
 }
 unset($__cartVersion);
