@@ -118,6 +118,11 @@ abstract class AbstractController extends ActionController
     protected function initializeShopParameters($rootId)
     {
         $shopInfo = $this->repo->getShopInfoRepository()->getByContainedId($rootId);
+        if (!$shopInfo) {
+            if (!empty($this->settings['shopId'])) {
+                $shopInfo = $this->repo->getShopInfoRepository()->getByShopId($this->settings['shopId']);
+            }
+        }
         $this->repo->getQuerySettings()->setShopData($shopInfo);
     }
 
