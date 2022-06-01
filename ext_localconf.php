@@ -14,7 +14,8 @@ require_once(\TYPO3\CMS\Core\Core\Environment::getPublicPath().'/dataTransfer/ru
     ];
 
     if (defined('MS3C_TYPO3_CACHED') && MS3C_TYPO3_CACHED) {
-        unset($nonCacheable['Object']);
+        //unset($nonCacheable['Object']);
+        $nonCacheable['Object'] = 'detail';
         unset($nonCacheable['Menu']);
         unset($nonCacheable['AjaxSearch']);
     }

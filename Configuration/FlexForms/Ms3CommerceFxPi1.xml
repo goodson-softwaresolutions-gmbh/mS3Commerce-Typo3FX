@@ -52,6 +52,11 @@
                                         <numIndex index="1">Object->list</numIndex>
                                     </numIndex>
                                     <numIndex index="1">
+                                        <numIndex index="0">LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.detail</numIndex>
+                                        <!-- Controller -> action -->
+                                        <numIndex index="1">Object->detail</numIndex>
+                                    </numIndex>
+                                    <numIndex index="2">
                                         <numIndex index="0">LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.searchresult</numIndex>
                                         <numIndex index="1">Search->search</numIndex>
                                     </numIndex>
