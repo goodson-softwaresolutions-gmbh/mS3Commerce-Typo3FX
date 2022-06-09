@@ -331,6 +331,20 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         return $this->categorization->getAttributes();
     }
 
+    /**
+     * @return bool TRUE if there are any non-empty attributes in this categorization for the object
+     */
+    public function getHasValues() {
+        return $this->hasValues();
+    }
+
+    /**
+     * @return bool TRUE if there are any non-empty attributes in this categorization for the object
+     */
+    public function hasValues() {
+        return count($this->getFilledAttributes()) > 0;
+    }
+
     /* ArrayAccess implementation: Access by position in categorization */
     public function offsetExists($offset)
     {
