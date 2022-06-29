@@ -32,7 +32,7 @@ class MenuController extends AbstractController
     {
         if ($rootGuid) {
             $cur = $this->repo->getObjectByMenuGuid($rootGuid);
-            $currentObjectId = $cur->getMenuId();
+            $currentObjectId = $cur ? $cur->getMenuId() : 0;
         } else {
             $currentObjectId = $rootId;
         }
