@@ -51,6 +51,7 @@ class PimObjectCollectionRepository extends PimObjectRepository
     public function loadParentObjects($coll)
     {
         // This will cache the menus for later retrieval
+        $this->ensureMenuIds($coll->all());
         $menuIds = ObjectHelper::getMenuIdsFromObjects($coll->all());
         $menus = $this->getMenusByIds($menuIds);
         $parentIds = array_map(function($m) { return $m->getParentId(); }, $menus);

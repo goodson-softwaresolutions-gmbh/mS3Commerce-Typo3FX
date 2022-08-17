@@ -268,6 +268,8 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         }
         if ($object->getCollection()) {
             $this->objectCollection->loadParentObjects($object->getCollection());
+        } else {
+            $this->object->ensureMenuId($object);
         }
         $m = $this->object->getMenuById($object->getMenuId());
         if ($m) {

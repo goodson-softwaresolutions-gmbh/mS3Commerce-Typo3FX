@@ -244,6 +244,54 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     * Ensures that the given object has a Menu Id set.
+     * If it doesn't have one, a menu id is loaded for it
+     * @param PimObject $object The object
+     */
+    public function ensureMenuId($object) {
+        $this->ensureMenuIds([$object]);
+    }
+
+    /**
+     * Ensures that the given objects have a Menu Ids set.
+     * If an object doesn't have one, a menu id is loaded for it
+     * @param PimObject[] $objects
+     */
+    public function ensureMenuIds($objects)
+    {
+        $toLoad = array_filter($objects, function($o) { return !$o->getMenuId(); });
+        if (empty($toLoad)) return;
+
+        $products = array_filter($toLoad, function($o) { return $o->isProduct(); });
+        $groups = array_filter($toLoad, function($o) { return $o->isGroup(); });
+
+        $products = ObjectHelper::getIdsFromObjects($products);
+        $groups = ObjectHelper::getIdsFromObjects($groups);
+
+        $q = $this->_q();
+        $q->select("IFNULL( CONCAT('".PimObject::TypeProduct.":' , ProductId), CONCAT('".PimObject::TypeGroup.":', GroupId) ), MIN(Id)")
+            ->from('Menu')
+            ->where(
+                $q->expr()->or(
+                    $q->expr()->in('ProductId', $q->createNamedParameter($products, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)),
+                    $q->expr()->in('GroupId', $q->createNamedParameter($groups, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)),
+                )
+            )
+            ->groupBy('ProductId, GroupId')
+            ;
+
+        $res = $q->execute()->fetchAllKeyValue();
+        if ($res) {
+            foreach ($objects as &$o) {
+                $k = ObjectHelper::getKeyFromObject($o);
+                if (isset($res[$k])) {
+                    $o->_setProperty('menuId', $res[$k]);
+                }
+            }
+        }
+    }
+
+    /**
      * Returns a Prodcut by its name
      * @param string $objectName The product's name
      * @param int $shopId The shop to search in (if 0 uses global query settings)
