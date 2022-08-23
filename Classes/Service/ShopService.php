@@ -8,6 +8,9 @@ use Ms3\Ms3CommerceFx\Domain\Model\ShopInfo;
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 use Ms3\Ms3CommerceFx\Persistence\StorageSession;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class ShopService implements SingletonInterface
 {
@@ -116,4 +119,24 @@ class ShopService implements SingletonInterface
     private function getShop($id) {
         return $this->repo->getShopInfoRepository()->getByShopId($id);
     }
+
+    public function ensureShopParametersSet()
+    {
+        $querySettings = $this->repo->getQuerySettings();
+        if (!is_null($querySettings->getShopData())) return;
+
+        // No Shop data set. force some shop
+        $mgr = GeneralUtility::makeInstance(ObjectManager::class);
+        $configMgr = $mgr->get(ConfigurationManager::class);
+        $settings = $configMgr->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_SETTINGS, 'ms3commercefx');
+        $querySettings->initializeFromSettings($settings);
+        if (!is_null($querySettings->getShopData())) return;
+
+        // Still not set. Assume a global "shopId" is set
+        $shop = $this->getShop($settings['shopId']);
+        if ($shop) {
+            $querySettings->setShopData($shop);
+        }
+    }
+
 }
