@@ -274,7 +274,7 @@ class PimObjectRepository extends RepositoryBase
             ->where(
                 $q->expr()->or(
                     $q->expr()->in('ProductId', $q->createNamedParameter($products, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)),
-                    $q->expr()->in('GroupId', $q->createNamedParameter($groups, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)),
+                    $q->expr()->in('GroupId', $q->createNamedParameter($groups, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY))
                 )
             )
             ->groupBy('ProductId, GroupId')
