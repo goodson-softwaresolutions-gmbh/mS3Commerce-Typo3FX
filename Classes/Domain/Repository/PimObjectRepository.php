@@ -292,18 +292,39 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
-     * Returns a Prodcut by its name
-     * @param string $objectName The product's name
+     * Returns a Prodcut by its Object GUID
+     * @param string $guid The product's guid
      * @param int $shopId The shop to search in (if 0 uses global query settings)
      * @return Product
      */
-    public function getProductByName($objectName, $shopId = 0)
+    public function getProductByName($guid, $shopId = 0)
     {
         $q = $this->_q();
         $q->select('m.Id')
             ->from('Product', 'p')
             ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
-            ->where($q->expr()->eq('Name', $q->createNamedParameter($objectName)));
+            ->where($q->expr()->eq('Name', $q->createNamedParameter($guid)));
+        $this->shopService->addShopIdRestriction($q, 'm.Id', $shopId ?: $this->querySettings->getShopId());
+        $res = $q->execute()->fetchOne();
+        if ($res) {
+            return $this->getByMenuId($res);
+        }
+        return null;
+    }
+
+    /**
+     * Returns a Prodcut by its name
+     * @param string $objectName The product's name
+     * @param int $shopId The shop to search in (if 0 uses global query settings)
+     * @return Product
+     */
+    public function getProductByGuid($objectName, $shopId = 0)
+    {
+        $q = $this->_q();
+        $q->select('m.Id')
+            ->from('Product', 'p')
+            ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
+            ->where($q->expr()->eq('AsimOid', $q->createNamedParameter($objectName)));
         $this->shopService->addShopIdRestriction($q, 'm.Id', $shopId ?: $this->querySettings->getShopId());
         $res = $q->execute()->fetchOne();
         if ($res) {
