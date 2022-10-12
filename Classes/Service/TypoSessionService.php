@@ -34,6 +34,7 @@ class TypoSessionService implements SingletonInterface
         $this->doAuthentication([
             'logintype' => 'logout'
         ]);
+        $this->getUser()->storeSessionData();
         $ret = $this->isLoggedIn();
         return $ret;
     }
