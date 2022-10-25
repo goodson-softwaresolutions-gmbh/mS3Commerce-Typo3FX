@@ -4,23 +4,35 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\DependencyInjection\Definition;
 
 return function (ContainerConfigurator $container, ContainerBuilder $containerBuilder) {
-
-    /////// CART
-    (function () use ($container, $containerBuilder) {
-        $cartVersion = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getExtensionVersion('cart');
-        if (!$cartVersion || version_compare($cartVersion, '7.0.0', '<')) {
-            return;
+    $registerEvent = function($event, $class, $id = '') use ($containerBuilder) {
+        if (empty($id)) {
+            $id = 'ms3commercefx/'.strtolower(str_replace('\\', '-', $event).'-'.strtolower(str_replace('\\', '_', $class)));
         }
-
         $d = new Definition();
         $d->setAutowired(true);
         $d->addTag('event.listener', [
-            'identifier' => 'ms3commercefx/cart-add-to-cart-finisher',
-            'event' => 'Extcode\Cart\Event\RetrieveProductsFromRequestEvent',
+            'identifier' => $id,
+            'event' => $event,
         ]);
+        $containerBuilder->setDefinition($class, $d);
+    };
 
-        $containerBuilder->setDefinition(\Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart\AddToCartFinisherListener::class, $d);
-    })();
+    /////// IMAGE CLEAR
+    $registerEvent(
+        'TYPO3\CMS\Core\Resource\Event\BeforeFileProcessingEvent',
+        \Ms3\Ms3CommerceFx\EventListener\BeforeFileProcessingEvent::class,
+        'ms3commercefx/check-processed-file-before-processing'
+    );
+
+    /////// CART
+    $cartVersion = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getExtensionVersion('cart');
+    if ($cartVersion && version_compare($cartVersion, '7.0.0', '<')) {
+        $registerEvent(
+            'Extcode\Cart\Event\RetrieveProductsFromRequestEvent',
+            \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisherListener::class,
+            'ms3commercefx/cart-add-to-cart-finisher'
+        );
+    }
 
     ////// SEARCH
     (function () use ($container, $containerBuilder) {
@@ -38,3 +50,4 @@ return function (ContainerConfigurator $container, ContainerBuilder $containerBu
         $services->alias(\Ms3\Ms3CommerceFx\Search\FullTextSearchInterface::class, $fullTextClass);
     })();
 };
+
