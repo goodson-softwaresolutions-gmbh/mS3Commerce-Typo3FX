@@ -87,7 +87,7 @@ class FormViewHelper extends AbstractTagBasedViewHelper
             ->setTargetPageUid($pid)
             ->setTargetPageType(159)
             ->setNoCache(true)
-            ->setUseCacheHash(false);
+            ;
 
         if ($rootId)
             $uriBuilder->setArguments(['tx_ms3commercefx_pi1[rootId]' => $rootId]);

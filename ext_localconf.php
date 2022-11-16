@@ -1,4 +1,8 @@
 <?php
+use \Ms3\Ms3CommerceFx\Controller\ObjectController;
+use \Ms3\Ms3CommerceFx\Controller\MenuController;
+use \Ms3\Ms3CommerceFx\Controller\AjaxSearchController;
+use \Ms3\Ms3CommerceFx\Controller\SearchController;
 
 defined('TYPO3_MODE') || die('Access denied.');
 
@@ -7,17 +11,17 @@ require_once(\TYPO3\CMS\Core\Core\Environment::getPublicPath().'/dataTransfer/ru
 (static function(){
     $pluginActions =
     $nonCacheable = [
-        'Object' => 'list,detail',
-        'Menu' => 'menu',
-        'AjaxSearch' => 'filter',
-        'Search' => 'search'
+        ObjectController::class => 'list,detail',
+        MenuController::class => 'menu',
+        AjaxSearchController::class => 'filter',
+        SearchController::class => 'search'
     ];
 
     if (defined('MS3C_TYPO3_CACHED') && MS3C_TYPO3_CACHED) {
         //unset($nonCacheable['Object']);
-        $nonCacheable['Object'] = 'detail';
-        unset($nonCacheable['Menu']);
-        unset($nonCacheable['AjaxSearch']);
+        $nonCacheable[ObjectController::class] = 'detail';
+        unset($nonCacheable[MenuController::class]);
+        unset($nonCacheable[AjaxSearchController::class]);
     }
 
     \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
@@ -25,6 +29,20 @@ require_once(\TYPO3\CMS\Core\Core\Environment::getPublicPath().'/dataTransfer/ru
         'Pi1',
         $pluginActions,
         $nonCacheable
+    );
+
+    \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+        'Ms3.Ms3CommerceFx',
+        'Menu',
+        [MenuController::class => $pluginActions[MenuController::class]],
+        [MenuController::class => $nonCacheable[MenuController::class]]
+    );
+
+    \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+        'Ms3.Ms3CommerceFx',
+        'AjaxSearch',
+        [AjaxSearchController::class => $pluginActions[AjaxSearchController::class]],
+        [AjaxSearchController::class => $nonCacheable[AjaxSearchController::class]]
     );
 
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig(

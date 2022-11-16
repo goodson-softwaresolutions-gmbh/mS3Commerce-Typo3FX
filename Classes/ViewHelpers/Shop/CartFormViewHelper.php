@@ -78,7 +78,6 @@ XXX;
             ->reset()
             ->setTargetPageUid($pid)
             ->setNoCache(true)
-            ->setUseCacheHash(false)
         ;
 
         if ($isAjax) {
