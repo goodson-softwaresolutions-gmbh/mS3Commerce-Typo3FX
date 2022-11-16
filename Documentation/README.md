@@ -62,7 +62,7 @@ to enable more advanced features, like AJAX filters, speaking URLs, etc.
 
 
 ### Quickstart Guide
-- Install and set up dataTransfer (cf dataTransfer documentation)
+- Install and set up dataTransfer (cf. [dataTransfer documentation](https://github.com/goodson-softwaresolutions-gmbh/mS3Commerce-dataTransfer/tree/master/documentation))
 
 - Add mS3 Commerce FX Plugin to page
 
@@ -94,7 +94,7 @@ to enable more advanced features, like AJAX filters, speaking URLs, etc.
 ### Utilities
 The dataTransfer provides a DB Viewer to see what data objects are import form mS3 PIM.
 It is found in on the webserver at `https://host/dataTransfer/viewdb.php`
-Check the [dataTransfer documentation]() for details. 
+Check the [dataTransfer documentation](https://github.com/goodson-softwaresolutions-gmbh/mS3Commerce-dataTransfer/tree/master/documentation#viewdbphp) for details. 
 
 ### Languages and Shops
 mS3 Commerce can handle multiple languages and product assortments (called "market") in a single instance. A language/assortment
@@ -187,7 +187,7 @@ and the values of all `AjaxSearch.control` input elements.
 ### Caching
 The Front End Plugin functions are usually not cached, so that all content is re-rendered on every page load.
 
-With the global parameter `MS3C_TYPO3_CACHED` (see [dataTransfer documentation]()), this can be changed.
+With the global parameter `MS3C_TYPO3_CACHED` (see [dataTransfer documentation](https://github.com/goodson-softwaresolutions-gmbh/mS3Commerce-dataTransfer/tree/master/documentation#typo3-specific-parameters)), this can be changed.
 If this parameter is set to 1, the Object List, Menu, and Ajax Form elements are cacheable content objects
 and handled accordingly by Typo3. 
 
