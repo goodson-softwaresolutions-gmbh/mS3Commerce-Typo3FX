@@ -15,6 +15,7 @@
 
 namespace Ms3\Ms3CommerceFx\Domain\Repository;
 
+use Doctrine\DBAL\ParameterType;
 use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
 use Ms3\Ms3CommerceFx\Domain\Model\Group;
 use Ms3\Ms3CommerceFx\Domain\Model\Menu;
@@ -98,6 +99,28 @@ class PimObjectRepository extends RepositoryBase
             return current($menuObjs)[0];
         }
         return null;
+    }
+
+    /**
+     * Loads multiple menus by their ids
+     * @param int[] $menuIds
+     * @return Menu[]
+     */
+    public function getMenusByIds($menuIds)
+    {
+        $toLoad = $this->store->filterKnownIdentifiers($menuIds, Menu::class);
+
+        if (!empty($toLoad)) {
+            $this->loadMenuBy($this->_q()->expr()->in('m.Id', $toLoad));
+        }
+
+        $menus = $this->store->getObjectsByIdentifiers($menuIds, Menu::class);
+        $objects = ObjectHelper::getObjectsFromMenus($menus);
+
+        // Must be cached already here
+        $realObjects = $this->restrictionService->filterRestrictionObjects($objects);
+        $realMenuIds = ObjectHelper::getMenuIdsFromObjects($realObjects);
+        return GeneralUtilities::subset($menus, $realMenuIds);
     }
 
     /**
@@ -216,32 +239,71 @@ class PimObjectRepository extends RepositoryBase
      */
     public function getByMenuIds($menuIds)
     {
-        $toLoad = $this->store->filterKnownIdentifiers($menuIds, Menu::class);
-
-        if (!empty($toLoad)) {
-            $this->loadMenuBy($this->_q()->expr()->in('m.Id', $toLoad));
-        }
-
-        $menus = $this->store->getObjectsByIdentifiers($menuIds, Menu::class);
-        $objects = ObjectHelper::getObjectsFromMenus($menus);
-
-        // Must be cached already here
-        return $this->restrictionService->filterRestrictionObjects($objects);
+        $menus = $this->getMenusByIds($menuIds);
+        return ObjectHelper::getObjectsFromMenus($menus);
     }
 
     /**
-     * Returns a Prodcut by its name
-     * @param string $objectName The product's name
+     * Ensures that the given object has a Menu Id set.
+     * If it doesn't have one, a menu id is loaded for it
+     * @param PimObject $object The object
+     */
+    public function ensureMenuId($object) {
+        $this->ensureMenuIds([$object]);
+    }
+
+    /**
+     * Ensures that the given objects have a Menu Ids set.
+     * If an object doesn't have one, a menu id is loaded for it
+     * @param PimObject[] $objects
+     */
+    public function ensureMenuIds($objects)
+    {
+        $toLoad = array_filter($objects, function($o) { return !$o->getMenuId(); });
+        if (empty($toLoad)) return;
+
+        $products = array_filter($toLoad, function($o) { return $o->isProduct(); });
+        $groups = array_filter($toLoad, function($o) { return $o->isGroup(); });
+
+        $products = ObjectHelper::getIdsFromObjects($products);
+        $groups = ObjectHelper::getIdsFromObjects($groups);
+
+        $q = $this->_q();
+        $q->select("IFNULL( CONCAT('".PimObject::TypeProduct.":' , ProductId), CONCAT('".PimObject::TypeGroup.":', GroupId) ), MIN(Id)")
+            ->from('Menu')
+            ->where(
+                $q->expr()->or(
+                    $q->expr()->in('ProductId', $q->createNamedParameter($products, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)),
+                    $q->expr()->in('GroupId', $q->createNamedParameter($groups, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY))
+                )
+            )
+            ->groupBy('ProductId, GroupId')
+            ;
+
+        $res = $q->execute()->fetchAllKeyValue();
+        if ($res) {
+            foreach ($objects as &$o) {
+                $k = ObjectHelper::getKeyFromObject($o);
+                if (isset($res[$k])) {
+                    $o->_setProperty('menuId', $res[$k]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns a Prodcut by its Object GUID
+     * @param string $guid The product's guid
      * @param int $shopId The shop to search in (if 0 uses global query settings)
      * @return Product
      */
-    public function getProductByName($objectName, $shopId = 0)
+    public function getProductByName($guid, $shopId = 0)
     {
         $q = $this->_q();
         $q->select('m.Id')
             ->from('Product', 'p')
             ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
-            ->where($q->expr()->eq('Name', $q->createNamedParameter($objectName)));
+            ->where($q->expr()->eq('Name', $q->createNamedParameter($guid)));
         $this->shopService->addShopIdRestriction($q, 'm.Id', $shopId ?: $this->querySettings->getShopId());
         $res = $q->execute()->fetchOne();
         if ($res) {
@@ -251,9 +313,50 @@ class PimObjectRepository extends RepositoryBase
     }
 
     /**
+     * Returns a Prodcut by its name
+     * @param string $objectName The product's name
+     * @param int $shopId The shop to search in (if 0 uses global query settings)
+     * @return Product
+     */
+    public function getProductByGuid($objectName, $shopId = 0)
+    {
+        $q = $this->_q();
+        $q->select('m.Id')
+            ->from('Product', 'p')
+            ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
+            ->where($q->expr()->eq('AsimOid', $q->createNamedParameter($objectName)));
+        $this->shopService->addShopIdRestriction($q, 'm.Id', $shopId ?: $this->querySettings->getShopId());
+        $res = $q->execute()->fetchOne();
+        if ($res) {
+            return $this->getByMenuId($res);
+        }
+        return null;
+    }
+
+    public function getProductsByNames($objectNames, $shopId = 0)
+    {
+        $q = $this->_q();
+        $q->select('MIN(m.Id)')
+            ->from('Product', 'p')
+            ->innerJoin('p', 'Menu', 'm', $q->expr()->eq('m.ProductId', 'p.Id'))
+            ->where($q->expr()->in('Name', $q->createNamedParameter($objectNames, \Doctrine\DBAL\Connection::PARAM_STR_ARRAY)))
+            ->groupBy('p.Id')
+        ;
+        $this->shopService->addShopIdRestriction($q, 'm.Id', $shopId ?: $this->querySettings->getShopId());
+        $res = $q->execute()->fetchFirstColumn();
+        if ($res) {
+            return $this->getByMenuIds($res);
+        }
+        if (is_array($res) && empty($res)) {
+            return [];
+        }
+        return null;
+    }
+
+    /**
      * Finds objects by a given attribute value
      * @param string $attributeName The attribute's name
-     * @param string $value The value to find
+     * @param string|string[] $value The value to find
      * @param int $entityType Types of entities to find. Must be {@see PimObject::TypeGroup}, {@see PimObject::TypeProduct} or {@see PimObject::TypeNone}. If None, finds all types
      * @param bool $like If true, performs LIKE query, otherwise equals
      * @return PimObject[]
@@ -272,7 +375,11 @@ class PimObjectRepository extends RepositoryBase
             if ($like) {
                 $qG->andWhere($qG->expr()->like('gv.ContentPlain', ':val'));
             } else {
-                $qG->andWhere($qG->expr()->eq('gv.ContentPlain', ':val'));
+                if (is_array($value)) {
+                    $qG->andWhere($qG->expr()->in('gv.ContentPlain', ':val'));
+                } else {
+                    $qG->andWhere($qG->expr()->eq('gv.ContentPlain', ':val'));
+                }
             }
             $qG = $qG->getSQL();
         }
@@ -288,13 +395,23 @@ class PimObjectRepository extends RepositoryBase
             if ($like) {
                 $qP->andWhere($qP->expr()->like('pv.ContentPlain', ':val'));
             } else {
-                $qP->andWhere($qP->expr()->eq('pv.ContentPlain', ':val'));
+                if (is_array($value)) {
+                    $qP->andWhere($qP->expr()->in('pv.ContentPlain', ':val'));
+                } else {
+                    $qP->andWhere($qP->expr()->eq('pv.ContentPlain', ':val'));
+                }
             }
             $qP = $qP->getSQL();
         }
 
         $q = implode(' UNION ', array_filter([$qG, $qP]));
-        $res = $this->db->getConnection()->executeQuery($q, [':attr' => $attributeName, ':val' => $value]);
+        $params = [':attr' => $attributeName, ':val' => $value];
+        if (is_array($value)) {
+            $types = [':val' => \Doctrine\DBAL\Connection::PARAM_STR_ARRAY];
+        } else {
+            $types = [];
+        }
+        $res = $this->db->getConnection()->executeQuery($q, $params, $types);
         $menuIds = $res->fetchAll();
         $menuIds = GeneralUtilities::flattenArray($menuIds);
         return $this->getByMenuIds($menuIds);
@@ -509,18 +626,18 @@ class PimObjectRepository extends RepositoryBase
                 if ($existing) {
                     return $existing;
                 }
-                $obj = new Group($row[$prefix.'Id']);
+                $obj = $this->objectCreation->createGroup($row[$prefix.'Id']);
                 $this->mapper->mapObject($obj, $row, $prefix);
-                $this->store->registerObject($obj);
+                $this->store->registerObject($obj, Group::class);
                 return $obj;
             case PimObject::TypeProduct:
                 $existing = $this->store->getObjectByIdentifier($row[$prefix.'Id'], Product::class);
                 if ($existing) {
                     return $existing;
                 }
-                $obj = new Product($row[$prefix.'Id']);
+                $obj = $this->objectCreation->createProduct($row[$prefix.'Id']);
                 $this->mapper->mapObject($obj, $row, $prefix);
-                $this->store->registerObject($obj);
+                $this->store->registerObject($obj, Product::class);
                 return $obj;
             default:
                 return null;

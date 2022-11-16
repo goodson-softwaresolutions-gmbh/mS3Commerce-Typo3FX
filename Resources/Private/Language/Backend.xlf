@@ -15,8 +15,17 @@
             <trans-unit id="settings.commerce.action.list" xml:space="preserve">
                 <source>Object list</source>
             </trans-unit>
+            <trans-unit id="settings.commerce.action.detail" xml:space="preserve">
+                <source>Object detail</source>
+            </trans-unit>
             <trans-unit id="settings.commerce.action.searchresult" xml:space="preserve">
                 <source>Search result</source>
+            </trans-unit>
+            <trans-unit id="settings.commerce.rootStructureElement" xml:space="preserve">
+                <source>Root Level</source>
+            </trans-unit>
+            <trans-unit id="settings.commerce.overrideRootGuid" xml:space="preserve">
+                <source>Root Element</source>
             </trans-unit>
         </body>
     </file>

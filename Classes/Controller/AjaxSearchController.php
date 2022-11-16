@@ -41,8 +41,8 @@ class AjaxSearchController extends AbstractController
 
     public function initializeAction()
     {
-        parent::initializeRootId();
-        parent::initializeQuerySettings();
+        $this->initializeRootId();
+        $this->initializeQuerySettings();
         $in = file_get_contents('php://input');
         $this->inputVariables = json_decode($in, true);
     }

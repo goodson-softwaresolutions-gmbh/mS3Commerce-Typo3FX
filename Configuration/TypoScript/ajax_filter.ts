@@ -6,6 +6,5 @@ ms3commercefx.ajax {
     xhtml_cleaning = 0
     admPanel = 0
     10 = COA
-    10 < tt_content.list.20.ms3commercefx_pi1
-    10.switchableControllerActions.AjaxSearch.1 = filter
+    10 < tt_content.list.20.ms3commercefx_ajaxsearch
 }

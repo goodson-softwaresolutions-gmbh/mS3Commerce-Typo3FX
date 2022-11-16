@@ -42,6 +42,9 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
      */
     protected $shopService;
 
+    /** @var \Ms3\Ms3CommerceFx\Service\ObjectCreationService */
+    protected $objectCreation;
+
     /**
      * @param \Ms3\Ms3CommerceFx\Persistence\DbBackend $backend
      */
@@ -78,6 +81,13 @@ class RepositoryBase implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function injectShopService(\Ms3\Ms3CommerceFx\Service\ShopService $shopService) {
         $this->shopService = $shopService;
+    }
+
+    /**
+     * @param \Ms3\Ms3CommerceFx\Service\ObjectCreationService $ocs
+     */
+    public function injectObjectCreationService(\Ms3\Ms3CommerceFx\Service\ObjectCreationService $ocs) {
+        $this->objectCreation = $ocs;
     }
 
     /**

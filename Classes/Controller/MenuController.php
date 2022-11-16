@@ -17,20 +17,40 @@ namespace Ms3\Ms3CommerceFx\Controller;
 
 use Ms3\Ms3CommerceFx\Domain\Repository\RepositoryFacade;
 
+use Ms3\Ms3CommerceFx\Service\ObjectHelper;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class MenuController extends AbstractController
 {
-    public function menuAction()
+    /**
+     * @param int $rootId
+     * @param string $rootGuid
+     */
+    public function menuAction($rootId = 0, $rootGuid = '')
     {
-        if (array_key_exists('startId', $this->settings)) {
-            $startId = $this->settings['startId'];
+        if ($rootGuid) {
+            $cur = $this->repo->getObjectByMenuGuid($rootGuid);
+            $currentObjectId = $cur ? $cur->getMenuId() : 0;
         } else {
+            $currentObjectId = $rootId;
+        }
+        $startId = 0;
+        if (isset($this->settings['startId'])) {
+            $startId = $this->settings['startId'];
+        } else if (isset($this->settings['startGuid'])) {
+            $guid = ObjectHelper::createShopGuid($this->settings['startGuid'], $this->repo->getQuerySettings()->getShopId());
+            $root = $this->repo->getObjectByMenuGuid($guid);
+            $startId = $root ? $root->getMenuId() : 0;
+        }
+
+        if (!$startId) {
             $startId = $this->rootId;
         }
         $obj = $this->repo->getObjectByMenuId($startId);
         $this->view->assign('object', $obj);
+        $cur = $this->repo->getObjectByMenuId($currentObjectId);
+        $this->view->assign('current', $cur);
     }
 }

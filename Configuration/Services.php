@@ -34,5 +34,20 @@ return function (ContainerConfigurator $container, ContainerBuilder $containerBu
         );
     }
 
+    ////// SEARCH
+    (function () use ($container, $containerBuilder) {
+        $fullTextClass = \Ms3\Ms3CommerceFx\Search\FullTextSearch::class;
+        if (defined('MS3C_SEARCH_BACKEND')) {
+            if (MS3C_SEARCH_BACKEND == 'MySQL') {
+                $fullTextClass = \Ms3\Ms3CommerceFx\Search\MySqlFullTextSearch::class;
+            } else if (MS3C_SEARCH_BACKEND == 'ElasticSearch') {
+                // TODO Not yet supported
+                //$fullTextClass = 'ElasticFullTextSearch';
+            }
+        }
+
+        $services = $container->services();
+        $services->alias(\Ms3\Ms3CommerceFx\Search\FullTextSearchInterface::class, $fullTextClass);
+    })();
 };
 

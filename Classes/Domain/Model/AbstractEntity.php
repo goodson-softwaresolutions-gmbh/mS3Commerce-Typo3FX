@@ -40,6 +40,18 @@ abstract class AbstractEntity
         $this->id = $id;
     }
 
+    public function __sleep()
+    {
+        $items = $this->_getProperties();
+        unset($items['repo']);
+        return array_merge(['id'], array_keys($items));
+    }
+
+    public function __wakeup()
+    {
+        $this->repo = null;
+    }
+
     /**
      * @return int The entity's ID
      */
@@ -95,7 +107,7 @@ abstract class AbstractEntity
 
     protected function getRepo() {
         if ($this->repo == null) {
-            $this->repo = GeneralUtility::makeInstance(RepositoryFacade::class);
+            $this->repo = RepositoryFacade::getInstance();
         }
         return $this->repo;
     }

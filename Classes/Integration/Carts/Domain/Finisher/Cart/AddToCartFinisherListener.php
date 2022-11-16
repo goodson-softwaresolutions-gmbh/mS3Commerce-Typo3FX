@@ -14,7 +14,7 @@
  ***************************************************************/
 
 
-namespace Ms3\Ms3CommerceFx\Domain\Finisher\Cart;
+namespace Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart;
 
 
 use Extcode\Cart\Event\RetrieveProductsFromRequestEvent;
@@ -25,7 +25,7 @@ use TYPO3\CMS\Extbase\Object\Container\Container as ExtbaseContainer;
 /**
  * Class AddToCartFinisherListener
  * Handler for carts v7 and above for add to cart events
- * @package Ms3\Ms3CommerceFx\Domain\Finisher\Cart
+ * @package Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart
  */
 class AddToCartFinisherListener extends AddToCartFinisher
 {

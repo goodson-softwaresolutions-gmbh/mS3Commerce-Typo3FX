@@ -13,7 +13,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-namespace Ms3\Ms3CommerceFx\Domain\Finisher\Cart;
+namespace Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart;
 
 
 use Extcode\Cart\Domain\Model\Cart\Cart;
@@ -30,7 +30,7 @@ if ($__cartVersion && version_compare($__cartVersion, '7.0.0', '<')) {
      * Class AddToCartFinisherAdapter
      * Legacy adapter for carts before 7.0.
      * This used to have a finisher interface. This adapter bridges to the implementation
-     * @package Ms3\Ms3CommerceFx\Domain\Finisher\Cart
+     * @package Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart
      */
 
     class AddToCartFinisherAdapter extends AddToCartFinisher implements \Extcode\Cart\Domain\Finisher\Cart\AddToCartFinisherInterface
@@ -55,5 +55,7 @@ if ($__cartVersion && version_compare($__cartVersion, '7.0.0', '<')) {
             return [[/*errors*/], [/*product*/ $product]];
         }
     }
+} else {
+    class AddToCartFinisherAdapter{}
 }
 unset($__cartVersion);

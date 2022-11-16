@@ -25,6 +25,22 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
 {
+    private static $_instance = null;
+    public function __construct()
+    {
+        if (!self::$_instance) {
+            self::$_instance = $this;
+        }
+    }
+
+    public static function getInstance() {
+        if (!self::$_instance) {
+            $mgr = GeneralUtility::makeInstance(ObjectManager::class);
+            $mgr->get(self::class);
+        }
+        return self::$_instance;
+    }
+
     private $db;
     /**
      * @param \Ms3\Ms3CommerceFx\Persistence\DbBackend $backend
@@ -238,6 +254,28 @@ class RepositoryFacade implements \TYPO3\CMS\Core\SingletonInterface
         if ($object->parentPathLoaded()) return;
         $path = $this->object->getParentPathForMenuId($object->getMenuId());
         $object->_setProperty('parentPath', $path);
+    }
+
+    /**
+     * @param PimObject $object
+     * @return PimObject
+     */
+    public function getParentObject($object) {
+        // If parent path is loaded, just take it from there
+        if ($object->parentPathLoaded()) {
+            $pp = $object->getParentPath();
+            return end($pp);
+        }
+        if ($object->getCollection()) {
+            $this->objectCollection->loadParentObjects($object->getCollection());
+        } else {
+            $this->object->ensureMenuId($object);
+        }
+        $m = $this->object->getMenuById($object->getMenuId());
+        if ($m) {
+            return $this->getObjectRepository()->getByMenuId($m->getParentId());
+        }
+        return null;
     }
 
     /**

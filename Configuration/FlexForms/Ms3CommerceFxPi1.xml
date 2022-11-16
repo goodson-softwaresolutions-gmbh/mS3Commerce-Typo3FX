@@ -16,6 +16,29 @@
                             </config>
                         </TCEforms>
                     </settings.templateFile>
+                    <config.rootStructureElement>
+                        <TCEforms>
+                            <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.rootStructureElement</label>
+                            <onChange>reload</onChange>
+                            <config>
+                                <type>select</type>
+                                <renderType>selectSingle</renderType>
+                                <itemsProcFunc>Ms3\Ms3CommerceFx\Backend\ItemSelector->getStructureElementsFlex</itemsProcFunc>
+                                <items></items>
+                            </config>
+                        </TCEforms>
+                    </config.rootStructureElement>
+                    <settings.overrideRootGuid>
+                        <TCEforms>
+                            <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.overrideRootGuid</label>
+                            <config>
+                                <type>select</type>
+                                <renderType>selectSingle</renderType>
+                                <itemsProcFunc>Ms3\Ms3CommerceFx\Backend\ItemSelector->getItemListFlex</itemsProcFunc>
+                                <items></items>
+                            </config>
+                        </TCEforms>
+                    </settings.overrideRootGuid>
                     <switchableControllerActions>
                         <TCEforms>
                             <label>LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.title</label>
@@ -29,6 +52,11 @@
                                         <numIndex index="1">Object->list</numIndex>
                                     </numIndex>
                                     <numIndex index="1">
+                                        <numIndex index="0">LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.detail</numIndex>
+                                        <!-- Controller -> action -->
+                                        <numIndex index="1">Object->detail</numIndex>
+                                    </numIndex>
+                                    <numIndex index="2">
                                         <numIndex index="0">LLL:EXT:ms3commercefx/Resources/Private/Language/Backend.xlf:settings.commerce.action.searchresult</numIndex>
                                         <numIndex index="1">Search->search</numIndex>
                                     </numIndex>

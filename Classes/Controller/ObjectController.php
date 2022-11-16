@@ -37,13 +37,8 @@ class ObjectController extends AbstractController
      */
     public function listAction($rootId = 0, $rootGuid = '', $start = 0)
     {
-        if ($rootGuid) {
-            $obj = $this->repo->getObjectByMenuGuid($rootGuid);
-        } else {
-            if ($rootId == 0) $rootId = $this->rootId;
-            $obj = $this->repo->getObjectByMenuId($rootId);
-        }
-        $obj = $this->shopService->getObjectInCurrentShop($obj);
+        $obj = $this->getObjectFromParameters($rootId, $rootGuid, true);
+        if (!$obj) $this->handleNotFound();
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
         $this->view->assign('start', $start);
@@ -51,12 +46,25 @@ class ObjectController extends AbstractController
 
     /**
      * @param int $rootId
+     * @param string $rootGuid
      */
-    public function detailAction($rootId)
+    public function detailAction($rootId = 0, $rootGuid = '')
     {
-        $obj = $this->repo->getObjectByMenuId($rootId);
-        $obj = $this->shopService->getObjectInCurrentShop($obj);
+        $obj = $this->getObjectFromParameters($rootId, $rootGuid, false);
+        if (!$obj) $this->handleNotFound();
         $this->view->assign('object', $obj);
         $this->view->assign('allAttributes', new AttributeAccess($this->repo->getAttributeRepository()));
+    }
+
+    protected function getObjectFromParameters($rootId, $rootGuid, $useSettingsFallback)
+    {
+        if ($rootGuid) {
+            $obj = $this->repo->getObjectByMenuGuid($rootGuid);
+        } else {
+            if ($rootId == 0 && $useSettingsFallback) $rootId = $this->rootId;
+            $obj = $this->repo->getObjectByMenuId($rootId);
+        }
+        $obj = $this->shopService->getObjectInCurrentShop($obj);
+        return $obj;
     }
 }

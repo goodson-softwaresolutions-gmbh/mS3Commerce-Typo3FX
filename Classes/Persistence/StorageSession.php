@@ -95,20 +95,20 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
         return null;
     }
 
-    public function registerObject($object)
+    public function registerObject($object, $asClass = null)
     {
         $this->objectMap[$object] = $object->getId();
-        $this->identifierMap[get_class($object)][$object->getId()] = $object;
+        $this->identifierMap[$asClass ?? get_class($object)][$object->getId()] = $object;
     }
 
-    public function registerObjectSecondary($object, $key)
+    public function registerObjectSecondary($object, $key, $asClass = null)
     {
-        $this->secondaryMap[get_class($object)][$key] = $object;
+        $this->secondaryMap[$asClass ?? get_class($object)][$key] = $object;
     }
 
-    public function unregisterObject($object)
+    public function unregisterObject($object, $asClass = null)
     {
-        unset($this->identifierMap[get_class($object)][$this->objectMap[$object]]);
+        unset($this->identifierMap[$asClass ?? get_class($object)][$this->objectMap[$object]]);
         $this->objectMap->detach($object);
     }
 

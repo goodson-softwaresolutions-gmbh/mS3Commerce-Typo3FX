@@ -55,6 +55,32 @@ abstract class PimObject extends AbstractEntity
     /** @var Relation[][] */
     protected $relations;
 
+    public function __sleep()
+    {
+        $data = parent::__sleep();
+        $data = array_flip($data);
+        unset($data['children']);
+        unset($data['parentPath']);
+        unset($data['attributes']);
+        unset($data['categorizations']);
+        unset($data['collection']);
+        unset($data['relations']);
+        unset($data['menuId']);
+        return array_flip($data);
+    }
+
+    public function __wakeup()
+    {
+        parent::__wakeup();
+        $this->children = null;
+        $this->parentPath = null;
+        $this->attributes = null;
+        $this->categorizations = null;
+        $this->collection = null;
+        $this->relations = null;
+        $this->menuId = null;
+    }
+
     public function __construct($id = 0) {
         parent::__construct($id);
     }
@@ -159,6 +185,13 @@ abstract class PimObject extends AbstractEntity
     public function getParentPath() {
         $this->getRepo()->loadObjectParentPath($this);
         return $this->parentPath;
+    }
+
+    /**
+     * @return PimObject
+     */
+    public function getParentObject() {
+        return $this->getRepo()->getParentObject($this);
     }
 
     /**
@@ -296,6 +329,20 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
      */
     public function getAttributes() {
         return $this->categorization->getAttributes();
+    }
+
+    /**
+     * @return bool TRUE if there are any non-empty attributes in this categorization for the object
+     */
+    public function getHasValues() {
+        return $this->hasValues();
+    }
+
+    /**
+     * @return bool TRUE if there are any non-empty attributes in this categorization for the object
+     */
+    public function hasValues() {
+        return count($this->getFilledAttributes()) > 0;
     }
 
     /* ArrayAccess implementation: Access by position in categorization */

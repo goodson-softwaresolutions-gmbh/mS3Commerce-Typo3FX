@@ -22,6 +22,7 @@ namespace Ms3\Ms3CommerceFx\Persistence;
  */
 class DbBackend implements \TYPO3\CMS\Core\SingletonInterface
 {
+    /** @var \Doctrine\DBAL\Connection[] */
     private static $connections = [];
     /**
      * @var \Doctrine\DBAL\Connection
@@ -44,6 +45,18 @@ class DbBackend implements \TYPO3\CMS\Core\SingletonInterface
             $this->mainConnection = $this->getConnectionInternal('production');
         }
         return $this->mainConnection;
+    }
+
+    /**
+     * Returns a connection by name from the mS3 DataTransfer DBAccess file
+     * @param string $name Connection name
+     * @return \Doctrine\DBAL\Connection The connection to the named database
+     * @throws \Exception On error connecting to database
+     */
+    public function getNamedConnection($name)
+    {
+        $this->connectDb($name);
+        return self::$connections[$name];
     }
 
     private function getConnectionInternal($type)

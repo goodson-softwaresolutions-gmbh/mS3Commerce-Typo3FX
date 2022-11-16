@@ -52,6 +52,7 @@ class Menu extends AbstractEntity
     protected $depth;
     protected $ordinal;
     protected $path;
+    protected $orderPath;
     protected $contextID;
     protected $groupId;
     protected $productId;
@@ -100,6 +101,14 @@ class Menu extends AbstractEntity
     public function getOrdinal()
     {
         return $this->ordinal;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrderPath()
+    {
+        return $this->orderPath;
     }
 
     /**

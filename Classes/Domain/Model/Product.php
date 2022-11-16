@@ -28,6 +28,22 @@ class Product extends PimObject
     /** @var ProductAvailability[] */
     protected $availability = null;
 
+    public function __sleep()
+    {
+        $data = parent::__sleep();
+        $data = array_flip($data);
+        unset($data['prices']);
+        unset($data['availability']);
+        return array_flip($data);
+    }
+
+    public function __wakeup()
+    {
+        parent::__wakeup();
+        $this->prices = null;
+        $this->availability = null;
+    }
+
     /**
      * @return int
      */

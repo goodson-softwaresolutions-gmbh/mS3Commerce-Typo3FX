@@ -13,7 +13,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-namespace Ms3\Ms3CommerceFx\Domain\Finisher\Cart;
+namespace Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart;
 
 
 use Extcode\Cart\Domain\Model\Cart\Cart;
@@ -148,13 +148,14 @@ class AddToCartFinisher
         }
 
         $tc = $this->getTaxClass($pimProduct, $cart);
+        $pr = $pimProduct->getPrice();
 
         $product = new \Extcode\Cart\Domain\Model\Cart\Product(
             self::PRODUCT_TYPE,
             $productId,
             $pimProduct->getName(),
             $pimProduct->getAuxiliaryName(),
-            $pimProduct->getPrice()->getPrice(),
+            $pr ? $pr->getPrice() : 0,
             $tc,
             $qty
         );
