@@ -25,8 +25,8 @@ return function (ContainerConfigurator $container, ContainerBuilder $containerBu
     );
 
     /////// CART
-    $cartVersion = \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getExtensionVersion('cart');
-    if ($cartVersion && version_compare($cartVersion, '7.0.0', '<')) {
+    if ($containerBuilder->hasDefinition('Extcode\Cart\Domain\Finisher\Cart\AddToCartFinisherInterface')) {
+        // Cart version < 7.0
         $registerEvent(
             'Extcode\Cart\Event\RetrieveProductsFromRequestEvent',
             \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisherListener::class,
