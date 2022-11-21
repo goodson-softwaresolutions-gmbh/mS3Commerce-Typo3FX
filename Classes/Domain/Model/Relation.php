@@ -39,6 +39,8 @@ class Relation extends AbstractEntity
     protected $printText2;
     /** @var int */
     protected $amount;
+    /** @var int */
+    protected $orderNr;
 
     /** @var PimObject */
     protected $parent;
