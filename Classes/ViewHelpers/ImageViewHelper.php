@@ -3,6 +3,8 @@
 
 namespace Ms3\Ms3CommerceFx\ViewHelpers;
 
+use Ms3\Ms3CommerceFx\Domain\Model\AttributeValue;
+
 class ImageViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\ImageViewHelper
 {
     public function initializeArguments()
@@ -45,6 +47,9 @@ class ImageViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\ImageViewHelper
     {
         try {
             $this->arguments = $args;
+            if ($this->arguments['src'] instanceof AttributeValue) {
+                $this->arguments['src'] = urldecode((string) $this->arguments['src']);
+            }
             $res = parent::render();
             if ($this->arguments['srcOnly']) {
                 return $this->tag->getAttribute('src');
