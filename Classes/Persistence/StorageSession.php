@@ -63,7 +63,7 @@ class StorageSession implements \TYPO3\CMS\Core\SingletonInterface
 
     public function getObjectByIdentifier($identifier, $className)
     {
-        return $this->identifierMap[$className][$identifier];
+        return $this->identifierMap[$className][$identifier] ?? null;
     }
 
     public function getObjectsByIdentifiers($identifiers, $className) {
