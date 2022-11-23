@@ -23,7 +23,7 @@ use Ms3\Ms3CommerceFx\Domain\Repository\PimObjectRepository;
 use Ms3\Ms3CommerceFx\Persistence\QuerySettings;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
-use TYPO3\CMS\Extbase\Mvc\Web\Request;
+use TYPO3\CMS\Extbase\Mvc\Request;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class AddToCartFinisher

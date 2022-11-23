@@ -20,7 +20,6 @@ namespace Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart;
 use Extcode\Cart\Event\RetrieveProductsFromRequestEvent;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\Container\Container as ExtbaseContainer;
 
 /**
  * Class AddToCartFinisherListener
@@ -29,37 +28,7 @@ use TYPO3\CMS\Extbase\Object\Container\Container as ExtbaseContainer;
  */
 class AddToCartFinisherListener extends AddToCartFinisher
 {
-    /** @var ExtbaseContainer */
-    protected $objectManager;
-
-    /**
-     * @param ExtbaseContainer $objectManager
-     */
-    public function injectObjectManager(ExtbaseContainer $objectManager) {
-        $this->objectManager = $objectManager;
-    }
     public function __invoke(RetrieveProductsFromRequestEvent $event)
-    {
-        if (defined('MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS') && MS3C_TX_CART_ADDTOCART_CUSTOM_CLASS) {
-            // Legacy mode: check overriding class
-            $name = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['cart'][AddToCartFinisher::PRODUCT_TYPE]['Cart']['AddToCartFinisher'];
-            if ($name) {
-                $this->handleLegacyRequest($name, $event);
-            }
-
-            // If there is no overriding class, but specified there is a custom class,
-            // assume it is registered as own event listener.
-            // => Nothing to do for us
-            return;
-        } else {
-            $this->handleListenerRequest($event);
-        }
-    }
-
-    /**
-     * @param RetrieveProductsFromRequestEvent $event
-     */
-    private function handleListenerRequest($event)
     {
         $request = $event->getRequest();
         $cart = $event->getCart();
@@ -76,24 +45,4 @@ class AddToCartFinisherListener extends AddToCartFinisher
             );
         }
     }
-
-    /**
-     * @param string $className
-     * @param RetrieveProductsFromRequestEvent $event
-     */
-    private function handleLegacyRequest($className, $event) {
-        $request = $event->getRequest();
-        $cart = $event->getCart();
-        $obj = $this->objectManager->getInstance($className);
-        $res = $obj->getProductFromRequest($request, $cart);
-        $errors = $res[0];
-        $products = $res[1];
-        foreach ($errors as $e) {
-            $event->addError(GeneralUtility::makeInstance(FlashMessage::class, $e));
-        }
-        foreach ($products as $p) {
-            $event->addProduct($p);
-        }
-    }
-
 }
