@@ -20,8 +20,8 @@ require_once(\TYPO3\CMS\Core\Core\Environment::getPublicPath().'/dataTransfer/ru
     if (defined('MS3C_TYPO3_CACHED') && MS3C_TYPO3_CACHED) {
         //unset($nonCacheable['Object']);
         $nonCacheable[ObjectController::class] = 'detail';
-        unset($nonCacheable[MenuController::class]);
-        unset($nonCacheable[AjaxSearchController::class]);
+        $nonCacheable[MenuController::class] = [];
+        $nonCacheable[AjaxSearchController::class] = [];
     }
 
     \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
