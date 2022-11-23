@@ -235,6 +235,14 @@ abstract class PimObject extends AbstractEntity
         return $this->attributes;
     }
 
+    /**
+     * @param string $name
+     * @return AttributeValue|null
+     */
+    public function getAttribute($name) {
+        return $this->getAttributes()[$name]??null;
+    }
+
     public function attributesLoaded() : bool {
         return $this->attributes !== null;
     }
