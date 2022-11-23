@@ -165,7 +165,7 @@ class SearchQueryUtils
             $colStr = '('. implode(',', $cols).') ';
         }
 
-        $db->getConnection()->executeUpdate(
+        $db->getConnection()->executeStatement(
             "INSERT INTO $table $colStr {$q->getSQL()}",
             $q->getParameters(),
             $q->getParameterTypes()
