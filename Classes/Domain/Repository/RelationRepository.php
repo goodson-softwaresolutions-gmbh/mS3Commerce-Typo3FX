@@ -125,14 +125,14 @@ class RelationRepository extends RepositoryBase
     private function materializeRelations($loadRelations)
     {
         $relations = GeneralUtilities::groupBy($loadRelations, function($x) { return $x->getDestinationType(); }, function($x) { return $x->getDestinationId(); });
-        $groups = $this->objRepo->getObjectsByIds(PimObject::TypeGroup, $relations[PimObject::TypeGroup]);
-        $products = $this->objRepo->getObjectsByIds(PimObject::TypeProduct, $relations[PimObject::TypeProduct]);
+        $groups = $this->objRepo->getObjectsByIds(PimObject::TypeGroup, $relations[PimObject::TypeGroup] ?? []);
+        $products = $this->objRepo->getObjectsByIds(PimObject::TypeProduct, $relations[PimObject::TypeProduct] ?? []);
 
         foreach ($loadRelations as $r) {
-            if ($r->getDestinationType() == PimObject::TypeGroup) {
+            if ($r->getDestinationType() == PimObject::TypeGroup && isset($groups[$r->getDestinationId()])) {
                 $r->_setProperty('child', $groups[$r->getDestinationId()]);
             }
-            if ($r->getDestinationType() == PimObject::TypeProduct) {
+            if ($r->getDestinationType() == PimObject::TypeProduct && isset($products[$r->getDestinationId()])) {
                 $r->_setProperty('child', $products[$r->getDestinationId()]);
             }
         }
