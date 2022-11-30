@@ -55,7 +55,7 @@ class Product extends PimObject
     public function getBasketQuantity() {
         $cart = $this->getRepo()->getTxCartsBasket();
         if (!$cart) return null;
-        $product = $cart->getProduct('mS3Commerce_'.$this->id);
+        $product = $cart->getProducts()['mS3Commerce_'.$this->id] ?? null;
         if ($product) {
             return $product->getQuantity();
         }

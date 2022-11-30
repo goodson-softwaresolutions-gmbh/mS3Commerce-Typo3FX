@@ -60,7 +60,7 @@ class RelationRepository extends RepositoryBase
 
         $res = $q->execute();
         $map = [];
-        while ($row = $res->fetch()) {
+        while ($row = $res->fetchAssociative()) {
             if ($row['GroupId']) {
                 $key = ObjectHelper::buildKeyForObject($row['GroupId'], PimObject::TypeGroup);
                 $parent = $groups[$key];
@@ -81,27 +81,24 @@ class RelationRepository extends RepositoryBase
         $rrr = GeneralUtilities::flattenArray($map);
         $this->materializeRelations($rrr);
 
-        foreach ($groups as $k => $g) {
-            $rels = [];
-            if (array_key_exists($k, $map)) {
-                $rels = $map[$k];
-                // Remove invisible relations
-                $rels = array_filter($rels, function($r) { return $r->_getProperty('child');} );
-                $rels = GeneralUtilities::groupBy($rels, function($x) { return GeneralUtilities::sanitizeFluidAccessName($x->getName());});
+        function assignRelations($map, $objects) {
+            foreach ($objects as $k => $o) {
+                $rels = [];
+                if (array_key_exists($k, $map)) {
+                    $rels = $map[$k];
+                    // Remove invisible relations
+                    $rels = array_filter($rels, function($r) { return $r->_getProperty('child');} );
+                    $rels = GeneralUtilities::groupBy($rels, function($x) { return GeneralUtilities::sanitizeFluidAccessName($x->getName());});
+                    foreach ($rels as &$items) {
+                        usort($items, function($a, $b) { return $a->_getProperty('orderNr') <=> $b->_getProperty('orderNr');} );
+                    }
+                }
+                $o->_setProperty('relations', $rels);
             }
-            $g->_setProperty('relations', $rels);
         }
 
-        foreach ($products as $k => $p) {
-            $rels = [];
-            if (array_key_exists($k, $map)) {
-                $rels = $map[$k];
-                // Remove invisible relations
-                $rels = array_filter($rels, function($r) { return $r->_getProperty('child');} );
-                $rels = GeneralUtilities::groupBy($rels, function($x) { return GeneralUtilities::sanitizeFluidAccessName($x->getName());});
-            }
-            $p->_setProperty('relations', $rels);
-        }
+        assignRelations($map, $groups);
+        assignRelations($map, $products);
     }
 
     /**
@@ -128,14 +125,14 @@ class RelationRepository extends RepositoryBase
     private function materializeRelations($loadRelations)
     {
         $relations = GeneralUtilities::groupBy($loadRelations, function($x) { return $x->getDestinationType(); }, function($x) { return $x->getDestinationId(); });
-        $groups = $this->objRepo->getObjectsByIds(PimObject::TypeGroup, $relations[PimObject::TypeGroup]);
-        $products = $this->objRepo->getObjectsByIds(PimObject::TypeProduct, $relations[PimObject::TypeProduct]);
+        $groups = $this->objRepo->getObjectsByIds(PimObject::TypeGroup, $relations[PimObject::TypeGroup] ?? []);
+        $products = $this->objRepo->getObjectsByIds(PimObject::TypeProduct, $relations[PimObject::TypeProduct] ?? []);
 
         foreach ($loadRelations as $r) {
-            if ($r->getDestinationType() == PimObject::TypeGroup) {
+            if ($r->getDestinationType() == PimObject::TypeGroup && isset($groups[$r->getDestinationId()])) {
                 $r->_setProperty('child', $groups[$r->getDestinationId()]);
             }
-            if ($r->getDestinationType() == PimObject::TypeProduct) {
+            if ($r->getDestinationType() == PimObject::TypeProduct && isset($products[$r->getDestinationId()])) {
                 $r->_setProperty('child', $products[$r->getDestinationId()]);
             }
         }

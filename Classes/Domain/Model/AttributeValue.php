@@ -137,13 +137,13 @@ class AttributeValue extends AbstractEntity
     }
 
     public function _map($row, $prefix) {
-        $this->groupId = $row[$prefix.'GroupId'];
-        $this->productId = $row[$prefix.'ProductId'];
-        $this->featureId = $row[$prefix.'FeatureId'];
-        $this->languageId = $row[$prefix.'LanguageId'];
-        $this->contentHtml = $row[$prefix.'ContentHtml'];
-        $this->contentPlain = $row[$prefix.'ContentPlain'];
-        $this->contentNumber = $row[$prefix.'ContentNumber'];
+        $this->groupId = $row[$prefix.'GroupId'] ?? 0;
+        $this->productId = $row[$prefix.'ProductId'] ?? 0;
+        $this->featureId = $row[$prefix.'FeatureId'] ?? 0;
+        $this->languageId = $row[$prefix.'LanguageId'] ?? 0;
+        $this->contentHtml = $row[$prefix.'ContentHtml'] ?? '';
+        $this->contentPlain = $row[$prefix.'ContentPlain'] ?? '';
+        $this->contentNumber = $row[$prefix.'ContentNumber'] ?? null;
         return true;
     }
 }

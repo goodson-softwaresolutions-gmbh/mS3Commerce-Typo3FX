@@ -91,7 +91,7 @@ class Price extends AbstractEntity
     }
 
     public function _map($row, $prefix) {
-        $this->vpe = $row[$prefix.'VPE'];
+        $this->vpe = $row[$prefix.'VPE'] ?? '';
         return false;
     }
 }

@@ -71,7 +71,7 @@ abstract class AbstractController extends ActionController
         if (!empty($this->settings['templateFile'])) {
             $view->setTemplatePathAndFilename($this->settings['templateFile']);
         }
-        if (is_array($this->settings['variables'])) {
+        if (isset($this->settings['variables']) && is_array($this->settings['variables'])) {
             $this->view->assignMultiple($this->settings['variables']);
         }
     }

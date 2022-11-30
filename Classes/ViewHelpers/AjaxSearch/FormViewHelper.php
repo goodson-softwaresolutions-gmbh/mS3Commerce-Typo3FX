@@ -90,7 +90,7 @@ class FormViewHelper extends AbstractTagBasedViewHelper
             ;
 
         if ($rootId)
-            $uriBuilder->setArguments(['tx_ms3commercefx_pi1[rootId]' => $rootId]);
+            $uriBuilder->setArguments(['tx_ms3commercefx_ajaxsearch[rootId]' => $rootId]);
 
         return $uriBuilder
             ->build();

@@ -25,11 +25,11 @@ return function (ContainerConfigurator $container, ContainerBuilder $containerBu
     );
 
     /////// CART
-    if ($containerBuilder->hasDefinition('Extcode\Cart\Domain\Finisher\Cart\AddToCartFinisherInterface')) {
-        // Cart version < 7.0
+    if ($containerBuilder->hasDefinition('Extcode\Cart\Event\RetrieveProductsFromRequestEvent')) {
+        // Cart version >= 7.0
         $registerEvent(
             'Extcode\Cart\Event\RetrieveProductsFromRequestEvent',
-            \Ms3\Ms3CommerceFx\Domain\Finisher\Cart\AddToCartFinisherListener::class,
+            \Ms3\Ms3CommerceFx\Integration\Carts\Domain\Finisher\Cart\AddToCartFinisherListener::class,
             'ms3commercefx/cart-add-to-cart-finisher'
         );
     }

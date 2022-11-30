@@ -594,7 +594,7 @@ class SearchRepository extends RepositoryBase
 
             $filterCols[] = 'filter_mask INT NOT NULL DEFAULT 0';
             $filterCols[] = 'filter_sum INT NOT NULL DEFAULT 0';
-            $filterCols = implode($filterCols, ',') . ',';
+            $filterCols = implode(',', $filterCols) . ',';
         }
         $this->db->getConnection()->executeQuery(
         /** @lang MySQL */ <<<XXX

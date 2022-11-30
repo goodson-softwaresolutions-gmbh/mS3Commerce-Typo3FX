@@ -235,6 +235,14 @@ abstract class PimObject extends AbstractEntity
         return $this->attributes;
     }
 
+    /**
+     * @param string $name
+     * @return AttributeValue|null
+     */
+    public function getAttribute($name) {
+        return $this->getAttributes()[$name]??null;
+    }
+
     public function attributesLoaded() : bool {
         return $this->attributes !== null;
     }
@@ -402,7 +410,7 @@ class CategorizationProxy implements \ArrayAccess, \Iterator
         if ($this->filledAttributes == null) {
             $this->filledAttributes = [];
             foreach ($this->categorization->getAttributes() as $attr) {
-                $fa = $this->obj->getAttributes()[$attr->getSaneName()];
+                $fa = $this->obj->getAttributes()[$attr->getSaneName()] ?? null;
                 if ($fa) {
                     $this->filledAttributes[] = $fa;
                 }

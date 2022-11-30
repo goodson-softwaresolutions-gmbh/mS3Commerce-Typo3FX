@@ -54,6 +54,8 @@ class AjaxSearchController extends AbstractController
         $context = SearchContext::createContext();
 
         try {
+            if (!$rootId) $rootId = $this->rootId;
+
             $filterAttrs = $this->inputVariables['filterAttributes'];
             $selAttrs = $this->inputVariables['selectedFilters'];
             $multiAttrs = $this->inputVariables['multiAttributes'];

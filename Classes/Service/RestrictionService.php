@@ -145,7 +145,7 @@ class RestrictionService implements SingletonInterface
 
         foreach ($objects as $k => $o) {
             $v = $this->applyFilter(
-                $vals[$k],
+                $vals[$k]??[],
                 $this->querySettings->getStructureElementRestrictionAttribute($o->getStructureElement()->getName()),
                 $this->querySettings->getStructureElementRestrictionValues($o->getStructureElement()->getName())
             );
@@ -155,7 +155,7 @@ class RestrictionService implements SingletonInterface
             }
 
             $v = $this->applyFilter(
-                $vals[$k],
+                $vals[$k]??[],
                 $this->querySettings->getUserRestrictionAttribute(),
                 $this->getUserRestrictionValues()
             );
@@ -200,7 +200,7 @@ class RestrictionService implements SingletonInterface
             return true;
         }
 
-        $v = $values[GeneralUtilities::sanitizeFluidAccessName($attribute)];
+        $v = $values[GeneralUtilities::sanitizeFluidAccessName($attribute)]??null;
         if ($v == null) {
             return true;
         }
