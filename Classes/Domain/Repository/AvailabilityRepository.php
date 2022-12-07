@@ -48,7 +48,6 @@ class AvailabilityRepository extends RepositoryBase
         $curAvails = [];
         /** @var Product $curProduct */
         $curProduct = null;
-        $lastGuid = null;
         while ($row = $res->fetch()) {
             if (!$curProduct) {
                 $curProduct = $productMap[$row['ProductAsimOID']];
@@ -64,11 +63,10 @@ class AvailabilityRepository extends RepositoryBase
             $avail = new ProductAvailability($row['Id']);
             $this->mapper->mapObject($avail, $row);
             $curAvails[] = $avail;
-            $lastGuid = $row['ProductAsimOID'];
         }
 
         // Set availability of last product
-        if ($curProduct && $curProduct->getGuid() != $lastGuid && !empty($curAvails)) {
+        if ($curProduct && !empty($curAvails)) {
             $curProduct->_setProperty('availability', $curAvails);
         }
 

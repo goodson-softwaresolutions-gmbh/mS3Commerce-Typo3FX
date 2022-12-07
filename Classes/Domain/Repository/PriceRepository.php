@@ -53,7 +53,6 @@ class PriceRepository extends RepositoryBase
         $curPrices = [];
         /** @var Product $curProduct */
         $curProduct = null;
-        $lastGuid = null;
         while ($row = $res->fetch()) {
             if (!$curProduct) {
                 $curProduct = $productMap[$row['ProductAsimOID']];
@@ -69,11 +68,10 @@ class PriceRepository extends RepositoryBase
             $price = new Price($row['Id']);
             $this->mapper->mapObject($price, $row);
             $curPrices[] = $price;
-            $lastGuid = $row['ProductAsimOID'];
         }
 
         // Set prices of last product
-        if ($curProduct && $curProduct->getGuid() != $lastGuid && !empty($curPrices)) {
+        if ($curProduct && !empty($curPrices)) {
             $curProduct->_setProperty('prices', $curPrices);
         }
 
